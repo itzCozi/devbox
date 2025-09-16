@@ -1,0 +1,23 @@
+{
+  "name": "example-project",
+  "base_image": "ubuntu:22.04",
+  "setup_commands": [
+    "apt update",
+    "apt install -y python3 python3-pip python3-venv nodejs npm git curl wget",
+    "pip3 install flask requests beautifulsoup4 pandas",
+    "npm install -g typescript @types/node",
+    "echo 'Development environment setup complete!'"
+  ],
+  "environment": {
+    "PYTHONPATH": "/workspace",
+    "NODE_ENV": "development"
+  },
+  "ports": [
+    "3000:3000",
+    "5000:5000",
+    "8000:8000"
+  ],
+  "volumes": [
+    "/workspace/data:/data"
+  ]
+}
