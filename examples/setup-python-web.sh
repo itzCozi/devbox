@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Example setup script for a Python web development environment
-# This would be run inside the devbox container after initialization
+# This would be run inside the devbox box after initialization
 
 set -e
 

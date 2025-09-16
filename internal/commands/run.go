@@ -10,8 +10,8 @@ import (
 
 var runCmd = &cobra.Command{
 	Use:   "run <project> <command> [args...]",
-	Short: "Run a command in the project container",
-	Long:  `Execute an arbitrary command inside the specified project's container.`,
+	Short: "Run a command in the project box",
+	Long:  `Execute an arbitrary command inside the specified project's box.`,
 	Args:  cobra.MinimumNArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		projectName := args[0]
@@ -34,30 +34,30 @@ var runCmd = &cobra.Command{
 			return fmt.Errorf("project '%s' not found. Run 'devbox init %s' first", projectName, projectName)
 		}
 
-		// Check if container exists and is running
-		exists, err = dockerClient.ContainerExists(project.ContainerName)
+		// Check if box exists and is running
+		exists, err = dockerClient.BoxExists(project.BoxName)
 		if err != nil {
-			return fmt.Errorf("failed to check container status: %w", err)
+			return fmt.Errorf("failed to check box status: %w", err)
 		}
 
 		if !exists {
-			return fmt.Errorf("container '%s' not found. Run 'devbox init %s' to recreate", project.ContainerName, projectName)
+			return fmt.Errorf("box '%s' not found. Run 'devbox init %s' to recreate", project.BoxName, projectName)
 		}
 
-		status, err := dockerClient.GetContainerStatus(project.ContainerName)
+		status, err := dockerClient.GetBoxStatus(project.BoxName)
 		if err != nil {
-			return fmt.Errorf("failed to get container status: %w", err)
+			return fmt.Errorf("failed to get box status: %w", err)
 		}
 
 		if status != "running" {
-			fmt.Printf("Starting container '%s'...\n", project.ContainerName)
-			if err := dockerClient.StartContainer(project.ContainerName); err != nil {
-				return fmt.Errorf("failed to start container: %w", err)
+			fmt.Printf("Starting box '%s'...\n", project.BoxName)
+			if err := dockerClient.StartBox(project.BoxName); err != nil {
+				return fmt.Errorf("failed to start box: %w", err)
 			}
 		}
 
 		// Run command
-		if err := docker.RunCommand(project.ContainerName, command); err != nil {
+		if err := docker.RunCommand(project.BoxName, command); err != nil {
 			return fmt.Errorf("failed to run command: %w", err)
 		}
 

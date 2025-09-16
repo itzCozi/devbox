@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # devbox-wrapper.sh
-# This script provides devbox commands inside the container
+# This script provides devbox commands inside the box
 
-CONTAINER_NAME="${DEVBOX_CONTAINER_NAME:-unknown}"
+BOX_NAME="${DEVBOX_BOX_NAME:-unknown}"
 PROJECT_NAME="${DEVBOX_PROJECT_NAME:-unknown}"
 
 case "$1" in
@@ -12,35 +12,35 @@ case "$1" in
         exit 0
         ;;
     "status"|"info")
-        echo "📊 Devbox Container Status"
+        echo "📊 Devbox Box Status"
         echo "Project: $PROJECT_NAME"
-        echo "Container: $CONTAINER_NAME"
+        echo "Box: $BOX_NAME"
         echo "Workspace: /workspace"
         echo "Host: $(cat /etc/hostname)"
         echo "User: $(whoami)"
         echo "Working Directory: $(pwd)"
         echo ""
-        echo "💡 Available devbox commands inside container:"
+        echo "💡 Available devbox commands inside box:"
         echo "  devbox exit     - Exit the shell"
-        echo "  devbox status   - Show container information"
+        echo "  devbox status   - Show box information"
         echo "  devbox help     - Show this help"
         echo "  devbox host     - Run command on host (experimental)"
         ;;
     "help"|"--help"|"-h")
-        echo "🚀 Devbox Container Commands"
+        echo "🚀 Devbox Box Commands"
         echo ""
-        echo "Available commands inside the container:"
+        echo "Available commands inside the box:"
         echo "  devbox exit         - Exit the devbox shell"
-        echo "  devbox status       - Show container and project information"
+        echo "  devbox status       - Show box and project information"
         echo "  devbox help         - Show this help message"
         echo "  devbox host <cmd>   - Execute command on host (experimental)"
         echo ""
         echo "📁 Your project files are in: /workspace"
-        echo "🐧 You're in an Ubuntu container with full package management"
+        echo "🐧 You're in an Ubuntu box with full package management"
         echo ""
         echo "Examples:"
         echo "  devbox exit                    # Exit to host"
-        echo "  devbox status                  # Check container info"
+        echo "  devbox status                  # Check box info"
         echo "  devbox host 'devbox list'     # Run host command"
         echo ""
         echo "💡 Tip: Files in /workspace are shared with your host system"
@@ -53,14 +53,14 @@ case "$1" in
         fi
         echo "🔄 Executing on host: $2"
         echo "⚠️  Note: This is experimental and may not work in all environments"
-        # This is a placeholder - we can't easily execute on host from container
+        # This is a placeholder - we can't easily execute on host from box
         # without additional setup like Docker socket mounting
         echo "❌ Host command execution not yet implemented"
-        echo "💡 Exit the container and run commands on the host instead"
+        echo "💡 Exit the box and run commands on the host instead"
         ;;
     "version")
-        echo "devbox container wrapper v1.0"
-        echo "Container: $CONTAINER_NAME"
+        echo "devbox box wrapper v1.0"
+        echo "Box: $BOX_NAME"
         echo "Project: $PROJECT_NAME"
         ;;
     "")
@@ -69,7 +69,7 @@ case "$1" in
         ;;
     *)
         echo "❌ Unknown devbox command: $1"
-        echo "💡 Use 'devbox help' to see available commands inside the container"
+        echo "💡 Use 'devbox help' to see available commands inside the box"
         echo ""
         echo "Available commands:"
         echo "  exit, status, help, host, version"

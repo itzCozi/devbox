@@ -21,10 +21,10 @@ var (
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "devbox",
-	Short: "Isolated development environments using Docker containers",
+	Short: "Isolated development environments using Docker boxs",
 	Long: `devbox isolates development environments so that when you install system 
-packages with apt they live only inside the project container and don't affect 
-your host system. Each project has its own Docker container, while your code 
+packages with apt they live only inside the project box and don't affect 
+your host system. Each project has its own Docker box, while your code 
 stays in a flat folder on the host.`,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		// Check if running on Debian/Ubuntu

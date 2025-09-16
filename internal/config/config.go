@@ -15,7 +15,7 @@ type Config struct {
 // Project represents a devbox project
 type Project struct {
 	Name          string `json:"name"`
-	ContainerName string `json:"container_name"`
+	BoxName       string `json:"box_name"`
 	BaseImage     string `json:"base_image"`
 	WorkspacePath string `json:"workspace_path"`
 	Status        string `json:"status,omitempty"`

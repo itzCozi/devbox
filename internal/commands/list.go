@@ -10,7 +10,7 @@ import (
 var listCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List all devbox projects and their status",
-	Long:  `Display all managed devbox projects along with their container status.`,
+	Long:  `Display all managed devbox projects along with their box status.`,
 	Args:  cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// Load configuration
@@ -26,36 +26,36 @@ var listCmd = &cobra.Command{
 			return nil
 		}
 
-		// Get container statuses
-		containers, err := dockerClient.ListContainers()
+		// Get box statuses
+		boxs, err := dockerClient.ListBoxs()
 		if err != nil {
-			return fmt.Errorf("failed to list containers: %w", err)
+			return fmt.Errorf("failed to list boxs: %w", err)
 		}
 
-		// Create a map of container names to their status
-		containerStatus := make(map[string]string)
-		for _, container := range containers {
-			for _, name := range container.Names {
-				// Remove leading slash from container name
+		// Create a map of box names to their status
+		boxStatus := make(map[string]string)
+		for _, box := range boxs {
+			for _, name := range box.Names {
+				// Remove leading slash from box name
 				cleanName := strings.TrimPrefix(name, "/")
-				containerStatus[cleanName] = container.Status
+				boxStatus[cleanName] = box.Status
 			}
 		}
 
 		// Display projects
 		fmt.Printf("DEVBOX PROJECTS\n")
-		fmt.Printf("%-20s %-20s %-15s %s\n", "PROJECT", "CONTAINER", "STATUS", "WORKSPACE")
+		fmt.Printf("%-20s %-20s %-15s %s\n", "PROJECT", "BOX", "STATUS", "WORKSPACE")
 		fmt.Printf("%-20s %-20s %-15s %s\n", strings.Repeat("-", 20), strings.Repeat("-", 20), strings.Repeat("-", 15), strings.Repeat("-", 30))
 
 		for _, project := range projects {
 			status := "not found"
-			if containerStatus[project.ContainerName] != "" {
-				status = containerStatus[project.ContainerName]
+			if boxStatus[project.BoxName] != "" {
+				status = boxStatus[project.BoxName]
 			}
 
 			fmt.Printf("%-20s %-20s %-15s %s\n",
 				project.Name,
-				project.ContainerName,
+				project.BoxName,
 				status,
 				project.WorkspacePath)
 		}

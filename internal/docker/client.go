@@ -27,7 +27,7 @@ func (c *Client) Close() error {
 func IsDockerAvailable() error {
 	cmd := exec.Command("docker", "version")
 	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("Docker is not installed or not running. Please ensure Docker is installed and the Docker daemon is running")
+		return fmt.Errorf("docker is not installed or not running. Please ensure Docker is installed and the Docker daemon is running")
 	}
 	return nil
 }
@@ -54,13 +54,13 @@ func (c *Client) PullImage(image string) error {
 	return nil
 }
 
-// CreateContainer creates a new Docker container
-func (c *Client) CreateContainer(name, image, workspaceHost, workspaceContainer string) (string, error) {
+// CreateBox creates a new Docker box
+func (c *Client) CreateBox(name, image, workspaceHost, workspaceBox string) (string, error) {
 	args := []string{
 		"create",
 		"--name", name,
-		"--mount", fmt.Sprintf("type=bind,source=%s,target=%s", workspaceHost, workspaceContainer),
-		"--workdir", workspaceContainer,
+		"--mount", fmt.Sprintf("type=bind,source=%s,target=%s", workspaceHost, workspaceBox),
+		"--workdir", workspaceBox,
 		"--restart", "unless-stopped",
 		"-it",
 		image,
@@ -70,70 +70,74 @@ func (c *Client) CreateContainer(name, image, workspaceHost, workspaceContainer 
 	cmd := exec.Command("docker", args...)
 	output, err := cmd.Output()
 	if err != nil {
-		return "", fmt.Errorf("failed to create container: %w", err)
+		return "", fmt.Errorf("failed to create box: %w", err)
 	}
 
-	containerID := strings.TrimSpace(string(output))
-	return containerID, nil
+	boxID := strings.TrimSpace(string(output))
+	return boxID, nil
 }
 
-// StartContainer starts a Docker container
-func (c *Client) StartContainer(containerID string) error {
-	cmd := exec.Command("docker", "start", containerID)
+// StartBox starts a Docker box
+func (c *Client) StartBox(boxID string) error {
+	cmd := exec.Command("docker", "start", boxID)
 	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("failed to start container: %w", err)
+		return fmt.Errorf("failed to start box: %w", err)
 	}
 	return nil
 }
 
-// SetupDevboxInContainer installs the devbox wrapper script inside the container
-func (c *Client) SetupDevboxInContainer(containerName, projectName string) error {
+// SetupDevboxInBox installs the devbox wrapper script inside the box
+func (c *Client) SetupDevboxInBox(boxName, projectName string) error {
+	// First, run system updates to ensure packages are up to date
+	fmt.Printf("Updating system packages in box...\n")
+	updateCmd := exec.Command("docker", "exec", boxName, "bash", "-c", "apt update -y && apt full-upgrade -y")
+	updateCmd.Stdout = os.Stdout
+	updateCmd.Stderr = os.Stderr
+	if err := updateCmd.Run(); err != nil {
+		fmt.Printf("Warning: failed to update packages in box: %v\n", err)
+		// Don't fail the whole setup if package update fails
+	}
+
 	// Create the wrapper script content with proper escaping
 	wrapperScript := `#!/bin/bash
 
 # devbox-wrapper.sh
-# This script provides devbox commands inside the container
+# This script provides devbox commands inside the box
 
-CONTAINER_NAME="` + containerName + `"
+BOX_NAME="` + boxName + `"
 PROJECT_NAME="` + projectName + `"
 
 case "$1" in
-    "exit"|"quit")
-        echo "👋 Exiting devbox shell for project \"$PROJECT_NAME\""
-        # Use kill to terminate the parent bash shell
-        kill -TERM $PPID 2>/dev/null || exit 0
-        exit 0
-        ;;
     "status"|"info")
-        echo "📊 Devbox Container Status"
+        echo "📊 Devbox Box Status"
         echo "Project: $PROJECT_NAME"
-        echo "Container: $CONTAINER_NAME"
+        echo "Box: $BOX_NAME"
         echo "Workspace: /workspace"
         echo "Host: $(cat /etc/hostname)"
         echo "User: $(whoami)"
         echo "Working Directory: $(pwd)"
         echo ""
-        echo "💡 Available devbox commands inside container:"
+        echo "💡 Available devbox commands inside box:"
         echo "  devbox exit     - Exit the shell"
-        echo "  devbox status   - Show container information"
+        echo "  devbox status   - Show box information"
         echo "  devbox help     - Show this help"
         echo "  devbox host     - Run command on host (experimental)"
         ;;
     "help"|"--help"|"-h")
-        echo "🚀 Devbox Container Commands"
+        echo "🚀 Devbox Box Commands"
         echo ""
-        echo "Available commands inside the container:"
+        echo "Available commands inside the box:"
         echo "  devbox exit         - Exit the devbox shell"
-        echo "  devbox status       - Show container and project information"
+        echo "  devbox status       - Show box and project information"
         echo "  devbox help         - Show this help message"
         echo "  devbox host <cmd>   - Execute command on host (experimental)"
         echo ""
         echo "📁 Your project files are in: /workspace"
-        echo "🐧 You are in an Ubuntu container with full package management"
+        echo "🐧 You are in an Ubuntu box with full package management"
         echo ""
         echo "Examples:"
         echo "  devbox exit                    # Exit to host"
-        echo "  devbox status                  # Check container info"
+        echo "  devbox status                  # Check box info"
         echo "  devbox host \"devbox list\"     # Run host command"
         echo ""
         echo "💡 Tip: Files in /workspace are shared with your host system"
@@ -146,14 +150,14 @@ case "$1" in
         fi
         echo "🔄 Executing on host: $2"
         echo "⚠️  Note: This is experimental and may not work in all environments"
-        # This is a placeholder - we cannot easily execute on host from container
+        # This is a placeholder - we cannot easily execute on host from box
         # without additional setup like Docker socket mounting
         echo "❌ Host command execution not yet implemented"
-        echo "💡 Exit the container and run commands on the host instead"
+        echo "💡 Exit the box and run commands on the host instead"
         ;;
     "version")
-        echo "devbox container wrapper v1.0"
-        echo "Container: $CONTAINER_NAME"
+        echo "devbox box wrapper v1.0"
+        echo "Box: $BOX_NAME"
         echo "Project: $PROJECT_NAME"
         ;;
     "")
@@ -162,38 +166,64 @@ case "$1" in
         ;;
     *)
         echo "❌ Unknown devbox command: $1"
-        echo "💡 Use \"devbox help\" to see available commands inside the container"
+        echo "💡 Use \"devbox help\" to see available commands inside the box"
         echo ""
         echo "Available commands:"
         echo "  exit, status, help, host, version"
+        echo ""
+        echo "Note: 'devbox exit' is handled by the shell function for proper exit behavior"
         exit 1
         ;;
 esac`
 
-	// Install the wrapper script in the container using a here-document to avoid quoting issues
+	// Install the wrapper script in the box using a here-document to avoid quoting issues
 	// First remove any existing wrapper to ensure we get the new version
 	installCmd := `rm -f /usr/local/bin/devbox && cat > /usr/local/bin/devbox << 'DEVBOX_WRAPPER_EOF'
 ` + wrapperScript + `
 DEVBOX_WRAPPER_EOF
 chmod +x /usr/local/bin/devbox`
 
-	cmd := exec.Command("docker", "exec", containerName, "bash", "-c", installCmd)
+	cmd := exec.Command("docker", "exec", boxName, "bash", "-c", installCmd)
 	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("failed to install devbox wrapper in container: %w", err)
+		return fmt.Errorf("failed to install devbox wrapper in box: %w", err)
 	}
 
-	// Add a welcome message to .bashrc
-	welcomeCmd := `echo '
+	// Clean up any existing devbox configurations in .bashrc and add new ones
+	welcomeCmd := `# Remove any existing devbox configurations
+sed -i '/# Devbox welcome message/,/^$/d' /root/.bashrc 2>/dev/null || true
+sed -i '/devbox_exit()/,/^}$/d' /root/.bashrc 2>/dev/null || true
+sed -i '/devbox() {/,/^}$/d' /root/.bashrc 2>/dev/null || true
+
+# Add new devbox configuration
+cat >> /root/.bashrc << 'BASHRC_EOF'
+
 # Devbox welcome message  
 if [ -t 1 ]; then
     echo "🚀 Welcome to devbox project: ` + projectName + `"
     echo "📁 Your files are in: /workspace"
     echo "💡 Type 'devbox help' for available commands"
-    echo "🚪 Type 'devbox exit' to leave the container"
+    echo "🚪 Type 'devbox exit' to leave the box"
     echo ""
-fi' >> /root/.bashrc`
+fi
 
-	cmd = exec.Command("docker", "exec", containerName, "bash", "-c", welcomeCmd)
+# Define exit function for devbox
+devbox_exit() {
+    echo "👋 Exiting devbox shell for project \"` + projectName + `\""
+    exit 0
+}
+
+# Override devbox command when it's called with exit
+devbox() {
+    if [[ "$1" == "exit" || "$1" == "quit" ]]; then
+        devbox_exit
+        return
+    fi
+    # Call the actual devbox script for other commands
+    /usr/local/bin/devbox "$@"
+}
+BASHRC_EOF`
+
+	cmd = exec.Command("docker", "exec", boxName, "bash", "-c", welcomeCmd)
 	if err := cmd.Run(); err != nil {
 		// Don't fail the whole setup if welcome message fails
 		fmt.Printf("Warning: failed to add welcome message: %v\n", err)
@@ -202,57 +232,57 @@ fi' >> /root/.bashrc`
 	return nil
 }
 
-// StopContainer stops a Docker container
-func (c *Client) StopContainer(containerName string) error {
-	cmd := exec.Command("docker", "stop", containerName)
+// StopBox stops a Docker box
+func (c *Client) StopBox(boxName string) error {
+	cmd := exec.Command("docker", "stop", boxName)
 	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("failed to stop container: %w", err)
+		return fmt.Errorf("failed to stop box: %w", err)
 	}
 	return nil
 }
 
-// RemoveContainer removes a Docker container
-func (c *Client) RemoveContainer(containerName string) error {
-	cmd := exec.Command("docker", "rm", "-f", containerName)
+// RemoveBox removes a Docker box
+func (c *Client) RemoveBox(boxName string) error {
+	cmd := exec.Command("docker", "rm", "-f", boxName)
 	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("failed to remove container: %w", err)
+		return fmt.Errorf("failed to remove box: %w", err)
 	}
 	return nil
 }
 
-// ContainerExists checks if a container exists
-func (c *Client) ContainerExists(containerName string) (bool, error) {
-	cmd := exec.Command("docker", "inspect", containerName)
+// BoxExists checks if a box exists
+func (c *Client) BoxExists(boxName string) (bool, error) {
+	cmd := exec.Command("docker", "inspect", boxName)
 	err := cmd.Run()
 	if err != nil {
 		if exitError, ok := err.(*exec.ExitError); ok && exitError.ExitCode() == 1 {
 			return false, nil
 		}
-		return false, fmt.Errorf("failed to inspect container: %w", err)
+		return false, fmt.Errorf("failed to inspect box: %w", err)
 	}
 	return true, nil
 }
 
-// GetContainerStatus returns the status of a container
-func (c *Client) GetContainerStatus(containerName string) (string, error) {
-	cmd := exec.Command("docker", "inspect", "--format", "{{.State.Status}}", containerName)
+// GetBoxStatus returns the status of a box
+func (c *Client) GetBoxStatus(boxName string) (string, error) {
+	cmd := exec.Command("docker", "inspect", "--format", "{{.State.Status}}", boxName)
 	output, err := cmd.Output()
 	if err != nil {
 		if exitError, ok := err.(*exec.ExitError); ok && exitError.ExitCode() == 1 {
 			return "not found", nil
 		}
-		return "", fmt.Errorf("failed to inspect container: %w", err)
+		return "", fmt.Errorf("failed to inspect box: %w", err)
 	}
 	return strings.TrimSpace(string(output)), nil
 }
 
-// AttachShell attaches an interactive shell to a container using docker exec
-func AttachShell(containerName string) error {
-	// Set environment variables for the container session
+// AttachShell attaches an interactive shell to a box using docker exec
+func AttachShell(boxName string) error {
+	// Set environment variables for the box session
 	cmd := exec.Command("docker", "exec", "-it",
-		"-e", fmt.Sprintf("DEVBOX_CONTAINER_NAME=%s", containerName),
-		containerName, "/bin/bash", "-c",
-		"export PS1='devbox(\\$PROJECT_NAME):\\w\\$ '; exec /bin/bash --norc")
+		"-e", fmt.Sprintf("DEVBOX_BOX_NAME=%s", boxName),
+		boxName, "/bin/bash", "-c",
+		"export PS1='devbox(\\$PROJECT_NAME):\\w\\$ '; exec /bin/bash")
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -263,9 +293,9 @@ func AttachShell(containerName string) error {
 	return nil
 }
 
-// RunCommand runs a command in a container using docker exec
-func RunCommand(containerName string, command []string) error {
-	args := append([]string{"exec", "-it", containerName}, command...)
+// RunCommand runs a command in a box using docker exec
+func RunCommand(boxName string, command []string) error {
+	args := append([]string{"exec", "-it", boxName}, command...)
 	cmd := exec.Command("docker", args...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
@@ -277,15 +307,15 @@ func RunCommand(containerName string, command []string) error {
 	return nil
 }
 
-// WaitForContainer waits for a container to be running
-func (c *Client) WaitForContainer(containerName string, timeout time.Duration) error {
+// WaitForBox waits for a box to be running
+func (c *Client) WaitForBox(boxName string, timeout time.Duration) error {
 	start := time.Now()
 	for {
 		if time.Since(start) > timeout {
-			return fmt.Errorf("timeout waiting for container to be ready")
+			return fmt.Errorf("timeout waiting for box to be ready")
 		}
 
-		status, err := c.GetContainerStatus(containerName)
+		status, err := c.GetBoxStatus(boxName)
 		if err != nil {
 			return err
 		}
@@ -298,22 +328,22 @@ func (c *Client) WaitForContainer(containerName string, timeout time.Duration) e
 	}
 }
 
-// ContainerInfo represents container information
-type ContainerInfo struct {
+// BoxInfo represents box information
+type BoxInfo struct {
 	Names  []string
 	Status string
 	Image  string
 }
 
-// ListContainers lists all containers with the devbox prefix
-func (c *Client) ListContainers() ([]ContainerInfo, error) {
+// ListBoxs lists all boxs with the devbox prefix
+func (c *Client) ListBoxs() ([]BoxInfo, error) {
 	cmd := exec.Command("docker", "ps", "-a", "--format", "{{.Names}}\t{{.Status}}\t{{.Image}}")
 	output, err := cmd.Output()
 	if err != nil {
-		return nil, fmt.Errorf("failed to list containers: %w", err)
+		return nil, fmt.Errorf("failed to list boxs: %w", err)
 	}
 
-	var containers []ContainerInfo
+	var boxs []BoxInfo
 	scanner := bufio.NewScanner(bytes.NewReader(output))
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -328,7 +358,7 @@ func (c *Client) ListContainers() ([]ContainerInfo, error) {
 
 		name := parts[0]
 		if strings.HasPrefix(name, "devbox_") {
-			containers = append(containers, ContainerInfo{
+			boxs = append(boxs, BoxInfo{
 				Names:  []string{name},
 				Status: parts[1],
 				Image:  parts[2],
@@ -336,5 +366,5 @@ func (c *Client) ListContainers() ([]ContainerInfo, error) {
 		}
 	}
 
-	return containers, scanner.Err()
+	return boxs, scanner.Err()
 }

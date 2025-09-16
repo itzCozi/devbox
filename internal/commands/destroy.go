@@ -11,8 +11,8 @@ import (
 
 var destroyCmd = &cobra.Command{
 	Use:   "destroy <project>",
-	Short: "Stop and remove a project container",
-	Long: `Stop and remove the Docker container for the specified project.
+	Short: "Stop and remove a project box",
+	Long: `Stop and remove the Docker box for the specified project.
 Optionally delete the project folder with --force.`,
 	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -37,7 +37,7 @@ Optionally delete the project folder with --force.`,
 
 		// Confirm destruction unless force flag is set
 		if !forceFlag {
-			fmt.Printf("This will destroy the container '%s' for project '%s'.\n", project.ContainerName, projectName)
+			fmt.Printf("This will destroy the box '%s' for project '%s'.\n", project.BoxName, projectName)
 			fmt.Printf("The project files in '%s' will be preserved.\n", project.WorkspacePath)
 			fmt.Print("Are you sure? (y/N): ")
 
@@ -54,26 +54,26 @@ Optionally delete the project folder with --force.`,
 			}
 		}
 
-		// Check if container exists
-		exists, err = dockerClient.ContainerExists(project.ContainerName)
+		// Check if box exists
+		exists, err = dockerClient.BoxExists(project.BoxName)
 		if err != nil {
-			return fmt.Errorf("failed to check container status: %w", err)
+			return fmt.Errorf("failed to check box status: %w", err)
 		}
 
 		if exists {
-			// Stop container
-			fmt.Printf("Stopping container '%s'...\n", project.ContainerName)
-			if err := dockerClient.StopContainer(project.ContainerName); err != nil {
-				fmt.Printf("Warning: failed to stop container: %v\n", err)
+			// Stop box
+			fmt.Printf("Stopping box '%s'...\n", project.BoxName)
+			if err := dockerClient.StopBox(project.BoxName); err != nil {
+				fmt.Printf("Warning: failed to stop box: %v\n", err)
 			}
 
-			// Remove container
-			fmt.Printf("Removing container '%s'...\n", project.ContainerName)
-			if err := dockerClient.RemoveContainer(project.ContainerName); err != nil {
-				return fmt.Errorf("failed to remove container: %w", err)
+			// Remove box
+			fmt.Printf("Removing box '%s'...\n", project.BoxName)
+			if err := dockerClient.RemoveBox(project.BoxName); err != nil {
+				return fmt.Errorf("failed to remove box: %w", err)
 			}
 		} else {
-			fmt.Printf("Container '%s' not found (already removed)\n", project.ContainerName)
+			fmt.Printf("Box '%s' not found (already removed)\n", project.BoxName)
 		}
 
 		// Remove project from configuration

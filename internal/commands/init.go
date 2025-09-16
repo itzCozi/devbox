@@ -13,8 +13,8 @@ import (
 var initCmd = &cobra.Command{
 	Use:   "init <project>",
 	Short: "Initialize a new devbox project",
-	Long: `Create a new devbox project with its own Docker container.
-This will create a project directory and a corresponding Docker container.`,
+	Long: `Create a new devbox project with its own Docker box.
+This will create a project directory and a corresponding Docker box.`,
 	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		projectName := args[0]
@@ -48,59 +48,59 @@ This will create a project directory and a corresponding Docker container.`,
 
 		fmt.Printf("Created workspace directory: %s\n", workspacePath)
 
-		// Define container settings
-		containerName := fmt.Sprintf("devbox_%s", projectName)
+		// Define box settings
+		boxName := fmt.Sprintf("devbox_%s", projectName)
 		baseImage := "ubuntu:22.04" // Default to Ubuntu 22.04
-		workspaceContainer := "/workspace"
+		workspaceBox := "/workspace"
 
 		// Pull the base image
-		fmt.Printf("Setting up container '%s'...\n", containerName)
+		fmt.Printf("Setting up box '%s'...\n", boxName)
 		if err := dockerClient.PullImage(baseImage); err != nil {
 			return fmt.Errorf("failed to pull base image: %w", err)
 		}
 
-		// Remove existing container if force flag is set
+		// Remove existing box if force flag is set
 		if forceFlag {
-			exists, err := dockerClient.ContainerExists(containerName)
+			exists, err := dockerClient.BoxExists(boxName)
 			if err != nil {
-				return fmt.Errorf("failed to check container existence: %w", err)
+				return fmt.Errorf("failed to check box existence: %w", err)
 			}
 			if exists {
-				fmt.Printf("Removing existing container '%s'...\n", containerName)
-				dockerClient.StopContainer(containerName)
-				if err := dockerClient.RemoveContainer(containerName); err != nil {
-					return fmt.Errorf("failed to remove existing container: %w", err)
+				fmt.Printf("Removing existing box '%s'...\n", boxName)
+				dockerClient.StopBox(boxName)
+				if err := dockerClient.RemoveBox(boxName); err != nil {
+					return fmt.Errorf("failed to remove existing box: %w", err)
 				}
 			}
 		}
 
-		// Create container
-		containerID, err := dockerClient.CreateContainer(containerName, baseImage, workspacePath, workspaceContainer)
+		// Create box
+		boxID, err := dockerClient.CreateBox(boxName, baseImage, workspacePath, workspaceBox)
 		if err != nil {
-			return fmt.Errorf("failed to create container: %w", err)
+			return fmt.Errorf("failed to create box: %w", err)
 		}
 
-		// Start container
-		if err := dockerClient.StartContainer(containerID); err != nil {
-			return fmt.Errorf("failed to start container: %w", err)
+		// Start box
+		if err := dockerClient.StartBox(boxID); err != nil {
+			return fmt.Errorf("failed to start box: %w", err)
 		}
 
-		// Wait for container to be ready
-		fmt.Printf("Starting container...\n")
-		if err := dockerClient.WaitForContainer(containerName, 30*time.Second); err != nil {
-			return fmt.Errorf("container failed to start: %w", err)
+		// Wait for box to be ready
+		fmt.Printf("Starting box...\n")
+		if err := dockerClient.WaitForBox(boxName, 30*time.Second); err != nil {
+			return fmt.Errorf("box failed to start: %w", err)
 		}
 
-		// Setup devbox commands inside the container
-		fmt.Printf("Setting up devbox commands in container...\n")
-		if err := dockerClient.SetupDevboxInContainer(containerName, projectName); err != nil {
-			return fmt.Errorf("failed to setup devbox in container: %w", err)
+		// Setup devbox commands inside the box
+		fmt.Printf("Setting up devbox commands in box...\n")
+		if err := dockerClient.SetupDevboxInBox(boxName, projectName); err != nil {
+			return fmt.Errorf("failed to setup devbox in box: %w", err)
 		}
 
 		// Create project configuration
 		project := &config.Project{
 			Name:          projectName,
-			ContainerName: containerName,
+			BoxName:       boxName,
 			BaseImage:     baseImage,
 			WorkspacePath: workspacePath,
 			Status:        "running",
@@ -114,7 +114,7 @@ This will create a project directory and a corresponding Docker container.`,
 
 		fmt.Printf("✅ Project '%s' initialized successfully!\n", projectName)
 		fmt.Printf("📁 Workspace: %s\n", workspacePath)
-		fmt.Printf("🐳 Container: %s\n", containerName)
+		fmt.Printf("🐳 Box: %s\n", boxName)
 		fmt.Printf("\nNext steps:\n")
 		fmt.Printf("  devbox shell %s    # Open interactive shell\n", projectName)
 		fmt.Printf("  devbox run %s <cmd> # Run a command\n", projectName)
