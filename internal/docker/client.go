@@ -86,6 +86,100 @@ func (c *Client) StartContainer(containerID string) error {
 	return nil
 }
 
+// SetupDevboxInContainer installs the devbox wrapper script inside the container
+func (c *Client) SetupDevboxInContainer(containerName, projectName string) error {
+	// Create the wrapper script content
+	wrapperScript := `#!/bin/bash
+
+# devbox-wrapper.sh
+# This script provides devbox commands inside the container
+
+CONTAINER_NAME="` + containerName + `"
+PROJECT_NAME="` + projectName + `"
+
+case "$1" in
+    "exit"|"quit")
+        echo "👋 Exiting devbox shell for project '$PROJECT_NAME'"
+        exit 0
+        ;;
+    "status"|"info")
+        echo "📊 Devbox Container Status"
+        echo "Project: $PROJECT_NAME"
+        echo "Container: $CONTAINER_NAME"
+        echo "Workspace: /workspace"
+        echo "Host: $(cat /etc/hostname)"
+        echo "User: $(whoami)"
+        echo "Working Directory: $(pwd)"
+        echo ""
+        echo "💡 Available devbox commands inside container:"
+        echo "  devbox exit     - Exit the shell"
+        echo "  devbox status   - Show container information"
+        echo "  devbox help     - Show this help"
+        ;;
+    "help"|"--help"|"-h")
+        echo "🚀 Devbox Container Commands"
+        echo ""
+        echo "Available commands inside the container:"
+        echo "  devbox exit         - Exit the devbox shell"
+        echo "  devbox status       - Show container and project information"  
+        echo "  devbox help         - Show this help message"
+        echo ""
+        echo "📁 Your project files are in: /workspace"
+        echo "🐧 You're in an Ubuntu container with full package management"
+        echo ""
+        echo "Examples:"
+        echo "  devbox exit                    # Exit to host"
+        echo "  devbox status                  # Check container info"
+        echo ""
+        echo "💡 Tip: Files in /workspace are shared with your host system"
+        ;;
+    "version")
+        echo "devbox container wrapper v1.0"
+        echo "Container: $CONTAINER_NAME"
+        echo "Project: $PROJECT_NAME"
+        ;;
+    "")
+        echo "❌ Missing command. Use 'devbox help' for available commands."
+        exit 1
+        ;;
+    *)
+        echo "❌ Unknown devbox command: $1"
+        echo "💡 Use 'devbox help' to see available commands inside the container"
+        echo ""
+        echo "Available commands:"
+        echo "  exit, status, help, version"
+        exit 1
+        ;;
+esac`
+
+	// Install the wrapper script in the container
+	installCmd := fmt.Sprintf(`echo '%s' > /usr/local/bin/devbox && chmod +x /usr/local/bin/devbox`, wrapperScript)
+
+	cmd := exec.Command("docker", "exec", containerName, "bash", "-c", installCmd)
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("failed to install devbox wrapper in container: %w", err)
+	}
+
+	// Add a welcome message to .bashrc
+	welcomeCmd := `echo '
+# Devbox welcome message  
+if [ -t 1 ]; then
+    echo "🚀 Welcome to devbox project: ` + projectName + `"
+    echo "📁 Your files are in: /workspace"
+    echo "💡 Type 'devbox help' for available commands"
+    echo "🚪 Type 'devbox exit' to leave the container"
+    echo ""
+fi' >> /root/.bashrc`
+
+	cmd = exec.Command("docker", "exec", containerName, "bash", "-c", welcomeCmd)
+	if err := cmd.Run(); err != nil {
+		// Don't fail the whole setup if welcome message fails
+		fmt.Printf("Warning: failed to add welcome message: %v\n", err)
+	}
+
+	return nil
+}
+
 // StopContainer stops a Docker container
 func (c *Client) StopContainer(containerName string) error {
 	cmd := exec.Command("docker", "stop", containerName)

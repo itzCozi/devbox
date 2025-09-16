@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+	"os/exec"
 
 	"github.com/spf13/cobra"
 
@@ -52,6 +53,15 @@ var shellCmd = &cobra.Command{
 			fmt.Printf("Starting container '%s'...\n", project.ContainerName)
 			if err := dockerClient.StartContainer(project.ContainerName); err != nil {
 				return fmt.Errorf("failed to start container: %w", err)
+			}
+		}
+
+		// Ensure devbox wrapper is installed in the container
+		checkCmd := exec.Command("docker", "exec", project.ContainerName, "test", "-f", "/usr/local/bin/devbox")
+		if err := checkCmd.Run(); err != nil {
+			fmt.Printf("Installing devbox commands in container...\n")
+			if err := dockerClient.SetupDevboxInContainer(project.ContainerName, projectName); err != nil {
+				fmt.Printf("Warning: failed to setup devbox commands: %v\n", err)
 			}
 		}
 

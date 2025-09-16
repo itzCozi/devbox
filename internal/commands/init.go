@@ -91,6 +91,12 @@ This will create a project directory and a corresponding Docker container.`,
 			return fmt.Errorf("container failed to start: %w", err)
 		}
 
+		// Setup devbox commands inside the container
+		fmt.Printf("Setting up devbox commands in container...\n")
+		if err := dockerClient.SetupDevboxInContainer(containerName, projectName); err != nil {
+			return fmt.Errorf("failed to setup devbox in container: %w", err)
+		}
+
 		// Create project configuration
 		project := &config.Project{
 			Name:          projectName,
