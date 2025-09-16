@@ -2,7 +2,6 @@ package commands
 
 import (
 	"fmt"
-	"os/exec"
 
 	"github.com/spf13/cobra"
 
@@ -56,13 +55,10 @@ var shellCmd = &cobra.Command{
 			}
 		}
 
-		// Ensure devbox wrapper is installed in the container
-		checkCmd := exec.Command("docker", "exec", project.ContainerName, "test", "-f", "/usr/local/bin/devbox")
-		if err := checkCmd.Run(); err != nil {
-			fmt.Printf("Installing devbox commands in container...\n")
-			if err := dockerClient.SetupDevboxInContainer(project.ContainerName, projectName); err != nil {
-				fmt.Printf("Warning: failed to setup devbox commands: %v\n", err)
-			}
+		// Always ensure devbox wrapper is up to date in the container
+		fmt.Printf("Setting up devbox commands in container...\n")
+		if err := dockerClient.SetupDevboxInContainer(project.ContainerName, projectName); err != nil {
+			return fmt.Errorf("failed to setup devbox in container: %w", err)
 		}
 
 		// Attach shell
