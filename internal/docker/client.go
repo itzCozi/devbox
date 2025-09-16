@@ -71,7 +71,7 @@ func (c *Client) CreateBox(name, image, workspaceHost, workspaceBox string) (str
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
-	
+
 	if err := cmd.Run(); err != nil {
 		stderrStr := strings.TrimSpace(stderr.String())
 		if stderrStr != "" {
@@ -89,7 +89,7 @@ func (c *Client) StartBox(boxID string) error {
 	cmd := exec.Command("docker", "start", boxID)
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
-	
+
 	if err := cmd.Run(); err != nil {
 		stderrStr := strings.TrimSpace(stderr.String())
 		if stderrStr != "" {
@@ -355,7 +355,7 @@ func (c *Client) ListBoxs() ([]BoxInfo, error) {
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
-	
+
 	if err := cmd.Run(); err != nil {
 		stderrStr := strings.TrimSpace(stderr.String())
 		if stderrStr != "" {

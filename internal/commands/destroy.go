@@ -83,7 +83,7 @@ Optionally delete the project folder with --force.`,
 		}
 
 		fmt.Printf("✅ Project '%s' destroyed successfully!\n", projectName)
-		
+
 		// Check if project directory exists before suggesting removal
 		if _, err := os.Stat(project.WorkspacePath); err == nil {
 			fmt.Printf("📁 Project files preserved in: %s\n", project.WorkspacePath)
