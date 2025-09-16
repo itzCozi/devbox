@@ -104,9 +104,8 @@ func (c *Client) StartBox(boxID string) error {
 func (c *Client) SetupDevboxInBox(boxName, projectName string) error {
 	// First, run system updates to ensure packages are up to date
 	fmt.Printf("Updating system packages in box...\n")
-	updateCmd := exec.Command("docker", "exec", boxName, "bash", "-c", "apt update -y && apt full-upgrade -y")
-	updateCmd.Stdout = os.Stdout
-	updateCmd.Stderr = os.Stderr
+	updateCmd := exec.Command("docker", "exec", boxName, "bash", "-c", "apt update -qq && apt full-upgrade -qq -y")
+	// Suppress apt output - don't redirect to console
 	if err := updateCmd.Run(); err != nil {
 		fmt.Printf("Warning: failed to update packages in box: %v\n", err)
 		// Don't fail the whole setup if package update fails
@@ -257,8 +256,16 @@ func (c *Client) StopBox(boxName string) error {
 
 // RemoveBox removes a Docker box
 func (c *Client) RemoveBox(boxName string) error {
+	// Use -f flag to force removal even if container is running
 	cmd := exec.Command("docker", "rm", "-f", boxName)
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+
 	if err := cmd.Run(); err != nil {
+		stderrStr := strings.TrimSpace(stderr.String())
+		if stderrStr != "" {
+			return fmt.Errorf("failed to remove box: %s", stderrStr)
+		}
 		return fmt.Errorf("failed to remove box: %w", err)
 	}
 	return nil
