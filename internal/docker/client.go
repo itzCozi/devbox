@@ -68,19 +68,33 @@ func (c *Client) CreateBox(name, image, workspaceHost, workspaceBox string) (str
 	}
 
 	cmd := exec.Command("docker", args...)
-	output, err := cmd.Output()
-	if err != nil {
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+	
+	if err := cmd.Run(); err != nil {
+		stderrStr := strings.TrimSpace(stderr.String())
+		if stderrStr != "" {
+			return "", fmt.Errorf("failed to create box: %s", stderrStr)
+		}
 		return "", fmt.Errorf("failed to create box: %w", err)
 	}
 
-	boxID := strings.TrimSpace(string(output))
+	boxID := strings.TrimSpace(stdout.String())
 	return boxID, nil
 }
 
 // StartBox starts a Docker box
 func (c *Client) StartBox(boxID string) error {
 	cmd := exec.Command("docker", "start", boxID)
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+	
 	if err := cmd.Run(); err != nil {
+		stderrStr := strings.TrimSpace(stderr.String())
+		if stderrStr != "" {
+			return fmt.Errorf("failed to start box: %s", stderrStr)
+		}
 		return fmt.Errorf("failed to start box: %w", err)
 	}
 	return nil
@@ -338,13 +352,20 @@ type BoxInfo struct {
 // ListBoxs lists all boxs with the devbox prefix
 func (c *Client) ListBoxs() ([]BoxInfo, error) {
 	cmd := exec.Command("docker", "ps", "-a", "--format", "{{.Names}}\t{{.Status}}\t{{.Image}}")
-	output, err := cmd.Output()
-	if err != nil {
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+	
+	if err := cmd.Run(); err != nil {
+		stderrStr := strings.TrimSpace(stderr.String())
+		if stderrStr != "" {
+			return nil, fmt.Errorf("failed to list boxs: %s", stderrStr)
+		}
 		return nil, fmt.Errorf("failed to list boxs: %w", err)
 	}
 
 	var boxs []BoxInfo
-	scanner := bufio.NewScanner(bytes.NewReader(output))
+	scanner := bufio.NewScanner(&stdout)
 	for scanner.Scan() {
 		line := scanner.Text()
 		if line == "" {

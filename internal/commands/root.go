@@ -3,6 +3,7 @@ package commands
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"regexp"
 	"runtime"
 
@@ -102,5 +103,5 @@ func getWorkspacePath(projectName string) (string, error) {
 		return "", fmt.Errorf("failed to get home directory: %w", err)
 	}
 
-	return fmt.Sprintf("%s/devbox/%s", homeDir, projectName), nil
+	return filepath.Join(homeDir, "devbox", projectName), nil
 }
