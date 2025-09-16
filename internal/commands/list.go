@@ -53,10 +53,10 @@ var listCmd = &cobra.Command{
 				status = containerStatus[project.ContainerName]
 			}
 
-			fmt.Printf("%-20s %-20s %-15s %s\n", 
-				project.Name, 
-				project.ContainerName, 
-				status, 
+			fmt.Printf("%-20s %-20s %-15s %s\n",
+				project.Name,
+				project.ContainerName,
+				status,
 				project.WorkspacePath)
 		}
 

@@ -46,7 +46,7 @@ func (c *Client) PullImage(image string) error {
 	cmd = exec.Command("docker", "pull", image)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	
+
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("failed to pull image %s: %w", image, err)
 	}
@@ -200,12 +200,12 @@ func (c *Client) ListContainers() ([]ContainerInfo, error) {
 		if line == "" {
 			continue
 		}
-		
+
 		parts := strings.Split(line, "\t")
 		if len(parts) != 3 {
 			continue
 		}
-		
+
 		name := parts[0]
 		if strings.HasPrefix(name, "devbox_") {
 			containers = append(containers, ContainerInfo{
