@@ -37,16 +37,6 @@ print_header() {
     echo -e "${NC}"
 }
 
-
-check_root() {
-    if [[ $EUID -eq 0 ]]; then
-        print_error "This script should not be run as root. Please run as a regular user."
-        print_info "The script will prompt for sudo when needed."
-        exit 1
-    fi
-}
-
-
 check_os() {
     print_info "Checking operating system compatibility..."
 
@@ -293,10 +283,7 @@ print_next_steps() {
 
 main() {
     print_header
-
-    check_root
     check_os
-
     print_info "Installing dependencies..."
     install_git
     install_make
