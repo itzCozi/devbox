@@ -339,6 +339,42 @@ devbox maintenance --auto-repair
 devbox maintenance --force --rebuild
 ```
 
+---
+
+##### `devbox update`
+
+Pull the latest base image(s) and rebuild environment container(s).
+
+This command replaces containers to ensure they are based on the newest upstream images, while preserving your workspace files on the host.
+
+**Syntax:**
+```bash
+devbox update [project]
+```
+
+**Behavior:**
+- When a project is specified, only that environment is updated
+- With no project, all registered projects are updated
+- Pulls the latest base image, recreates the container with current devbox.json config, and re-runs setup commands
+
+**Options:**
+- None currently. Uses your existing configuration in `devbox.json` if present.
+
+**Examples:**
+```bash
+# Update a single project
+devbox update myproject
+
+# Update all projects
+devbox update
+```
+
+**Notes:**
+- Your files remain in ~/devbox/<project>/ and are re-mounted into the new container
+- If the project has a devbox.json, its settings (ports, env, volumes, etc.) are applied on rebuild
+- System packages inside the container are updated as part of the rebuild
+ - If the container exists, it will be stopped and replaced; if missing, it will be created
+
 ## Exit Codes
 
 ---

@@ -118,6 +118,36 @@ devbox maintenance --rebuild
 devbox maintenance --force --health-check --update --restart
 ```
 
+## Update Command
+---
+
+Use the `devbox update` command to rebuild environment containers from the latest base images. This is the recommended way to apply upstream image updates or configuration changes that affect the base image or setup commands.
+
+##### Why use `devbox update`?
+
+- Pulls the newest base image(s)
+- Recreates the container with your current `devbox.json` configuration
+- Automatically runs a full system update inside the container
+- Re-runs your `setup_commands` to ensure tools are present
+- Preserves your project files on the host at `~/devbox/<project>/`
+
+##### Usage
+
+```bash
+# Update a single project
+devbox update myproject
+
+# Update all projects
+devbox update
+```
+
+##### When to use maintenance vs update
+
+- `devbox maintenance --update`: Update system packages inside existing containers
+- `devbox update`: Rebuild containers from the latest base images and re-apply configuration
+
+If you're changing `base_image` in `devbox.json` or want to ensure you are using the latest upstream image, use `devbox update`.
+
 ## Health Checks
 ---
 

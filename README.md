@@ -54,17 +54,6 @@ curl -fsSL https://devbox.ar0.eu/install.sh | bash
    devbox destroy my-project
    ```
 
-## Commands
-
-- `devbox init <name>` - Initialize a new development environment
-- `devbox shell <name>` - Enter an interactive shell in the environment
-- `devbox run <name> <command>` - Run a command in the environment
-- `devbox list` - List all environments
-- `devbox destroy <name>` - Remove an environment
-- `devbox config` - Manage configuration
-- `devbox cleanup` - Clean up unused Docker resources
-- `devbox maintenance` - Perform maintenance tasks
-
 ## Documentation
 
 For detailed documentation, guides, and examples, visit:

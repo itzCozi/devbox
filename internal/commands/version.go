@@ -20,5 +20,5 @@ var versionCmd = &cobra.Command{
 }
 
 func init() {
-	// No flags needed for the version command
+
 }
