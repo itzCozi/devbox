@@ -16,24 +16,20 @@ var shellCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		projectName := args[0]
 
-		// Validate project name
 		if err := validateProjectName(projectName); err != nil {
 			return err
 		}
 
-		// Load configuration
 		cfg, err := configManager.Load()
 		if err != nil {
 			return fmt.Errorf("failed to load configuration: %w", err)
 		}
 
-		// Check if project exists
 		project, exists := cfg.GetProject(projectName)
 		if !exists {
 			return fmt.Errorf("project '%s' not found. Run 'devbox init %s' first", projectName, projectName)
 		}
 
-		// Check if box exists and is running
 		exists, err = dockerClient.BoxExists(project.BoxName)
 		if err != nil {
 			return fmt.Errorf("failed to check box status: %w", err)
@@ -55,13 +51,11 @@ var shellCmd = &cobra.Command{
 			}
 		}
 
-		// Always ensure devbox wrapper is up to date in the box
 		fmt.Printf("Setting up devbox commands in box...\n")
 		if err := dockerClient.SetupDevboxInBox(project.BoxName, projectName); err != nil {
 			return fmt.Errorf("failed to setup devbox in box: %w", err)
 		}
 
-		// Attach shell
 		fmt.Printf("Attaching to box '%s'...\n", project.BoxName)
 		if err := docker.AttachShell(project.BoxName); err != nil {
 			return fmt.Errorf("failed to attach shell: %w", err)

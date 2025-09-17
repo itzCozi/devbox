@@ -19,7 +19,6 @@ var (
 	forceFlag     bool
 )
 
-// rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "devbox",
 	Short: "Isolated development environments using Docker boxs",
@@ -28,24 +27,21 @@ packages with apt they live only inside the project box and don't affect
 your host system. Each project has its own Docker box, while your code 
 stays in a flat folder on the host.`,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-		// Check if running on Debian/Ubuntu
+
 		if runtime.GOOS != "linux" {
 			return fmt.Errorf("devbox only runs on Debian/Ubuntu Linux")
 		}
 
-		// Initialize config manager
 		var err error
 		configManager, err = config.NewConfigManager()
 		if err != nil {
 			return fmt.Errorf("failed to initialize config: %w", err)
 		}
 
-		// Check Docker availability
 		if err := docker.IsDockerAvailable(); err != nil {
 			return err
 		}
 
-		// Initialize Docker client
 		dockerClient, err = docker.NewClient()
 		if err != nil {
 			return fmt.Errorf("failed to initialize Docker client: %w", err)
@@ -60,30 +56,27 @@ stays in a flat folder on the host.`,
 	},
 }
 
-// Execute adds all child commands to the root command and sets flags appropriately.
 func Execute() error {
 	return rootCmd.Execute()
 }
 
 func init() {
-	// Add subcommands
+
 	rootCmd.AddCommand(initCmd)
 	rootCmd.AddCommand(shellCmd)
 	rootCmd.AddCommand(runCmd)
 	rootCmd.AddCommand(destroyCmd)
 	rootCmd.AddCommand(listCmd)
+	rootCmd.AddCommand(configCmd)
 
-	// Global flags
 	destroyCmd.Flags().BoolVarP(&forceFlag, "force", "f", false, "Force operation without confirmation")
 }
 
-// validateProjectName validates that a project name is safe to use
 func validateProjectName(name string) error {
 	if name == "" {
 		return fmt.Errorf("project name cannot be empty")
 	}
 
-	// Allow alphanumeric, hyphens, and underscores
 	matched, err := regexp.MatchString("^[a-zA-Z0-9_-]+$", name)
 	if err != nil {
 		return fmt.Errorf("error validating project name: %w", err)
@@ -96,7 +89,6 @@ func validateProjectName(name string) error {
 	return nil
 }
 
-// getWorkspacePath returns the workspace path for a project
 func getWorkspacePath(projectName string) (string, error) {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {

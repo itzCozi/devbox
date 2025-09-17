@@ -10,20 +10,16 @@ import (
 	"time"
 )
 
-// Client wraps Docker CLI functionality
 type Client struct{}
 
-// NewClient creates a new Docker client
 func NewClient() (*Client, error) {
 	return &Client{}, nil
 }
 
-// Close closes the Docker client (no-op for CLI client)
 func (c *Client) Close() error {
 	return nil
 }
 
-// IsDockerAvailable checks if Docker is installed and running
 func IsDockerAvailable() error {
 	cmd := exec.Command("docker", "version")
 	if err := cmd.Run(); err != nil {
@@ -32,13 +28,12 @@ func IsDockerAvailable() error {
 	return nil
 }
 
-// PullImage pulls a Docker image if not already present
 func (c *Client) PullImage(image string) error {
-	// Check if image exists locally
+
 	cmd := exec.Command("docker", "images", "-q", image)
 	output, err := cmd.Output()
 	if err == nil && len(strings.TrimSpace(string(output))) > 0 {
-		// Image already exists
+
 		return nil
 	}
 
@@ -54,8 +49,11 @@ func (c *Client) PullImage(image string) error {
 	return nil
 }
 
-// CreateBox creates a new Docker box
 func (c *Client) CreateBox(name, image, workspaceHost, workspaceBox string) (string, error) {
+	return c.CreateBoxWithConfig(name, image, workspaceHost, workspaceBox, nil)
+}
+
+func (c *Client) CreateBoxWithConfig(name, image, workspaceHost, workspaceBox string, projectConfig interface{}) (string, error) {
 	args := []string{
 		"create",
 		"--name", name,
@@ -63,9 +61,15 @@ func (c *Client) CreateBox(name, image, workspaceHost, workspaceBox string) (str
 		"--workdir", workspaceBox,
 		"--restart", "unless-stopped",
 		"-it",
-		image,
-		"sleep", "infinity",
 	}
+
+	if projectConfig != nil {
+		if config, ok := projectConfig.(map[string]interface{}); ok {
+			args = c.applyProjectConfigToArgs(args, config)
+		}
+	}
+
+	args = append(args, image, "sleep", "infinity")
 
 	cmd := exec.Command("docker", args...)
 	var stdout, stderr bytes.Buffer
@@ -84,7 +88,118 @@ func (c *Client) CreateBox(name, image, workspaceHost, workspaceBox string) (str
 	return boxID, nil
 }
 
-// StartBox starts a Docker box
+func (c *Client) applyProjectConfigToArgs(args []string, config map[string]interface{}) []string {
+
+	if env, ok := config["environment"].(map[string]interface{}); ok {
+		for key, value := range env {
+			if valueStr, ok := value.(string); ok {
+				args = append(args, "-e", fmt.Sprintf("%s=%s", key, valueStr))
+			}
+		}
+	}
+
+	if ports, ok := config["ports"].([]interface{}); ok {
+		for _, port := range ports {
+			if portStr, ok := port.(string); ok {
+				args = append(args, "-p", portStr)
+			}
+		}
+	}
+
+	if volumes, ok := config["volumes"].([]interface{}); ok {
+		for _, volume := range volumes {
+			if volumeStr, ok := volume.(string); ok {
+				args = append(args, "-v", volumeStr)
+			}
+		}
+	}
+
+	if workingDir, ok := config["working_dir"].(string); ok && workingDir != "" {
+		args = append(args, "--workdir", workingDir)
+	}
+
+	if user, ok := config["user"].(string); ok && user != "" {
+		args = append(args, "--user", user)
+	}
+
+	if capabilities, ok := config["capabilities"].([]interface{}); ok {
+		for _, cap := range capabilities {
+			if capStr, ok := cap.(string); ok {
+				args = append(args, "--cap-add", capStr)
+			}
+		}
+	}
+
+	if labels, ok := config["labels"].(map[string]interface{}); ok {
+		for key, value := range labels {
+			if valueStr, ok := value.(string); ok {
+				args = append(args, "--label", fmt.Sprintf("%s=%s", key, valueStr))
+			}
+		}
+	}
+
+	if network, ok := config["network"].(string); ok && network != "" {
+		args = append(args, "--network", network)
+	}
+
+	if resources, ok := config["resources"].(map[string]interface{}); ok {
+		if cpus, ok := resources["cpus"].(string); ok && cpus != "" {
+			args = append(args, "--cpus", cpus)
+		}
+		if memory, ok := resources["memory"].(string); ok && memory != "" {
+			args = append(args, "--memory", memory)
+		}
+	}
+
+	if healthCheck, ok := config["health_check"].(map[string]interface{}); ok {
+		if test, ok := healthCheck["test"].([]interface{}); ok && len(test) > 0 {
+			var testArgs []string
+			for _, t := range test {
+				if testStr, ok := t.(string); ok {
+					testArgs = append(testArgs, testStr)
+				}
+			}
+			if len(testArgs) > 0 {
+				args = append(args, "--health-cmd", strings.Join(testArgs, " "))
+			}
+		}
+		if interval, ok := healthCheck["interval"].(string); ok && interval != "" {
+			args = append(args, "--health-interval", interval)
+		}
+		if timeout, ok := healthCheck["timeout"].(string); ok && timeout != "" {
+			args = append(args, "--health-timeout", timeout)
+		}
+		if retries, ok := healthCheck["retries"].(float64); ok && retries > 0 {
+			args = append(args, "--health-retries", fmt.Sprintf("%.0f", retries))
+		}
+	}
+
+	return args
+}
+
+func (c *Client) ExecuteSetupCommands(boxName string, commands []string) error {
+	if len(commands) == 0 {
+		return nil
+	}
+
+	fmt.Printf("Executing setup commands in box '%s'...\n", boxName)
+
+	for i, command := range commands {
+		fmt.Printf("Step %d/%d: %s\n", i+1, len(commands), command)
+
+		cmd := exec.Command("docker", "exec", boxName, "bash", "-c", command)
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+
+		if err := cmd.Run(); err != nil {
+			return fmt.Errorf("setup command failed: %s: %w", command, err)
+		}
+	}
+
+	fmt.Printf("Setup commands completed successfully!\n")
+	return nil
+}
+
 func (c *Client) StartBox(boxID string) error {
 	cmd := exec.Command("docker", "start", boxID)
 	var stderr bytes.Buffer
@@ -100,18 +215,26 @@ func (c *Client) StartBox(boxID string) error {
 	return nil
 }
 
-// SetupDevboxInBox installs the devbox wrapper script inside the box
 func (c *Client) SetupDevboxInBox(boxName, projectName string) error {
-	// First, run system updates to ensure packages are up to date
-	fmt.Printf("Updating system packages in box...\n")
-	updateCmd := exec.Command("docker", "exec", boxName, "bash", "-c", "apt update -qq && apt full-upgrade -qq -y")
-	// Suppress apt output - don't redirect to console
-	if err := updateCmd.Run(); err != nil {
-		fmt.Printf("Warning: failed to update packages in box: %v\n", err)
-		// Don't fail the whole setup if package update fails
+	return c.setupDevboxInBoxWithOptions(boxName, projectName, false)
+}
+
+func (c *Client) SetupDevboxInBoxWithUpdate(boxName, projectName string) error {
+	return c.setupDevboxInBoxWithOptions(boxName, projectName, true)
+}
+
+func (c *Client) setupDevboxInBoxWithOptions(boxName, projectName string, forceUpdate bool) error {
+
+	checkCmd := exec.Command("docker", "exec", boxName, "test", "-f", "/etc/devbox-initialized")
+	isFirstTime := checkCmd.Run() != nil
+
+	if isFirstTime {
+		markerCmd := exec.Command("docker", "exec", boxName, "touch", "/etc/devbox-initialized")
+		if err := markerCmd.Run(); err != nil {
+			fmt.Printf("Warning: failed to create initialization marker: %v\n", err)
+		}
 	}
 
-	// Create the wrapper script content with proper escaping
 	wrapperScript := `#!/bin/bash
 
 # devbox-wrapper.sh
@@ -189,8 +312,6 @@ case "$1" in
         ;;
 esac`
 
-	// Install the wrapper script in the box using a here-document to avoid quoting issues
-	// First remove any existing wrapper to ensure we get the new version
 	installCmd := `rm -f /usr/local/bin/devbox && cat > /usr/local/bin/devbox << 'DEVBOX_WRAPPER_EOF'
 ` + wrapperScript + `
 DEVBOX_WRAPPER_EOF
@@ -201,7 +322,6 @@ chmod +x /usr/local/bin/devbox`
 		return fmt.Errorf("failed to install devbox wrapper in box: %w", err)
 	}
 
-	// Clean up any existing devbox configurations in .bashrc and add new ones
 	welcomeCmd := `# Remove any existing devbox configurations
 sed -i '/# Devbox welcome message/,/^$/d' /root/.bashrc 2>/dev/null || true
 sed -i '/devbox_exit()/,/^}$/d' /root/.bashrc 2>/dev/null || true
@@ -238,14 +358,13 @@ BASHRC_EOF`
 
 	cmd = exec.Command("docker", "exec", boxName, "bash", "-c", welcomeCmd)
 	if err := cmd.Run(); err != nil {
-		// Don't fail the whole setup if welcome message fails
+
 		fmt.Printf("Warning: failed to add welcome message: %v\n", err)
 	}
 
 	return nil
 }
 
-// StopBox stops a Docker box
 func (c *Client) StopBox(boxName string) error {
 	cmd := exec.Command("docker", "stop", boxName)
 	if err := cmd.Run(); err != nil {
@@ -254,9 +373,8 @@ func (c *Client) StopBox(boxName string) error {
 	return nil
 }
 
-// RemoveBox removes a Docker box
 func (c *Client) RemoveBox(boxName string) error {
-	// Use -f flag to force removal even if container is running
+
 	cmd := exec.Command("docker", "rm", "-f", boxName)
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
@@ -271,7 +389,6 @@ func (c *Client) RemoveBox(boxName string) error {
 	return nil
 }
 
-// BoxExists checks if a box exists
 func (c *Client) BoxExists(boxName string) (bool, error) {
 	cmd := exec.Command("docker", "inspect", boxName)
 	err := cmd.Run()
@@ -284,7 +401,6 @@ func (c *Client) BoxExists(boxName string) (bool, error) {
 	return true, nil
 }
 
-// GetBoxStatus returns the status of a box
 func (c *Client) GetBoxStatus(boxName string) (string, error) {
 	cmd := exec.Command("docker", "inspect", "--format", "{{.State.Status}}", boxName)
 	output, err := cmd.Output()
@@ -297,9 +413,8 @@ func (c *Client) GetBoxStatus(boxName string) (string, error) {
 	return strings.TrimSpace(string(output)), nil
 }
 
-// AttachShell attaches an interactive shell to a box using docker exec
 func AttachShell(boxName string) error {
-	// Set environment variables for the box session
+
 	cmd := exec.Command("docker", "exec", "-it",
 		"-e", fmt.Sprintf("DEVBOX_BOX_NAME=%s", boxName),
 		boxName, "/bin/bash", "-c",
@@ -314,7 +429,6 @@ func AttachShell(boxName string) error {
 	return nil
 }
 
-// RunCommand runs a command in a box using docker exec
 func RunCommand(boxName string, command []string) error {
 	args := append([]string{"exec", "-it", boxName}, command...)
 	cmd := exec.Command("docker", args...)
@@ -328,7 +442,6 @@ func RunCommand(boxName string, command []string) error {
 	return nil
 }
 
-// WaitForBox waits for a box to be running
 func (c *Client) WaitForBox(boxName string, timeout time.Duration) error {
 	start := time.Now()
 	for {
@@ -349,14 +462,12 @@ func (c *Client) WaitForBox(boxName string, timeout time.Duration) error {
 	}
 }
 
-// BoxInfo represents box information
 type BoxInfo struct {
 	Names  []string
 	Status string
 	Image  string
 }
 
-// ListBoxs lists all boxs with the devbox prefix
 func (c *Client) ListBoxs() ([]BoxInfo, error) {
 	cmd := exec.Command("docker", "ps", "-a", "--format", "{{.Names}}\t{{.Status}}\t{{.Image}}")
 	var stdout, stderr bytes.Buffer

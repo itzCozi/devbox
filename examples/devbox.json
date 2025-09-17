@@ -2,22 +2,45 @@
   "name": "example-project",
   "base_image": "ubuntu:22.04",
   "setup_commands": [
-    "apt update",
-    "apt install -y python3 python3-pip python3-venv nodejs npm git curl wget",
-    "pip3 install flask requests beautifulsoup4 pandas",
-    "npm install -g typescript @types/node",
+    "apt install -y python3 python3-pip python3-venv nodejs npm git curl wget build-essential",
+    "pip3 install flask requests beautifulsoup4 pandas pytest black flake8",
+    "npm install -g typescript @types/node eslint prettier",
     "echo 'Development environment setup complete!'"
   ],
   "environment": {
     "PYTHONPATH": "/workspace",
-    "NODE_ENV": "development"
+    "NODE_ENV": "development",
+    "PYTHONUNBUFFERED": "1",
+    "TZ": "UTC"
   },
   "ports": [
     "3000:3000",
     "5000:5000",
-    "8000:8000"
+    "8000:8000",
+    "8080:8080"
   ],
   "volumes": [
-    "/workspace/data:/data"
-  ]
+    "/workspace/data:/data",
+    "/workspace/logs:/var/log/app"
+  ],
+  "working_dir": "/workspace",
+  "shell": "/bin/bash",
+  "user": "root",
+  "labels": {
+    "devbox.project": "example-project",
+    "devbox.type": "development",
+    "devbox.version": "1.0"
+  },
+  "restart": "unless-stopped",
+  "resources": {
+    "cpus": "2.0",
+    "memory": "2g"
+  },
+  "health_check": {
+    "test": ["CMD", "curl", "-f", "http://localhost:5000/health", "||", "exit", "1"],
+    "interval": "30s",
+    "timeout": "10s",
+    "start_period": "5s",
+    "retries": 3
+  }
 }

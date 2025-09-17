@@ -22,29 +22,24 @@ Special usage:
 	RunE: func(cmd *cobra.Command, args []string) error {
 		projectName := args[0]
 
-		// Handle special cleanup command
 		if projectName == "--cleanup-orphaned" {
 			return cleanupOrphanedContainers()
 		}
 
-		// Validate project name
 		if err := validateProjectName(projectName); err != nil {
 			return err
 		}
 
-		// Load configuration
 		cfg, err := configManager.Load()
 		if err != nil {
 			return fmt.Errorf("failed to load configuration: %w", err)
 		}
 
-		// Check if project exists
 		project, exists := cfg.GetProject(projectName)
 		if !exists {
 			return fmt.Errorf("project '%s' not found", projectName)
 		}
 
-		// Confirm destruction unless force flag is set
 		if !forceFlag {
 			fmt.Printf("This will destroy the box '%s' for project '%s'.\n", project.BoxName, projectName)
 			fmt.Printf("Empty project directories will be automatically removed.\n")
@@ -63,24 +58,22 @@ Special usage:
 			}
 		}
 
-		// Check if box exists
 		exists, err = dockerClient.BoxExists(project.BoxName)
 		if err != nil {
 			return fmt.Errorf("failed to check box status: %w", err)
 		}
 
 		if exists {
-			// Stop and remove box (force remove will stop it automatically)
+
 			fmt.Printf("Stopping and removing box '%s'...\n", project.BoxName)
 			if err := dockerClient.RemoveBox(project.BoxName); err != nil {
 				fmt.Printf("Warning: failed to remove box: %v\n", err)
-				// Continue anyway - we still want to remove from config
+
 			}
 		} else {
 			fmt.Printf("Box '%s' not found (already removed)\n", project.BoxName)
 		}
 
-		// Remove project from configuration
 		cfg.RemoveProject(projectName)
 		if err := configManager.Save(cfg); err != nil {
 			return fmt.Errorf("failed to save configuration: %w", err)
@@ -88,9 +81,8 @@ Special usage:
 
 		fmt.Printf("Project '%s' destroyed successfully!\n", projectName)
 
-		// Check if project directory exists and handle removal
 		if _, err := os.Stat(project.WorkspacePath); err == nil {
-			// Check if directory is empty
+
 			isEmpty, err := isDirEmpty(project.WorkspacePath)
 			if err != nil {
 				fmt.Printf("Warning: failed to check if directory is empty: %v\n", err)
@@ -113,7 +105,6 @@ Special usage:
 	},
 }
 
-// isDirEmpty checks if a directory is empty
 func isDirEmpty(dirPath string) (bool, error) {
 	f, err := os.Open(dirPath)
 	if err != nil {
@@ -121,36 +112,31 @@ func isDirEmpty(dirPath string) (bool, error) {
 	}
 	defer f.Close()
 
-	_, err = f.Readdirnames(1) // Try to read one entry
+	_, err = f.Readdirnames(1)
 	if err == io.EOF {
-		return true, nil // Directory is empty
+		return true, nil
 	}
-	return false, err // Directory is not empty or error occurred
+	return false, err
 }
 
-// cleanupOrphanedContainers removes devbox containers that are not tracked in config
 func cleanupOrphanedContainers() error {
 	fmt.Println("Cleaning up orphaned devbox containers...")
 
-	// Load configuration to get tracked projects
 	cfg, err := configManager.Load()
 	if err != nil {
 		return fmt.Errorf("failed to load configuration: %w", err)
 	}
 
-	// Get all devbox containers
 	boxes, err := dockerClient.ListBoxs()
 	if err != nil {
 		return fmt.Errorf("failed to list containers: %w", err)
 	}
 
-	// Build set of tracked box names
 	trackedBoxes := make(map[string]bool)
 	for _, project := range cfg.GetProjects() {
 		trackedBoxes[project.BoxName] = true
 	}
 
-	// Find orphaned containers
 	var orphanedBoxes []string
 	for _, box := range boxes {
 		for _, name := range box.Names {
@@ -171,7 +157,6 @@ func cleanupOrphanedContainers() error {
 		fmt.Printf("  - %s\n", boxName)
 	}
 
-	// Confirm cleanup unless force flag is set
 	if !forceFlag {
 		fmt.Print("\nRemove these orphaned containers? (y/N): ")
 		reader := bufio.NewReader(os.Stdin)
@@ -187,7 +172,6 @@ func cleanupOrphanedContainers() error {
 		}
 	}
 
-	// Remove orphaned containers
 	var removed, failed int
 	for _, boxName := range orphanedBoxes {
 		fmt.Printf("Removing %s...\n", boxName)
