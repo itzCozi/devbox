@@ -1,0 +1,114 @@
+name: Release
+
+on:
+  release:
+    types: [created]
+  workflow_dispatch:
+
+jobs:
+  release:
+    name: Release Build
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        include:
+          - goos: linux
+            goarch: amd64
+          - goos: linux
+            goarch: arm64
+          - goos: windows
+            goarch: amd64
+          - goos: darwin
+            goarch: amd64
+          - goos: darwin
+            goarch: arm64
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.21'
+        
+    - name: Cache Go modules
+      uses: actions/cache@v3
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+          
+    - name: Download dependencies
+      run: go mod download
+      
+    - name: Build binary
+      env:
+        GOOS: ${{ matrix.goos }}
+        GOARCH: ${{ matrix.goarch }}
+      run: |
+        mkdir -p build
+        BINARY_NAME=devbox
+        if [ "$GOOS" = "windows" ]; then
+          BINARY_NAME="${BINARY_NAME}.exe"
+        fi
+        
+        # Get version from git tag or use commit hash
+        if [ "${{ github.event_name }}" = "release" ]; then
+          VERSION=${{ github.event.release.tag_name }}
+        else
+          VERSION=$(git rev-parse --short HEAD)
+        fi
+        
+        CGO_ENABLED=0 go build \
+          -ldflags="-w -s -X main.version=${VERSION}" \
+          -o build/${BINARY_NAME}-${GOOS}-${GOARCH} \
+          ./cmd/devbox
+        
+    - name: Create archive
+      run: |
+        cd build
+        BINARY_NAME=devbox
+        if [ "${{ matrix.goos }}" = "windows" ]; then
+          BINARY_NAME="${BINARY_NAME}.exe"
+        fi
+        
+        ARCHIVE_NAME="devbox-${{ matrix.goos }}-${{ matrix.goarch }}"
+        
+        if [ "${{ matrix.goos }}" = "windows" ]; then
+          zip ${ARCHIVE_NAME}.zip ${BINARY_NAME}-${{ matrix.goos }}-${{ matrix.goarch }}
+        else
+          tar -czf ${ARCHIVE_NAME}.tar.gz ${BINARY_NAME}-${{ matrix.goos }}-${{ matrix.goarch }}
+        fi
+        
+    - name: Upload Release Asset (Linux/Darwin)
+      if: github.event_name == 'release' && matrix.goos != 'windows'
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ./build/devbox-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz
+        asset_name: devbox-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz
+        asset_content_type: application/gzip
+        
+    - name: Upload Release Asset (Windows)
+      if: github.event_name == 'release' && matrix.goos == 'windows'
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ./build/devbox-${{ matrix.goos }}-${{ matrix.goarch }}.zip
+        asset_name: devbox-${{ matrix.goos }}-${{ matrix.goarch }}.zip
+        asset_content_type: application/zip
+        
+    - name: Upload artifacts (manual trigger)
+      if: github.event_name == 'workflow_dispatch'
+      uses: actions/upload-artifact@v3
+      with:
+        name: devbox-${{ matrix.goos }}-${{ matrix.goarch }}
+        path: build/devbox-*
+        retention-days: 30

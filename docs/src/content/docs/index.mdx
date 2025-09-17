@@ -18,23 +18,23 @@ hero:
 import { Card, CardGrid } from '@astrojs/starlight/components';
 
 <CardGrid>
-  <Card title="🔒 Isolated Environments" icon="laptop">
-    Each project runs in its own Docker container, preventing dependency conflicts and keeping your host system clean.
+  <Card title="Isolated Environments" icon="laptop">
+    Each project runs in its own Docker container, preventing dependency conflicts and keeping your host system clean. Containers restart automatically and persist between reboots.
   </Card>
-  <Card title="📁 Host File Access" icon="document">
+  <Card title="Host File Access" icon="document">
     Your code stays on the host filesystem for easy editing with your favorite tools while running in isolated environments.
   </Card>
-  <Card title="🔄 Persistent Containers" icon="setting">
-    Containers restart automatically and persist between reboots, maintaining your development environment state.
-  </Card>
-  <Card title="⚡ Simple Commands" icon="rocket">
+  <Card title="Simple Commands" icon="rocket">
     Easy-to-use CLI with intuitive commands for creating, managing, and working with development environments.
   </Card>
-  <Card title="🛡️ Safety Checks" icon="approve-check">
+  <Card title="Safety Checks" icon="approve-check">
     Validates Docker installation and prevents accidental overwrites with built-in safety features.
   </Card>
-  <Card title="📋 Templates" icon="open-book">
-    Built-in templates for Python, Node.js, Go, and web development with customizable configurations.
+  <Card title="Templates & Configuration" icon="open-book">
+    Project-specific devbox.json configuration and built-in templates for Python, Node.js, Go, and web development.
+  </Card>
+  <Card title="Advanced Docker Features" icon="setting">
+    Port mapping, volume mounting, environment variables, and resource limits for powerful, customizable environments.
   </Card>
 </CardGrid>
 
@@ -55,17 +55,6 @@ cd /workspace
 echo "print('Hello from devbox!')" > hello.py
 python3 hello.py
 ```
-
-## Key Features
-
-- ✅ **Isolated environments**: Each project runs in its own Docker container
-- ✅ **Host file access**: Your code stays on the host filesystem for easy editing
-- ✅ **Persistent containers**: Containers restart automatically and persist between reboots
-- ✅ **Simple commands**: Easy-to-use CLI with intuitive commands
-- ✅ **Safety checks**: Validates Docker installation and prevents accidental overwrites
-- ✅ **Configuration files**: Project-specific `devbox.json` configuration with templates
-- ✅ **Environment templates**: Built-in templates for Python, Node.js, Go, and web development
-- ✅ **Advanced Docker features**: Port mapping, volume mounting, environment variables, resource limits
 
 ## Next Steps
 

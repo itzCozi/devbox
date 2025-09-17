@@ -16,6 +16,9 @@ export default defineConfig({
         light: './src/assets/logo-dark.png',
         dark: './src/assets/logo.png',
       },
+			components: {
+				Footer: './src/components/CustomFooter.astro',
+			},
 			social: [
 				{ icon: 'github', label: 'GitHub', href: 'https://github.com/itzCozi/devbox' }
 			],

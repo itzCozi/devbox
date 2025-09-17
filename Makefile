@@ -62,17 +62,57 @@ fmt:
 lint:
 	golangci-lint run
 
+# Check formatting
+check-fmt:
+	@if [ "$(shell gofmt -s -l . | wc -l)" -gt 0 ]; then \
+		echo "The following files are not formatted:"; \
+		gofmt -s -l .; \
+		echo "Please run 'make fmt' to format your code."; \
+		exit 1; \
+	fi
+
+# Run all quality checks
+quality: check-fmt lint
+	@echo "Running go vet..."
+	go vet ./...
+	@echo "All quality checks passed!"
+
+# Run tests with coverage
+test-coverage:
+	go test -coverprofile=coverage.out ./...
+	go tool cover -html=coverage.out -o coverage.html
+	@echo "Coverage report generated: coverage.html"
+
+# Run security checks
+security:
+	@echo "Installing security tools..."
+	@go install github.com/securecodewarrior/gosec/v2/cmd/gosec@latest
+	@go install golang.org/x/vuln/cmd/govulncheck@latest
+	@echo "Running gosec..."
+	gosec ./...
+	@echo "Running govulncheck..."
+	govulncheck ./...
+
+# Run all checks (CI-like)
+ci: deps test quality security
+	@echo "All CI checks passed!"
+
 # Show help
 help:
 	@echo "Available targets:"
-	@echo "  build    - Build the binary for Linux AMD64"
-	@echo "  dev      - Build the binary for current OS/arch"
-	@echo "  install  - Install the binary to /usr/local/bin"
-	@echo "  test     - Run tests"
-	@echo "  clean    - Clean build artifacts"
-	@echo "  deps     - Download and tidy dependencies"
-	@echo "  fmt      - Format code"
-	@echo "  lint     - Run linter"
-	@echo "  help     - Show this help message"
+	@echo "  build         - Build the binary for Linux AMD64"
+	@echo "  dev           - Build the binary for current OS/arch"
+	@echo "  install       - Install the binary to /usr/local/bin"
+	@echo "  test          - Run tests"
+	@echo "  test-coverage - Run tests with coverage report"
+	@echo "  clean         - Clean build artifacts"
+	@echo "  deps          - Download and tidy dependencies"
+	@echo "  fmt           - Format code"
+	@echo "  check-fmt     - Check code formatting"
+	@echo "  lint          - Run linter"
+	@echo "  quality       - Run all quality checks"
+	@echo "  security      - Run security checks"
+	@echo "  ci            - Run all checks (like CI)"
+	@echo "  help          - Show this help message"
 
-.PHONY: all build dev install test clean deps fmt lint help
+.PHONY: all build dev install test test-coverage clean deps fmt check-fmt lint quality security ci help
