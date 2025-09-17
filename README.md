@@ -25,10 +25,24 @@ A CLI tool for isolating development environments using Docker boxs on Debian/Ub
 
 ## Installation
 
-### Option 1: Build from Source
+### Option 1: One-Line Installation (Recommended)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/itzCozi/devbox/main/install.sh | bash
+```
+
+This script will automatically:
+- Check system compatibility (Debian/Ubuntu only)
+- Install Go, Docker, make, and git if needed
+- Clone the repository and build devbox
+- Install devbox to `/usr/local/bin`
+- Set up proper permissions
+
+### Option 2: Build from Source
 
 ```bash
 # Clone or download the source code
+git clone https://github.com/itzCozi/devbox.git
 cd devbox
 
 # Build and install
@@ -36,7 +50,7 @@ make build
 make install
 ```
 
-### Option 2: Development Build
+### Option 3: Development Build
 
 ```bash
 # Build for current OS/arch (for development)

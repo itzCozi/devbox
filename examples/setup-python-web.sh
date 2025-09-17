@@ -1,17 +1,17 @@
 #!/bin/bash
 
-# Example setup script for a Python web development environment
-# This would be run inside the devbox box after initialization
+
+
 
 set -e
 
 echo "🚀 Setting up Python web development environment..."
 
-# Update package lists
+
 echo "📦 Updating packages..."
 apt update
 
-# Install Python and related tools
+
 echo "🐍 Installing Python development tools..."
 apt install -y \
     python3 \
@@ -25,7 +25,7 @@ apt install -y \
     vim \
     nano
 
-# Install common Python packages
+
 echo "📚 Installing Python packages..."
 pip3 install \
     flask \
@@ -40,12 +40,12 @@ pip3 install \
     black \
     flake8
 
-# Install Node.js (for frontend development)
+
 echo "🟢 Installing Node.js..."
 curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
 apt install -y nodejs
 
-# Install global npm packages
+
 echo "📦 Installing npm packages..."
 npm install -g \
     typescript \
@@ -55,12 +55,12 @@ npm install -g \
     eslint \
     prettier
 
-# Create a sample project structure
+
 echo "📁 Creating project structure..."
 cd /workspace
 mkdir -p {src,tests,docs,scripts}
 
-# Create a sample Flask app
+
 cat > src/app.py << 'EOF'
 from flask import Flask, jsonify
 
@@ -78,7 +78,7 @@ if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
 EOF
 
-# Create a requirements.txt
+
 cat > requirements.txt << 'EOF'
 flask>=2.0.0
 requests>=2.25.0
@@ -90,7 +90,7 @@ black>=21.0.0
 flake8>=3.9.0
 EOF
 
-# Create a simple test
+
 cat > tests/test_app.py << 'EOF'
 import pytest
 import sys
@@ -114,13 +114,13 @@ def test_health():
     assert data['status'] == "healthy"
 EOF
 
-# Create a README for the project
+
 cat > README.md << 'EOF'
-# Sample Devbox Project
+
 
 This is a sample Python web development project created with devbox.
 
-## Getting Started
+
 
 1. Start the development server:
    ```bash
@@ -146,7 +146,7 @@ This is a sample Python web development project created with devbox.
    flake8 src/ tests/
    ```
 
-## Project Structure
+
 
 - `src/` - Source code
 - `tests/` - Test files
@@ -154,7 +154,7 @@ This is a sample Python web development project created with devbox.
 - `scripts/` - Utility scripts
 - `requirements.txt` - Python dependencies
 
-## API Endpoints
+
 
 - `GET /` - Hello message
 - `GET /health` - Health check

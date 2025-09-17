@@ -6,138 +6,93 @@ import argparse
 from typing import List, Tuple
 
 
-class GoCommentRemover:
-    def __init__(self, preserve_build_tags=True):
-        self.preserve_build_tags = preserve_build_tags
+class ShellCommentRemover:
+    def __init__(self, preserve_shebang=True):
+        self.preserve_shebang = preserve_shebang
         self.processed_files = 0
         self.total_comments_removed = 0
         
-    def is_go_file(self, filepath: str) -> bool:
-        """Check if file is a Go source file."""
-        return filepath.endswith('.go')
+    def is_shell_file(self, filepath: str) -> bool:
+        """Check if file is a shell script file."""
+        return filepath.endswith(('.sh', '.bash', '.zsh', '.fish'))
     
-    def find_go_files(self, directory: str) -> List[str]:
-        """Recursively find all Go files in directory."""
-        go_files = []
+    def find_shell_files(self, directory: str) -> List[str]:
+        """Recursively find all shell script files in directory."""
+        shell_files = []
         for root, dirs, files in os.walk(directory):
             # Skip vendor and .git directories
             dirs[:] = [d for d in dirs if d not in ['vendor', '.git', '.vscode', '__pycache__']]
             
             for file in files:
-                if self.is_go_file(file):
-                    go_files.append(os.path.join(root, file))
-        return go_files
+                if self.is_shell_file(file):
+                    shell_files.append(os.path.join(root, file))
+        return shell_files
     
-    def should_preserve_comment(self, comment: str) -> bool:
-        """Check if comment should be preserved (build tags, etc.)."""
-        if not self.preserve_build_tags:
+    def should_preserve_comment(self, comment: str, line_number: int) -> bool:
+        """Check if comment should be preserved (shebang, etc.)."""
+        if not self.preserve_shebang:
             return False
             
-        comment_content = comment.strip('/* \t\n/')
-        
-        # Preserve build tags
-        if comment_content.startswith('+build') or comment_content.startswith('go:'):
+        # Preserve shebang on first line
+        if line_number == 0 and comment.strip().startswith('#!'):
             return True
 
         return False
     
     def remove_comments_from_content(self, content: str) -> Tuple[str, int]:
         """
-        Remove comments from Go source code while preserving string literals.
+        Remove comments from shell script source code while preserving string literals.
         Returns (cleaned_content, number_of_comments_removed).
         """
         lines = content.split('\n')
         cleaned_lines = []
         comments_removed = 0
-        in_multiline_comment = False
-        multiline_start_line = -1
         
         for i, line in enumerate(lines):
             cleaned_line = ""
             j = 0
-            in_string = False
-            in_raw_string = False
-            string_delimiter = None
+            in_single_quote = False
+            in_double_quote = False
             
             while j < len(line):
                 char = line[j]
                 
-                if char == '`' and not in_string:
-                    in_raw_string = not in_raw_string
-                    cleaned_line += char
-                    j += 1
-                    continue
-                
-                if in_raw_string:
-                    cleaned_line += char
-                    j += 1
-                    continue
-                
-                if char in ['"', "'"] and not in_string:
-                    in_string = True
-                    string_delimiter = char
-                    cleaned_line += char
-                    j += 1
-                    continue
-                elif char == string_delimiter and in_string:
-                    if j > 0 and line[j-1] == '\\':
-                        backslash_count = 0
-                        k = j - 1
-                        while k >= 0 and line[k] == '\\':
-                            backslash_count += 1
-                            k -= 1
-                        if backslash_count % 2 == 1:
-                            cleaned_line += char
-                            j += 1
-                            continue
-                    
-                    in_string = False
-                    string_delimiter = None
-                    cleaned_line += char
-                    j += 1
-                    continue
-                
-                if in_string:
-                    cleaned_line += char
-                    j += 1
-                    continue
-                
-                if in_multiline_comment:
-                    if j < len(line) - 1 and line[j:j+2] == '*/':
-                        in_multiline_comment = False
-                        j += 2
-                        if multiline_start_line != i:
-                            comments_removed += 1
-                        continue
+                # Handle single quotes
+                if char == "'" and not in_double_quote:
+                    if not in_single_quote:
+                        in_single_quote = True
                     else:
-                        j += 1
-                        continue
+                        in_single_quote = False
+                    cleaned_line += char
+                    j += 1
+                    continue
                 
-                if j < len(line) - 1 and line[j:j+2] == '/*':
-                    end_pos = line.find('*/', j + 2)
-                    if end_pos != -1:
-                        comment_content = line[j:end_pos+2]
-                        if not self.should_preserve_comment(comment_content):
-                            comments_removed += 1
-                            j = end_pos + 2
-                            continue
-                        else:
-                            cleaned_line += comment_content
-                            j = end_pos + 2
-                            continue
-                    else:
-                        comment_content = line[j:]
-                        if not self.should_preserve_comment(comment_content):
-                            in_multiline_comment = True
-                            multiline_start_line = i
-                            break
-                        else:
-                            cleaned_line += line[j:]
-                            break
+                # Handle double quotes
+                if char == '"' and not in_single_quote:
+                    if not in_double_quote:
+                        in_double_quote = True
+                    elif j > 0 and line[j-1] != '\\':
+                        in_double_quote = False
+                    cleaned_line += char
+                    j += 1
+                    continue
                 
-                if j < len(line) - 1 and line[j:j+2] == '//':
+                # Handle escaped characters in double quotes
+                if in_double_quote and char == '\\' and j + 1 < len(line):
+                    cleaned_line += char + line[j + 1]
+                    j += 2
+                    continue
+                
+                # If we're inside quotes, don't process comments
+                if in_single_quote or in_double_quote:
+                    cleaned_line += char
+                    j += 1
+                    continue
+                
+                # Handle # comments
+                if char == '#':
                     comment_content = line[j:]
-                    if not self.should_preserve_comment(comment_content):
+                    if not self.should_preserve_comment(comment_content, i):
                         comments_removed += 1
                         break
                     else:
@@ -147,16 +102,15 @@ class GoCommentRemover:
                 cleaned_line += char
                 j += 1
             
-            if not in_multiline_comment:
-                if cleaned_line != line:
-                    cleaned_line = cleaned_line.rstrip()
-                cleaned_lines.append(cleaned_line)
+            # Clean up trailing whitespace from lines where comments were removed
+            cleaned_line = cleaned_line.rstrip()
+            cleaned_lines.append(cleaned_line)
         
         return '\n'.join(cleaned_lines), comments_removed
     
     def process_file(self, filepath: str, dry_run: bool = False) -> bool:
         """
-        Process a single Go file to remove comments.
+        Process a single shell script file to remove comments.
         Returns True if file was modified, False otherwise.
         """
         try:
@@ -186,25 +140,25 @@ class GoCommentRemover:
             return False
     
     def process_directory(self, directory: str, dry_run: bool = False) -> None:
-        """Process all Go files in directory."""
+        """Process all shell script files in directory."""
         if not os.path.isdir(directory):
             print(f"Error: {directory} is not a directory")
             return
         
-        go_files = self.find_go_files(directory)
+        shell_files = self.find_shell_files(directory)
         
-        if not go_files:
-            print(f"No Go files found in {directory}")
+        if not shell_files:
+            print(f"No shell script files found in {directory}")
             return
         
-        print(f"Found {len(go_files)} Go files to process")
+        print(f"Found {len(shell_files)} shell script files to process")
         
         if dry_run:
             print("DRY RUN - No files will be modified")
         
         modified_files = 0
         
-        for filepath in go_files:
+        for filepath in shell_files:
             if self.process_file(filepath, dry_run):
                 modified_files += 1
             self.processed_files += 1
@@ -218,14 +172,14 @@ class GoCommentRemover:
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Remove comments from Go source files",
+        description="Remove comments from shell script files",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
   python remove_comments.py                    # Process current directory
   python remove_comments.py /path/to/project  # Process specific directory
   python remove_comments.py --dry-run         # See what would be changed
-  python remove_comments.py --no-preserve     # Remove all comments including build tags
+  python remove_comments.py --no-preserve     # Remove all comments including shebang
         """
     )
     
@@ -245,7 +199,7 @@ Examples:
     parser.add_argument(
         '--no-preserve',
         action='store_true',
-        help='Remove all comments including build tags and go directives'
+        help='Remove all comments including shebang lines'
     )
     
     args = parser.parse_args()
@@ -256,9 +210,9 @@ Examples:
         print(f"Error: Directory {directory} does not exist")
         sys.exit(1)
     
-    print(f"Processing Go files in: {directory}")
+    print(f"Processing shell script files in: {directory}")
     
-    remover = GoCommentRemover(preserve_build_tags=not args.no_preserve)
+    remover = ShellCommentRemover(preserve_shebang=not args.no_preserve)
     
     try:
         remover.process_directory(directory, dry_run=args.dry_run)

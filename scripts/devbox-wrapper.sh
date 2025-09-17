@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# devbox-wrapper.sh
-# This script provides devbox commands inside the box
+
+
 
 BOX_NAME="${DEVBOX_BOX_NAME:-unknown}"
 PROJECT_NAME="${DEVBOX_PROJECT_NAME:-unknown}"
@@ -53,8 +53,8 @@ case "$1" in
         fi
         echo "🔄 Executing on host: $2"
         echo "⚠️  Note: This is experimental and may not work in all environments"
-        # This is a placeholder - we can't easily execute on host from box
-        # without additional setup like Docker socket mounting
+
+
         echo "❌ Host command execution not yet implemented"
         echo "💡 Exit the box and run commands on the host instead"
         ;;
