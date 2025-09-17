@@ -21,6 +21,11 @@ devbox creates isolated development environments, contained in a project's Docke
 ## Installation
 
 ```bash
+# Using the install script
+curl -fsSL https://raw.githubusercontent.com/itzCozi/devbox/main/install.sh | bash
+
+# OR
+
 # Clone the repository
 git clone https://github.com/itzCozi/devbox.git
 cd devbox
