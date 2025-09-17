@@ -50,26 +50,25 @@ fi
 case $ID in
 ubuntu | debian)
 print_success "Compatible OS detected: $PRETTY_NAME"
- ; ; 
+;;
 *)
 print_error "Unsupported operating system: $PRETTY_NAME"
 print_error "devbox requires Debian or Ubuntu Linux"
 exit 1
- ; ; 
+;;
 esac
 }
 
 
 command_exists() {
-command -v "$1" > /dev/null 2 > & 1
+command -v "$1" > /dev/null 2>&1
 }
 
 
 install_devbox() {
 print_info "Cloning devbox repository..."
 
-
-TEMP_DIR = $(mktemp -d)
+TEMP_DIR=$(mktemp -d)
 cd "$TEMP_DIR"
 
 
@@ -79,7 +78,7 @@ cd devbox
 print_info "Building devbox..."
 
 
-if ! command_exists go ; then
+if ! command_exists go; then
   print_error "Go is not available. Installation may have failed."
   exit 1
 fi
@@ -105,12 +104,11 @@ print_success "devbox installed successfully"
 verify_installation() {
 print_info "Verifying installation..."
 
-if command_exists devbox ; then
-  DEVBOX_VERSION = $(devbox --version 2 > /dev/null | | echo "unknown")
+if command_exists devbox; then
+  DEVBOX_VERSION=$(devbox --version 2>/dev/null || echo "unknown")
   print_success "devbox is installed and accessible: $DEVBOX_VERSION"
 
-
-  if docker ps > /dev/null 2 > & 1 ; then
+  if docker ps > /dev/null 2>&1; then
     print_success "Docker is accessible"
     else
     print_warning "Docker may require logout/login for group permissions"
@@ -159,28 +157,28 @@ sudo usermod -aG docker "$USER"
 
 
 print_info "Verifying installations..."
-if command_exists git ; then
+if command_exists git; then
   print_success "✓ git: $(git --version | head -n1)"
   else
   print_error "✗ git installation failed"
   exit 1
 fi
 
-if command_exists make ; then
+if command_exists make; then
   print_success "✓ make: $(make --version | head -n1)"
   else
   print_error "✗ make installation failed"
   exit 1
 fi
 
-if command_exists go ; then
+if command_exists go; then
   print_success "✓ go: $(go version)"
   else
   print_error "✗ go installation failed"
   exit 1
 fi
 
-if command_exists docker ; then
+if command_exists docker; then
   print_success "✓ docker: $(docker --version)"
   print_warning "You may need to log out and log back in for Docker group permissions to take effect"
   else
@@ -191,7 +189,7 @@ fi
 print_info "Installing devbox..."
 install_devbox
 
-if verify_installation ; then
+if verify_installation; then
   print_next_steps
   else
   print_error "Installation completed but verification failed"
