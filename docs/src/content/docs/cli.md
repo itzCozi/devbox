@@ -452,4 +452,4 @@ devbox cleanup --all
 devbox maintenance --update
 ```
 
-This CLI reference covers all devbox commands and common usage patterns. For more examples and tutorials, see the [Quick Start Guide](/guides/intro/).
+This CLI reference covers all devbox commands and common usage patterns. For more examples and tutorials, see the [Quick Start Guide](/intro/).

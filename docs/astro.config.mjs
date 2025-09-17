@@ -10,7 +10,7 @@ export default defineConfig({
 		starlight({
 			title: 'devbox',
 			description: 'Isolated development environments using Docker containers',
-			favicon: '/src/assets/logo.svg',
+			favicon: '/favicon.svg',
 			logo: {
 				replacesTitle: true,
         light: './src/assets/logo-dark.png',
@@ -20,7 +20,8 @@ export default defineConfig({
 				Footer: './src/components/CustomFooter.astro',
 			},
 			social: [
-				{ icon: 'github', label: 'GitHub', href: 'https://github.com/itzCozi/devbox' }
+				{ icon: 'github', label: 'GitHub', href: 'https://github.com/itzCozi/devbox' },
+				{ icon: 'discord', label: 'Discord', href: '/discord' }
 			],
 			editLink: {
         baseUrl: 'https://github.com/itzcozi/devbox/edit/main/docs/',
@@ -29,28 +30,29 @@ export default defineConfig({
 				{
 					label: 'Getting Started',
 					items: [
-						{ label: 'Quick Start', slug: 'guides/intro' },
-						{ label: 'Installation', slug: 'guides/install' },
+						{ label: 'Introduction', slug: 'intro' },
+						{ label: 'Quick Start', slug: 'start' },
+						{ label: 'Installation', slug: 'install' },
 					],
 				},
 				{
 					label: 'Configuration',
 					items: [
-						{ label: 'Configuration Files', slug: 'reference/configuration' },
-						{ label: 'Templates & Setup', slug: 'reference/templates' },
+						{ label: 'Configuration Files', slug: 'configuration' },
+						{ label: 'Templates & Setup', slug: 'templates' },
 					],
 				},
 				{
 					label: 'Maintenance',
 					items: [
-						{ label: 'Cleanup & Maintenance', slug: 'reference/cleanup-maintenance' },
-						{ label: 'Troubleshooting', slug: 'reference/troubleshooting' },
+						{ label: 'Cleanup & Maintenance', slug: 'cleanup-maintenance' },
+						{ label: 'Troubleshooting', slug: 'troubleshooting' },
 					],
 				},
 				{
 					label: 'Reference',
 					items: [
-						{ label: 'CLI Commands', slug: 'reference/cli' },
+						{ label: 'CLI Commands', slug: 'cli' },
 					],
 				},
 			],

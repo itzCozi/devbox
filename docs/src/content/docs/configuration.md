@@ -12,7 +12,7 @@ Devbox supports comprehensive configuration management through both global setti
 - **Project Configuration**: Stored as `devbox.json` in each project workspace - defines development environment
 - **Templates**: Built-in templates for common development environments (Python, Node.js, Go, Web)
 
-## Project Configuration File (devbox.json)
+## Project Configuration File
 ---
 
 Each project can have a `devbox.json` file in its workspace directory that defines the development environment configuration.
