@@ -105,7 +105,7 @@ verify_installation() {
 print_info "Verifying installation..."
 
 if command_exists devbox; then
-  DEVBOX_VERSION=$(devbox --version 2>/dev/null || echo "unknown")
+  DEVBOX_VERSION=$(devbox version 2>/dev/null || echo "unknown")
   print_success "devbox is installed and accessible: $DEVBOX_VERSION"
 
   if docker ps > /dev/null 2>&1; then

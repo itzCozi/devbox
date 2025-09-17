@@ -83,4 +83,14 @@ devbox maintenance --update
 - **Project files**: `~/devbox/<project>/` (on host)
 - **Container workspace**: `/workspace/` (inside container)
 - **Configuration**: `~/.devbox/config.json`
-- **Logs**: `~/.devbox/logs/`
+
+## Docker Access
+---
+
+By default, all devbox environments have access to the host's Docker daemon, allowing you to:
+
+- Build and manage Docker containers from within your devbox environment
+- Run Docker commands without additional configuration
+- Execute Docker Compose for multi-container applications
+
+This works by mounting the host's Docker socket (`/var/run/docker.sock`) in your devbox container and installing the Docker CLI tools automatically.

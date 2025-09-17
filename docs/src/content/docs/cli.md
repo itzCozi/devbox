@@ -12,7 +12,6 @@ Complete reference for all devbox commands, options, and usage patterns.
 All commands support these global options:
 
 - `--help, -h`: Show help information
-- `--version, -v`: Show version information
 
 ## Core Commands
 
@@ -242,6 +241,26 @@ devbox config global
 
 ---
 
+##### `devbox version`
+
+Display the version information for devbox.
+
+**Syntax:**
+```bash
+devbox version
+```
+
+**Examples:**
+```bash
+# Display version information
+devbox version
+```
+
+**Output Format:**
+```
+devbox (v1.0)
+```
+
 ##### `devbox cleanup`
 
 Clean up Docker resources and devbox artifacts.
@@ -401,55 +420,3 @@ docker exec devbox_myproject <command>
 docker stop devbox_myproject
 docker rm devbox_myproject
 ```
-
-## Common Patterns
-
----
-
-##### Development Workflow
-```bash
-# 1. Create project
-devbox init myapp --template python
-
-# 2. Enter environment
-devbox shell myapp
-
-# 3. Install dependencies (inside container)
-pip3 install -r requirements.txt
-
-# 4. Work on code (edit on host, run in container)
-# Edit files: ~/devbox/myapp/
-# Run code: devbox run myapp python3 app.py
-
-# 5. Clean up when done
-devbox destroy myapp
-```
-
-##### Multiple Projects
-```bash
-# Create different environments
-devbox init api --template nodejs
-devbox init worker --template python
-devbox init frontend --template web
-
-# Switch between environments
-devbox shell api      # Node.js environment
-devbox shell worker   # Python environment
-devbox shell frontend # Full-stack environment
-
-# Each is completely isolated
-```
-
-##### Maintenance Routine
-```bash
-# Weekly health check
-devbox maintenance --health-check
-
-# Monthly cleanup
-devbox cleanup --all
-
-# Update all environments
-devbox maintenance --update
-```
-
-This CLI reference covers all devbox commands and common usage patterns. For more examples and tutorials, see the [Quick Start Guide](/intro/).

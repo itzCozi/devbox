@@ -208,6 +208,10 @@ func (cm *ConfigManager) GetDefaultProjectConfig(projectName string) *ProjectCon
 		Restart:     "unless-stopped",
 		Environment: make(map[string]string),
 		Labels:      make(map[string]string),
+		Volumes:     []string{"/var/run/docker.sock:/var/run/docker.sock"},
+		SetupCommands: []string{
+			"apt install -y docker.io",
+		},
 	}
 }
 
@@ -218,34 +222,36 @@ func (cm *ConfigManager) CreateProjectConfigFromTemplate(templateName, projectNa
 			Name:      projectName,
 			BaseImage: "ubuntu:22.04",
 			SetupCommands: []string{
-				"apt install -y python3 python3-pip python3-venv python3-dev build-essential",
+				"apt install -y python3 python3-pip python3-venv python3-dev build-essential docker.io",
 				"pip3 install --upgrade pip setuptools wheel",
 			},
 			Environment: map[string]string{
 				"PYTHONPATH":       "/workspace",
 				"PYTHONUNBUFFERED": "1",
 			},
-			Ports: []string{"8000:8000", "5000:5000"},
+			Ports:   []string{"8000:8000", "5000:5000"},
+			Volumes: []string{"/var/run/docker.sock:/var/run/docker.sock"},
 		},
 		"nodejs": {
 			Name:      projectName,
 			BaseImage: "ubuntu:22.04",
 			SetupCommands: []string{
 				"curl -fsSL https://deb.nodesource.com/setup_18.x | bash -",
-				"apt install -y nodejs build-essential",
+				"apt install -y nodejs build-essential docker.io",
 				"npm install -g npm@latest",
 			},
 			Environment: map[string]string{
 				"NODE_ENV": "development",
 				"PATH":     "/workspace/node_modules/.bin:$PATH",
 			},
-			Ports: []string{"3000:3000", "8080:8080"},
+			Ports:   []string{"3000:3000", "8080:8080"},
+			Volumes: []string{"/var/run/docker.sock:/var/run/docker.sock"},
 		},
 		"go": {
 			Name:      projectName,
 			BaseImage: "ubuntu:22.04",
 			SetupCommands: []string{
-				"apt install -y wget git build-essential",
+				"apt install -y wget git build-essential docker.io",
 				"wget -O /tmp/go.tar.gz https://go.dev/dl/go1.21.0.linux-amd64.tar.gz",
 				"tar -C /usr/local -xzf /tmp/go.tar.gz",
 				"echo 'export PATH=$PATH:/usr/local/go/bin' >> /root/.bashrc",
@@ -254,13 +260,14 @@ func (cm *ConfigManager) CreateProjectConfigFromTemplate(templateName, projectNa
 				"GOPATH": "/workspace/go",
 				"PATH":   "/usr/local/go/bin:$PATH",
 			},
-			Ports: []string{"8080:8080"},
+			Ports:   []string{"8080:8080"},
+			Volumes: []string{"/var/run/docker.sock:/var/run/docker.sock"},
 		},
 		"web": {
 			Name:      projectName,
 			BaseImage: "ubuntu:22.04",
 			SetupCommands: []string{
-				"apt install -y python3 python3-pip nodejs npm nginx git curl wget",
+				"apt install -y python3 python3-pip nodejs npm nginx git curl wget docker.io",
 				"curl -fsSL https://deb.nodesource.com/setup_18.x | bash -",
 				"pip3 install flask django fastapi",
 				"npm install -g typescript vue-cli create-react-app",
@@ -269,7 +276,8 @@ func (cm *ConfigManager) CreateProjectConfigFromTemplate(templateName, projectNa
 				"PYTHONPATH": "/workspace",
 				"NODE_ENV":   "development",
 			},
-			Ports: []string{"3000:3000", "5000:5000", "8000:8000", "80:80"},
+			Ports:   []string{"3000:3000", "5000:5000", "8000:8000", "80:80"},
+			Volumes: []string{"/var/run/docker.sock:/var/run/docker.sock"},
 		},
 	}
 

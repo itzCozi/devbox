@@ -37,6 +37,7 @@ export default defineConfig({
 				},
 				{
 					label: 'Configuration',
+					collapsed: true,
 					items: [
 						{ label: 'Configuration Files', slug: 'configuration' },
 						{ label: 'Templates & Setup', slug: 'templates' },
@@ -44,6 +45,7 @@ export default defineConfig({
 				},
 				{
 					label: 'Maintenance',
+					collapsed: true,
 					items: [
 						{ label: 'Cleanup & Maintenance', slug: 'cleanup-maintenance' },
 						{ label: 'Troubleshooting', slug: 'troubleshooting' },

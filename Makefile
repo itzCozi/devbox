@@ -6,6 +6,12 @@ GOTEST=$(GOCMD) test
 GOGET=$(GOCMD) get
 GOMOD=$(GOCMD) mod
 
+# Version information
+VERSION=1.0
+GIT_COMMIT=$(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
+BUILD_DATE=$(shell date +%Y-%m-%d)
+LDFLAGS=-ldflags "-X devbox/internal/commands.Version=$(VERSION) -X devbox/internal/commands.CommitHash=$(GIT_COMMIT)"
+
 # Binary name
 BINARY_NAME=devbox
 BINARY_PATH=./cmd/devbox
@@ -23,9 +29,9 @@ deps:
 
 # Build the binary
 build:
-	@echo "Building $(BINARY_NAME)..."
+	@echo "Building $(BINARY_NAME) version $(VERSION) (commit $(GIT_COMMIT))..."
 	@mkdir -p $(BUILD_DIR)
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(GOBUILD) -o $(BUILD_DIR)/$(BINARY_NAME) $(BINARY_PATH)
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o $(BUILD_DIR)/$(BINARY_NAME) $(BINARY_PATH)
 	@echo "Built $(BUILD_DIR)/$(BINARY_NAME)"
 
 # Install the binary to /usr/local/bin

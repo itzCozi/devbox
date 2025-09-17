@@ -12,6 +12,7 @@ devbox creates isolated development environments, contained in a project's Docke
 - 🔧 **Configurable** - Define your environment with simple JSON configuration
 - 🗑️ **Disposable** - Easily destroy and recreate environments as needed
 - 🛡️ **Isolated** - Each project runs in its own container, preventing conflicts
+- 🔄 **Docker-in-Docker** - Use Docker within your devbox environments by default
 
 ## Requirements
 
