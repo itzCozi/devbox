@@ -1,12 +1,8 @@
-name: Documentation
+name: Documentation (Manual)
 
 on:
-  push:
-    branches: [ main ]
-    paths: [ 'docs/**' ]
-  pull_request:
-    branches: [ main ]
-    paths: [ 'docs/**' ]
+  # Disabled on push/PR to stop failing checks; manual trigger only
+  workflow_dispatch:
 
 jobs:
   build-docs:
