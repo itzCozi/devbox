@@ -149,7 +149,7 @@ Examples:
 			"apt update -y",
 			"apt full-upgrade -y",
 		}
-		if err := dockerClient.ExecuteSetupCommands(boxName, systemUpdateCommands); err != nil {
+		if err := dockerClient.ExecuteSetupCommandsWithOutput(boxName, systemUpdateCommands, false); err != nil {
 			return fmt.Errorf("failed to update system packages: %w", err)
 		}
 

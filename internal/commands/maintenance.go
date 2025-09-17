@@ -329,7 +329,7 @@ func updateAllContainers() error {
 			"apt autoclean",
 		}
 
-		if err := dockerClient.ExecuteSetupCommands(project.BoxName, updateCommands); err != nil {
+		if err := dockerClient.ExecuteSetupCommandsWithOutput(project.BoxName, updateCommands, false); err != nil {
 			fmt.Printf("❌ Failed to update %s: %v\n", projectName, err)
 			failed++
 		} else {
@@ -487,7 +487,7 @@ func rebuildAllContainers() error {
 			"apt update -y",
 			"apt full-upgrade -y",
 		}
-		if err := dockerClient.ExecuteSetupCommands(project.BoxName, updateCommands); err != nil {
+		if err := dockerClient.ExecuteSetupCommandsWithOutput(project.BoxName, updateCommands, false); err != nil {
 			fmt.Printf("⚠️  Failed to update system packages: %v\n", err)
 		}
 

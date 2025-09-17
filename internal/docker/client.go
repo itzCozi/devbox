@@ -178,25 +178,55 @@ func (c *Client) applyProjectConfigToArgs(args []string, config map[string]inter
 }
 
 func (c *Client) ExecuteSetupCommands(boxName string, commands []string) error {
+	return c.ExecuteSetupCommandsWithOutput(boxName, commands, true)
+}
+
+func (c *Client) ExecuteSetupCommandsWithOutput(boxName string, commands []string, showOutput bool) error {
 	if len(commands) == 0 {
 		return nil
 	}
 
-	fmt.Printf("Executing setup commands in box '%s'...\n", boxName)
+	if showOutput {
+		fmt.Printf("Executing setup commands in box '%s'...\n", boxName)
+	}
 
 	for i, command := range commands {
-		fmt.Printf("Step %d/%d: %s\n", i+1, len(commands), command)
+		if showOutput {
+			fmt.Printf("Step %d/%d: %s\n", i+1, len(commands), command)
+		}
 
 		cmd := exec.Command("docker", "exec", boxName, "bash", "-c", command)
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
 
-		if err := cmd.Run(); err != nil {
-			return fmt.Errorf("setup command failed: %s: %w", command, err)
+		if showOutput {
+			cmd.Stdout = os.Stdout
+			cmd.Stderr = os.Stderr
+
+			if err := cmd.Run(); err != nil {
+				return fmt.Errorf("setup command failed: %s: %w", command, err)
+			}
+		} else {
+
+			var stdout, stderr bytes.Buffer
+			cmd.Stdout = &stdout
+			cmd.Stderr = &stderr
+
+			if err := cmd.Run(); err != nil {
+
+				fmt.Printf("Command failed: %s\n", command)
+				if stderr.Len() > 0 {
+					fmt.Printf("Error output: %s\n", stderr.String())
+				}
+				if stdout.Len() > 0 {
+					fmt.Printf("Standard output: %s\n", stdout.String())
+				}
+				return fmt.Errorf("setup command failed: %s: %w", command, err)
+			}
 		}
 	}
 
-	fmt.Printf("Setup commands completed successfully!\n")
+	if showOutput {
+		fmt.Printf("Setup commands completed successfully!\n")
+	}
 	return nil
 }
 
