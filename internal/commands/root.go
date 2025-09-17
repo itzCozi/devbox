@@ -21,11 +21,8 @@ var (
 
 var rootCmd = &cobra.Command{
 	Use:   "devbox",
-	Short: "Isolated development environments using Docker boxs",
-	Long: `devbox isolates development environments so that when you install system 
-packages with apt they live only inside the project box and don't affect 
-your host system. Each project has its own Docker box, while your code 
-stays in a flat folder on the host.`,
+	Short: "Isolated development environments for anything",
+	Long:  `devbox creates isolated development environments, contained in a project's Docker box. Each project operates in its own disposable environment, while your code remains neatly organized in a simple, flat folder on the host machine.`,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 
 		if runtime.GOOS != "linux" {

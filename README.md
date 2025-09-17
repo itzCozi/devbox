@@ -1,16 +1,16 @@
 # devbox
 
-A CLI tool for isolating development environments using Docker boxs on Debian/Ubuntu Linux.
+A CLI tool for creating isolated development environments using Docker boxes on Debian/Ubuntu Linux.
 
 ## Overview
 
-`devbox` allows you to create isolated development environments where system packages installed with `apt` live only inside project boxs and don't affect your host system. Each project has its own Docker box, while your code stays in a flat folder on the host (`~/devbox/<project>`).
+`devbox` creates isolated development environments, contained in a project's Docker box. Each project operates in its own disposable environment, while your code remains neatly organized in a simple, flat folder on the host machine (`~/devbox/<project>`).
 
 ## Features
 
 - ✅ **Isolated environments**: Each project runs in its own Docker box
 - ✅ **Host file access**: Your code stays on the host filesystem for easy editing
-- ✅ **Persistent boxs**: Boxs restart automatically and persist between reboots
+- ✅ **Persistent boxes**: boxes restart automatically and persist between reboots
 - ✅ **Simple commands**: Easy-to-use CLI with intuitive commands
 - ✅ **Safety checks**: Validates Docker installation and prevents accidental overwrites
 - ✅ **Configuration files**: Project-specific `devbox.json` configuration with templates
@@ -136,7 +136,7 @@ Clean up Docker resources and devbox artifacts.
 
 ```bash
 devbox cleanup                      # Interactive cleanup menu
-devbox cleanup --orphaned           # Remove orphaned containers only
+devbox cleanup --orphaned           # Remove orphaned boxes only
 devbox cleanup --images             # Remove unused images only
 devbox cleanup --volumes            # Remove unused volumes only
 devbox cleanup --networks           # Remove unused networks only
@@ -146,28 +146,28 @@ devbox cleanup --dry-run            # Show what would be cleaned
 ```
 
 This command helps maintain a clean system by removing:
-- Orphaned devbox containers (not tracked in config)
+- Orphaned devbox boxes (not tracked in config)
 - Unused Docker images, volumes, and networks
 - Dangling build artifacts
 
 #### `devbox maintenance [flags]`
 
-Perform maintenance tasks on devbox projects and containers.
+Perform maintenance tasks on devbox projects and boxes.
 
 ```bash
 devbox maintenance                  # Interactive maintenance menu
 devbox maintenance --status         # Show detailed system status
 devbox maintenance --health-check   # Check health of all projects
-devbox maintenance --update         # Update all containers
-devbox maintenance --restart        # Restart stopped containers
-devbox maintenance --rebuild        # Rebuild all containers
+devbox maintenance --update         # Update all boxes
+devbox maintenance --restart        # Restart stopped boxes
+devbox maintenance --rebuild        # Rebuild all boxes
 devbox maintenance --auto-repair    # Auto-fix common issues
 ```
 
 This command provides:
 - System health checks and status monitoring
-- Automated updates for all containers
-- Container restart and rebuild capabilities
+- Automated updates for all boxes
+- box restart and rebuild capabilities
 - Auto-repair for common issues
 
 ### `devbox shell <project>`
@@ -475,10 +475,10 @@ Potential features for future versions:
 
 - **Multi-OS Support**: Support for different Linux distributions beyond Ubuntu
 - **Volume Management**: Better handling of persistent data and bind mounts
-- **Network Management**: Custom Docker networks for multi-container projects
-- **Resource Monitoring**: Real-time monitoring of container resource usage
+- **Network Management**: Custom Docker networks for multi-box projects
+- **Resource Monitoring**: Real-time monitoring of box resource usage
 - **Backup/Restore**: Backup and restore project configurations and data
-- **Remote Containers**: Support for remote Docker hosts
+- **Remote boxes**: Support for remote Docker hosts
 - **Plugin System**: Extensible plugin system for custom functionality
 
 ## License

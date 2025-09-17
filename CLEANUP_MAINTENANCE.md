@@ -6,7 +6,7 @@ This guide covers devbox's cleanup and maintenance features to keep your develop
 
 Devbox provides comprehensive cleanup and maintenance tools:
 
-- **Cleanup**: Remove unused Docker resources and orphaned containers
+- **Cleanup**: Remove unused Docker resources and orphaned boxes
 - **Maintenance**: System health checks, updates, and auto-repair functionality
 
 ## Cleanup Command
@@ -21,7 +21,7 @@ devbox cleanup
 
 This opens an interactive menu with the following options:
 
-1. **Clean up orphaned devbox containers** - Remove containers not tracked in config
+1. **Clean up orphaned devbox boxes** - Remove boxes not tracked in config
 2. **Remove unused Docker images** - Remove dangling and unused images
 3. **Remove unused Docker volumes** - Remove unused volumes
 4. **Remove unused Docker networks** - Remove unused networks
@@ -33,7 +33,7 @@ This opens an interactive menu with the following options:
 
 ```bash
 # Specific cleanup tasks
-devbox cleanup --orphaned           # Remove orphaned containers only
+devbox cleanup --orphaned           # Remove orphaned boxes only
 devbox cleanup --images             # Remove unused images only
 devbox cleanup --volumes            # Remove unused volumes only
 devbox cleanup --networks           # Remove unused networks only
@@ -51,7 +51,7 @@ devbox cleanup --force              # Skip confirmation prompts
 # See what would be cleaned without making changes
 devbox cleanup --dry-run --all
 
-# Clean only orphaned containers
+# Clean only orphaned boxes
 devbox cleanup --orphaned
 
 # Comprehensive cleanup with confirmation
@@ -75,9 +75,9 @@ This opens an interactive menu with these options:
 
 1. **Check system status** - Show Docker status, projects, and disk usage
 2. **Perform health check** - Check health of all projects
-3. **Update system packages** - Update packages in all containers
-4. **Restart stopped containers** - Start any stopped devbox containers
-5. **Rebuild all containers** - Recreate containers from latest base images
+3. **Update system packages** - Update packages in all boxes
+4. **Restart stopped boxes** - Start any stopped devbox boxes
+5. **Rebuild all boxes** - Recreate boxes from latest base images
 6. **Auto-repair common issues** - Automatically fix detected problems
 7. **Full maintenance** - Combines health check, updates, and restarts
 
@@ -87,9 +87,9 @@ This opens an interactive menu with these options:
 # Individual maintenance tasks
 devbox maintenance --status         # Show detailed system status
 devbox maintenance --health-check   # Check health of all projects
-devbox maintenance --update         # Update all containers
-devbox maintenance --restart        # Restart stopped containers
-devbox maintenance --rebuild        # Rebuild all containers
+devbox maintenance --update         # Update all boxes
+devbox maintenance --restart        # Restart stopped boxes
+devbox maintenance --rebuild        # Rebuild all boxes
 devbox maintenance --auto-repair    # Auto-fix common issues
 
 # Control flags
@@ -102,10 +102,10 @@ devbox maintenance --force          # Skip confirmation prompts
 # Check system health
 devbox maintenance --health-check
 
-# Update all containers
+# Update all boxes
 devbox maintenance --update
 
-# Rebuild all containers (with confirmation)
+# Rebuild all boxes (with confirmation)
 devbox maintenance --rebuild
 
 # Quick full maintenance without prompts
@@ -116,24 +116,24 @@ devbox maintenance --force --health-check --update --restart
 
 The health check system monitors:
 
-- **Container Status**: Whether containers are running or stopped
-- **Container Responsiveness**: Whether containers respond to commands
+- **box Status**: Whether boxes are running or stopped
+- **box Responsiveness**: Whether boxes respond to commands
 - **Workspace Directories**: Whether project directories exist
 - **Configuration Files**: Whether devbox.json files are valid
 
 Health check results show:
-- ✅ **Healthy**: Container running and responsive
-- ⚠️ **Unhealthy**: Container stopped or unresponsive
-- ❌ **Missing**: Container or workspace missing
+- ✅ **Healthy**: box running and responsive
+- ⚠️ **Unhealthy**: box stopped or unresponsive
+- ❌ **Missing**: box or workspace missing
 
 ## Auto-Repair
 
 The auto-repair feature automatically fixes common issues:
 
 - **Missing workspace directories**: Creates missing project directories
-- **Missing containers**: Recreates containers from configuration
-- **Stopped containers**: Starts stopped containers
-- **Unresponsive containers**: Restarts containers that don't respond
+- **Missing boxes**: Recreates boxes from configuration
+- **Stopped boxes**: Starts stopped boxes
+- **Unresponsive boxes**: Restarts boxes that don't respond
 
 ## System Updates
 
@@ -143,19 +143,19 @@ The update feature:
 3. Runs `apt autoremove -y` to remove unnecessary packages
 4. Runs `apt autoclean` to clean package cache
 
-Updates are applied to all tracked containers that are running or can be started.
+Updates are applied to all tracked boxes that are running or can be started.
 
-## Container Rebuilding
+## box Rebuilding
 
 The rebuild feature:
-1. Stops and removes existing containers
+1. Stops and removes existing boxes
 2. Pulls latest base images
-3. Recreates containers with current configuration
+3. Recreates boxes with current configuration
 4. Runs system updates
 5. Executes setup commands from devbox.json
 6. Sets up devbox environment
 
-**Note**: Rebuilding preserves your project files but recreates the container environment.
+**Note**: Rebuilding preserves your project files but recreates the box environment.
 
 ## Best Practices
 
@@ -200,12 +200,12 @@ devbox maintenance --auto-repair
 
 ### Common Issues and Solutions
 
-**Orphaned Containers**
+**Orphaned boxes**
 ```bash
-# Problem: Containers exist but aren't tracked
+# Problem: boxes exist but aren't tracked
 devbox cleanup --orphaned
 
-# Or remove specific container
+# Or remove specific box
 docker rm -f devbox_oldproject
 ```
 
@@ -218,7 +218,7 @@ devbox cleanup --all
 devbox cleanup --system-prune
 ```
 
-**Container Won't Start**
+**box Won't Start**
 ```bash
 # Check what's wrong
 devbox maintenance --health-check

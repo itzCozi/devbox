@@ -83,9 +83,9 @@ Each project can have a `devbox.json` file in its workspace directory that defin
 | `base_image` | string | Docker base image |
 | `setup_commands` | array | Commands to run during initialization (after system update) |
 | `environment` | object | Environment variables |
-| `ports` | array | Port mappings (host:container) |
+| `ports` | array | Port mappings (host:box) |
 | `volumes` | array | Volume mappings |
-| `working_dir` | string | Working directory in container |
+| `working_dir` | string | Working directory in box |
 | `shell` | string | Default shell |
 | `user` | string | User to run as |
 | `capabilities` | array | Linux capabilities to add |
@@ -99,7 +99,7 @@ Each project can have a `devbox.json` file in its workspace directory that defin
 
 ## System Updates
 
-Devbox automatically ensures that all containers start with up-to-date system packages. When you initialize any project (regardless of configuration), devbox will:
+Devbox automatically ensures that all boxes start with up-to-date system packages. When you initialize any project (regardless of configuration), devbox will:
 
 1. **System Update**: Always run `apt update -y && apt full-upgrade -y` first
 2. **Setup Commands**: Then execute any commands defined in your `setup_commands` array
@@ -322,7 +322,7 @@ devbox init old-project --template nodejs
 ## Error Handling
 
 - Invalid JSON in `devbox.json` will show parsing errors
-- Missing required fields are validated before container creation
+- Missing required fields are validated before box creation
 - Invalid port/volume formats are caught during validation
 - Failed setup commands stop initialization with clear error messages
 

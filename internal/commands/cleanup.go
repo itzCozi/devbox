@@ -25,7 +25,7 @@ var cleanupCmd = &cobra.Command{
 	Long: `Clean up various Docker resources and devbox-related artifacts.
 This command helps maintain a clean system by removing:
 
-- Orphaned devbox containers (not tracked in config)
+- Orphaned devbox boxes (not tracked in config)
 - Unused Docker images
 - Unused Docker volumes  
 - Unused Docker networks
@@ -33,7 +33,7 @@ This command helps maintain a clean system by removing:
 
 Examples:
   devbox cleanup                    # Interactive cleanup menu
-  devbox cleanup --orphaned         # Remove orphaned containers only
+  devbox cleanup --orphaned         # Remove orphaned boxes only
   devbox cleanup --images           # Remove unused images only
   devbox cleanup --all              # Clean up everything
   devbox cleanup --system-prune     # Run docker system prune
@@ -91,13 +91,13 @@ Examples:
 func runInteractiveCleanup() error {
 	fmt.Printf("🧹 Devbox Cleanup Menu\n\n")
 	fmt.Printf("Available cleanup options:\n")
-	fmt.Printf("  1. Clean up orphaned devbox containers\n")
+	fmt.Printf("  1. Clean up orphaned devbox boxes\n")
 	fmt.Printf("  2. Remove unused Docker images\n")
 	fmt.Printf("  3. Remove unused Docker volumes\n")
 	fmt.Printf("  4. Remove unused Docker networks\n")
 	fmt.Printf("  5. Run Docker system prune (comprehensive cleanup)\n")
 	fmt.Printf("  6. Clean up everything (options 1-4)\n")
-	fmt.Printf("  7. Show system status (disk usage, containers, images)\n")
+	fmt.Printf("  7. Show system status (disk usage, boxes, images)\n")
 	fmt.Printf("  q. Quit\n\n")
 
 	reader := bufio.NewReader(os.Stdin)
@@ -149,10 +149,10 @@ func runInteractiveCleanup() error {
 }
 
 func cleanupOrphanedFromCleanup() error {
-	fmt.Printf("🔍 Scanning for orphaned devbox containers...\n")
+	fmt.Printf("🔍 Scanning for orphaned devbox boxes...\n")
 
 	if dryRunFlag {
-		fmt.Printf("DRY RUN - No containers will be removed\n")
+		fmt.Printf("DRY RUN - No boxes will be removed\n")
 	}
 
 	cfg, err := configManager.Load()
@@ -160,43 +160,43 @@ func cleanupOrphanedFromCleanup() error {
 		return fmt.Errorf("failed to load configuration: %w", err)
 	}
 
-	containers, err := dockerClient.ListBoxs()
+	boxes, err := dockerClient.ListBoxes()
 	if err != nil {
-		return fmt.Errorf("failed to list containers: %w", err)
+		return fmt.Errorf("failed to list boxes: %w", err)
 	}
 
-	trackedContainers := make(map[string]bool)
+	trackedboxes := make(map[string]bool)
 	for _, project := range cfg.GetProjects() {
-		trackedContainers[project.BoxName] = true
+		trackedboxes[project.BoxName] = true
 	}
 
-	var orphanedContainers []string
-	for _, container := range containers {
-		for _, name := range container.Names {
+	var orphanedboxes []string
+	for _, box := range boxes {
+		for _, name := range box.Names {
 			cleanName := strings.TrimPrefix(name, "/")
-			if strings.HasPrefix(cleanName, "devbox_") && !trackedContainers[cleanName] {
-				orphanedContainers = append(orphanedContainers, cleanName)
+			if strings.HasPrefix(cleanName, "devbox_") && !trackedboxes[cleanName] {
+				orphanedboxes = append(orphanedboxes, cleanName)
 			}
 		}
 	}
 
-	if len(orphanedContainers) == 0 {
-		fmt.Printf("✅ No orphaned containers found.\n")
+	if len(orphanedboxes) == 0 {
+		fmt.Printf("✅ No orphaned boxes found.\n")
 		return nil
 	}
 
-	fmt.Printf("Found %d orphaned devbox container(s):\n", len(orphanedContainers))
-	for _, containerName := range orphanedContainers {
-		fmt.Printf("  • %s\n", containerName)
+	fmt.Printf("Found %d orphaned devbox box(s):\n", len(orphanedboxes))
+	for _, boxName := range orphanedboxes {
+		fmt.Printf("  • %s\n", boxName)
 	}
 
 	if dryRunFlag {
-		fmt.Printf("\nDRY RUN: Would remove %d orphaned containers\n", len(orphanedContainers))
+		fmt.Printf("\nDRY RUN: Would remove %d orphaned boxes\n", len(orphanedboxes))
 		return nil
 	}
 
 	if !forceFlag {
-		fmt.Print("\nRemove these orphaned containers? (y/N): ")
+		fmt.Print("\nRemove these orphaned boxes? (y/N): ")
 		reader := bufio.NewReader(os.Stdin)
 		response, err := reader.ReadString('\n')
 		if err != nil {
@@ -211,20 +211,20 @@ func cleanupOrphanedFromCleanup() error {
 	}
 
 	var removed, failed int
-	for _, containerName := range orphanedContainers {
-		fmt.Printf("Removing %s...\n", containerName)
-		if err := dockerClient.RemoveBox(containerName); err != nil {
-			fmt.Printf("❌ Failed to remove %s: %v\n", containerName, err)
+	for _, boxName := range orphanedboxes {
+		fmt.Printf("Removing %s...\n", boxName)
+		if err := dockerClient.RemoveBox(boxName); err != nil {
+			fmt.Printf("❌ Failed to remove %s: %v\n", boxName, err)
 			failed++
 		} else {
-			fmt.Printf("✅ Removed %s\n", containerName)
+			fmt.Printf("✅ Removed %s\n", boxName)
 			removed++
 		}
 	}
 
-	fmt.Printf("\nOrphaned containers cleanup complete: %d removed, %d failed\n", removed, failed)
+	fmt.Printf("\nOrphaned boxes cleanup complete: %d removed, %d failed\n", removed, failed)
 	if failed > 0 {
-		return fmt.Errorf("failed to remove %d container(s)", failed)
+		return fmt.Errorf("failed to remove %d box(s)", failed)
 	}
 
 	return nil
@@ -374,15 +374,15 @@ func showSystemStatus() error {
 		fmt.Printf("❌ Failed to get disk usage: %v\n", err)
 	}
 
-	fmt.Printf("\n=== Devbox Containers ===\n")
-	containers, err := dockerClient.ListBoxs()
+	fmt.Printf("\n=== Devbox boxes ===\n")
+	boxes, err := dockerClient.ListBoxes()
 	if err != nil {
-		fmt.Printf("❌ Failed to list containers: %v\n", err)
+		fmt.Printf("❌ Failed to list boxes: %v\n", err)
 	} else {
-		fmt.Printf("Active devbox containers: %d\n", len(containers))
-		for _, container := range containers {
-			for _, name := range container.Names {
-				fmt.Printf("  • %s (%s)\n", strings.TrimPrefix(name, "/"), container.Status)
+		fmt.Printf("Active devbox boxes: %d\n", len(boxes))
+		for _, box := range boxes {
+			for _, name := range box.Names {
+				fmt.Printf("  • %s (%s)\n", strings.TrimPrefix(name, "/"), box.Status)
 			}
 		}
 	}
@@ -409,8 +409,8 @@ func showSystemStatus() error {
 
 func init() {
 	cleanupCmd.Flags().BoolVarP(&dryRunFlag, "dry-run", "n", false, "Show what would be cleaned without actually removing anything")
-	cleanupCmd.Flags().BoolVarP(&allFlag, "all", "a", false, "Clean up all unused resources (containers, images, volumes, networks)")
-	cleanupCmd.Flags().BoolVar(&orphanedFlag, "orphaned", false, "Clean up orphaned devbox containers only")
+	cleanupCmd.Flags().BoolVarP(&allFlag, "all", "a", false, "Clean up all unused resources (boxes, images, volumes, networks)")
+	cleanupCmd.Flags().BoolVar(&orphanedFlag, "orphaned", false, "Clean up orphaned devbox boxes only")
 	cleanupCmd.Flags().BoolVar(&imagesFlag, "images", false, "Clean up unused Docker images only")
 	cleanupCmd.Flags().BoolVar(&volumesFlag, "volumes", false, "Clean up unused Docker volumes only")
 	cleanupCmd.Flags().BoolVar(&networksFlag, "networks", false, "Clean up unused Docker networks only")

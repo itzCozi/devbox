@@ -91,7 +91,7 @@ devbox maintenance --health-check
 # Clean up unused resources
 devbox cleanup --all
 
-# Update all containers
+# Update all boxes
 devbox maintenance --update
 ```
 
@@ -196,11 +196,11 @@ rm -rf ~/.devbox/
 
 2. **Persistent installs**: Packages installed with `apt` persist between box restarts
 
-3. **Port forwarding**: Use `docker run -p` syntax in custom boxs if you need exposed ports
+3. **Port forwarding**: Use `docker run -p` syntax in custom boxes if you need exposed ports
 
-4. **Resource limits**: Boxs share host resources - monitor usage with `docker stats`
+4. **Resource limits**: Boxes share host resources - monitor usage with `docker stats`
 
-5. **Backup projects**: Your code in `~/devbox/<project>/` is safe even if boxs are destroyed
+5. **Backup projects**: Your code in `~/devbox/<project>/` is safe even if boxes are destroyed
 
 6. **Multiple projects**: Each project is completely isolated - install different Python versions, Node versions, etc.
 
@@ -213,7 +213,7 @@ Edit `~/.devbox/config.json` to change base images for new projects.
 Create setup scripts like `examples/setup-python-web.sh` and run them after `devbox init`.
 
 ### Sharing projects
-Copy the `~/devbox/<project>/` directory to share project files (boxs are recreated on each system).
+Copy the `~/devbox/<project>/` directory to share project files (boxes are recreated on each system).
 
 ---
 

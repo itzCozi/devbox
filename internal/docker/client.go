@@ -498,7 +498,7 @@ type BoxInfo struct {
 	Image  string
 }
 
-func (c *Client) ListBoxs() ([]BoxInfo, error) {
+func (c *Client) ListBoxes() ([]BoxInfo, error) {
 	cmd := exec.Command("docker", "ps", "-a", "--format", "{{.Names}}\t{{.Status}}\t{{.Image}}")
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
@@ -507,12 +507,12 @@ func (c *Client) ListBoxs() ([]BoxInfo, error) {
 	if err := cmd.Run(); err != nil {
 		stderrStr := strings.TrimSpace(stderr.String())
 		if stderrStr != "" {
-			return nil, fmt.Errorf("failed to list boxs: %s", stderrStr)
+			return nil, fmt.Errorf("failed to list boxes: %s", stderrStr)
 		}
-		return nil, fmt.Errorf("failed to list boxs: %w", err)
+		return nil, fmt.Errorf("failed to list boxes: %w", err)
 	}
 
-	var boxs []BoxInfo
+	var boxes []BoxInfo
 	scanner := bufio.NewScanner(&stdout)
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -527,7 +527,7 @@ func (c *Client) ListBoxs() ([]BoxInfo, error) {
 
 		name := parts[0]
 		if strings.HasPrefix(name, "devbox_") {
-			boxs = append(boxs, BoxInfo{
+			boxes = append(boxes, BoxInfo{
 				Names:  []string{name},
 				Status: parts[1],
 				Image:  parts[2],
@@ -535,7 +535,7 @@ func (c *Client) ListBoxs() ([]BoxInfo, error) {
 		}
 	}
 
-	return boxs, scanner.Err()
+	return boxes, scanner.Err()
 }
 
 func (c *Client) RunDockerCommand(args []string) error {

@@ -27,7 +27,7 @@ case "$1" in
         echo "  devbox host     - Run command on host (experimental)"
         ;;
     "help"|"--help"|"-h")
-        echo "🚀 Devbox Box Commands"
+        echo "🚀 Devbox box Commands"
         echo ""
         echo "Available commands inside the box:"
         echo "  devbox exit         - Exit the devbox shell"

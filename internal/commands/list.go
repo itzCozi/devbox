@@ -30,13 +30,13 @@ var listCmd = &cobra.Command{
 			return nil
 		}
 
-		boxs, err := dockerClient.ListBoxs()
+		boxes, err := dockerClient.ListBoxes()
 		if err != nil {
-			return fmt.Errorf("failed to list boxs: %w", err)
+			return fmt.Errorf("failed to list boxes: %w", err)
 		}
 
 		boxStatus := make(map[string]string)
-		for _, box := range boxs {
+		for _, box := range boxes {
 			for _, name := range box.Names {
 
 				cleanName := strings.TrimPrefix(name, "/")

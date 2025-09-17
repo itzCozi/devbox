@@ -17,13 +17,13 @@ var destroyCmd = &cobra.Command{
 Removes empty project directories automatically.
 
 Special usage:
-  devbox destroy --cleanup-orphaned  Remove containers not tracked in config`,
+  devbox destroy --cleanup-orphaned  Remove boxes not tracked in config`,
 	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		projectName := args[0]
 
 		if projectName == "--cleanup-orphaned" {
-			return cleanupOrphanedContainers()
+			return cleanupOrphanedboxes()
 		}
 
 		if err := validateProjectName(projectName); err != nil {
@@ -119,17 +119,17 @@ func isDirEmpty(dirPath string) (bool, error) {
 	return false, err
 }
 
-func cleanupOrphanedContainers() error {
-	fmt.Println("Cleaning up orphaned devbox containers...")
+func cleanupOrphanedboxes() error {
+	fmt.Println("Cleaning up orphaned devbox boxes...")
 
 	cfg, err := configManager.Load()
 	if err != nil {
 		return fmt.Errorf("failed to load configuration: %w", err)
 	}
 
-	boxes, err := dockerClient.ListBoxs()
+	boxes, err := dockerClient.ListBoxes()
 	if err != nil {
-		return fmt.Errorf("failed to list containers: %w", err)
+		return fmt.Errorf("failed to list boxes: %w", err)
 	}
 
 	trackedBoxes := make(map[string]bool)
@@ -148,17 +148,17 @@ func cleanupOrphanedContainers() error {
 	}
 
 	if len(orphanedBoxes) == 0 {
-		fmt.Println("No orphaned containers found.")
+		fmt.Println("No orphaned boxes found.")
 		return nil
 	}
 
-	fmt.Printf("Found %d orphaned devbox container(s):\n", len(orphanedBoxes))
+	fmt.Printf("Found %d orphaned devbox box(s):\n", len(orphanedBoxes))
 	for _, boxName := range orphanedBoxes {
 		fmt.Printf("  - %s\n", boxName)
 	}
 
 	if !forceFlag {
-		fmt.Print("\nRemove these orphaned containers? (y/N): ")
+		fmt.Print("\nRemove these orphaned boxes? (y/N): ")
 		reader := bufio.NewReader(os.Stdin)
 		response, err := reader.ReadString('\n')
 		if err != nil {
@@ -186,7 +186,7 @@ func cleanupOrphanedContainers() error {
 
 	fmt.Printf("\nCleanup complete: %d removed, %d failed\n", removed, failed)
 	if failed > 0 {
-		return fmt.Errorf("failed to remove %d container(s)", failed)
+		return fmt.Errorf("failed to remove %d box(s)", failed)
 	}
 
 	return nil
