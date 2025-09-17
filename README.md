@@ -47,7 +47,9 @@ make dev
 
 ## Commands
 
-### `devbox init <project>`
+### Core Commands
+
+#### `devbox init <project>`
 
 Create a new devbox project with its own Docker box.
 
@@ -65,14 +67,44 @@ Options:
 - `--generate-config, -g`: Generate devbox.json configuration file
 - `--config-only, -c`: Generate configuration file only (don't create box)
 
-This command:
-1. Creates `~/devbox/<project>` directory on the host
-2. Creates a Docker box named `devbox_<project>`
-3. Mounts the host directory into `/workspace` inside the box
-4. Starts the box with Ubuntu 22.04 base image (or configured image)
-5. Runs setup commands if defined in `devbox.json`
+#### `devbox shell <project>`
 
-### `devbox config <command>`
+Open an interactive bash shell in the project's box.
+
+```bash
+devbox shell myproject
+```
+
+#### `devbox run <project> <command>`
+
+Run an arbitrary command inside the project's box.
+
+```bash
+devbox run myproject ls -la
+devbox run myproject apt update
+devbox run myproject python3 --version
+```
+
+#### `devbox destroy <project>`
+
+Stop and remove the project's box.
+
+```bash
+devbox destroy myproject
+```
+
+#### `devbox list`
+
+Show all managed projects and their box status.
+
+```bash
+devbox list            # Basic list
+devbox list --verbose  # Detailed list with configuration info
+```
+
+### Management Commands
+
+#### `devbox config <command>`
 
 Manage devbox configurations.
 
@@ -83,6 +115,46 @@ devbox config show myproject        # Show configuration details
 devbox config templates             # List available templates
 devbox config global                # Show global settings
 ```
+
+#### `devbox cleanup [flags]`
+
+Clean up Docker resources and devbox artifacts.
+
+```bash
+devbox cleanup                      # Interactive cleanup menu
+devbox cleanup --orphaned           # Remove orphaned containers only
+devbox cleanup --images             # Remove unused images only
+devbox cleanup --volumes            # Remove unused volumes only
+devbox cleanup --networks           # Remove unused networks only
+devbox cleanup --all                # Clean up everything
+devbox cleanup --system-prune       # Run docker system prune
+devbox cleanup --dry-run            # Show what would be cleaned
+```
+
+This command helps maintain a clean system by removing:
+- Orphaned devbox containers (not tracked in config)
+- Unused Docker images, volumes, and networks
+- Dangling build artifacts
+
+#### `devbox maintenance [flags]`
+
+Perform maintenance tasks on devbox projects and containers.
+
+```bash
+devbox maintenance                  # Interactive maintenance menu
+devbox maintenance --status         # Show detailed system status
+devbox maintenance --health-check   # Check health of all projects
+devbox maintenance --update         # Update all containers
+devbox maintenance --restart        # Restart stopped containers
+devbox maintenance --rebuild        # Rebuild all containers
+devbox maintenance --auto-repair    # Auto-fix common issues
+```
+
+This command provides:
+- System health checks and status monitoring
+- Automated updates for all containers
+- Container restart and rebuild capabilities
+- Auto-repair for common issues
 
 ### `devbox shell <project>`
 
@@ -387,11 +459,13 @@ make fmt
 
 Potential features for future versions:
 
-- **Templates**: `devbox init myproject --python` with pre-installed runtimes
-- **Project Config**: Support for `devbox.json` files with setup commands
-- **Cleanup Commands**: `devbox prune` to clean unused boxs/images
-- **Multiple Base Images**: Support for different Linux distributions
-- **Volume Management**: Better handling of persistent data
+- **Multi-OS Support**: Support for different Linux distributions beyond Ubuntu
+- **Volume Management**: Better handling of persistent data and bind mounts
+- **Network Management**: Custom Docker networks for multi-container projects
+- **Resource Monitoring**: Real-time monitoring of container resource usage
+- **Backup/Restore**: Backup and restore project configurations and data
+- **Remote Containers**: Support for remote Docker hosts
+- **Plugin System**: Extensible plugin system for custom functionality
 
 ## License
 

@@ -83,6 +83,18 @@ devbox list
 devbox destroy myproject
 ```
 
+### 7. System maintenance
+```bash
+# Check system health
+devbox maintenance --health-check
+
+# Clean up unused resources
+devbox cleanup --all
+
+# Update all containers
+devbox maintenance --update
+```
+
 ## Common Workflows
 
 ### Python Development

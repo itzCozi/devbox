@@ -68,6 +68,8 @@ func init() {
 	rootCmd.AddCommand(destroyCmd)
 	rootCmd.AddCommand(listCmd)
 	rootCmd.AddCommand(configCmd)
+	rootCmd.AddCommand(cleanupCmd)
+	rootCmd.AddCommand(maintenanceCmd)
 
 	destroyCmd.Flags().BoolVarP(&forceFlag, "force", "f", false, "Force operation without confirmation")
 }

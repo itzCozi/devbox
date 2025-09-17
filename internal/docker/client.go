@@ -507,3 +507,14 @@ func (c *Client) ListBoxs() ([]BoxInfo, error) {
 
 	return boxs, scanner.Err()
 }
+
+func (c *Client) RunDockerCommand(args []string) error {
+	cmd := exec.Command("docker", args...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("docker command failed: %w", err)
+	}
+	return nil
+}
