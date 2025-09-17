@@ -11,6 +11,8 @@ class ShellCommentRemover:
         self.preserve_shebang = preserve_shebang
         self.processed_files = 0
         self.total_comments_removed = 0
+        # Directories to skip while crawling
+        self.excluded_dirs = {"vendor", ".git", ".vscode", "__pycache__", "node_modules", "dist", "build"}
         
     def is_shell_file(self, filepath: str) -> bool:
         """Check if file is a shell script file."""
@@ -21,7 +23,7 @@ class ShellCommentRemover:
         shell_files = []
         for root, dirs, files in os.walk(directory):
             # Skip vendor and .git directories
-            dirs[:] = [d for d in dirs if d not in ['vendor', '.git', '.vscode', '__pycache__']]
+            dirs[:] = [d for d in dirs if d not in self.excluded_dirs]
             
             for file in files:
                 if self.is_shell_file(file):
@@ -139,8 +141,8 @@ class ShellCommentRemover:
             print(f"Error writing {filepath}: {e}")
             return False
     
-    def process_directory(self, directory: str, dry_run: bool = False) -> None:
-        """Process all shell script files in directory."""
+    def process_directory(self, directory: str, dry_run: bool = False, remove_empty_dirs: bool = True) -> None:
+        """Process all shell script files in directory, optionally removing empty directories."""
         if not os.path.isdir(directory):
             print(f"Error: {directory} is not a directory")
             return
@@ -168,11 +170,50 @@ class ShellCommentRemover:
         print(f"  Files modified: {modified_files}")
         if not dry_run:
             print(f"  Total comments removed: {self.total_comments_removed}")
+        
+        if remove_empty_dirs:
+            removed_dirs = self.remove_empty_directories(directory, dry_run=dry_run)
+            print(f"  Empty directories removed: {removed_dirs}")
+
+    def remove_empty_directories(self, root_dir: str, dry_run: bool = False) -> int:
+        """Remove empty directories under root_dir (post-order), excluding certain directories.
+
+        Returns the count of directories removed (or that would be removed in dry-run).
+        """
+        removed_count = 0
+        # Walk bottom-up so that we remove leaves first and then potentially their parents
+        for current_root, dirs, files in os.walk(root_dir, topdown=False):
+            # Skip excluded directories by name
+            # We still need to traverse into them (because topdown=False won't allow pruning),
+            # but we won't remove them even if empty.
+            for d in dirs:
+                dir_path = os.path.join(current_root, d)
+                # Never remove the root and skip excluded dir names
+                if d in self.excluded_dirs:
+                    continue
+                # Also skip any directory that lives under an excluded tree (e.g., .git/**/*)
+                rel = os.path.relpath(dir_path, root_dir)
+                parts = rel.split(os.sep)
+                if any(part in self.excluded_dirs for part in parts):
+                    continue
+                try:
+                    # Only consider truly empty directories
+                    if os.path.isdir(dir_path) and not os.listdir(dir_path):
+                        if dry_run:
+                            print(f"Would remove empty directory: {dir_path}")
+                        else:
+                            os.rmdir(dir_path)
+                            print(f"Removed empty directory: {dir_path}")
+                        removed_count += 1
+                except OSError as e:
+                    # Possibly not empty or permission denied; just report and continue
+                    print(f"Could not remove directory {dir_path}: {e}")
+        return removed_count
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Remove comments from shell script files",
+        description="Remove comments from shell script files and clean up empty directories",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -180,42 +221,49 @@ Examples:
   python remove_comments.py /path/to/project  # Process specific directory
   python remove_comments.py --dry-run         # See what would be changed
   python remove_comments.py --no-preserve     # Remove all comments including shebang
+  python remove_comments.py --keep-empty-dirs # Do not remove empty directories
         """
     )
-    
+
     parser.add_argument(
         'directory',
         nargs='?',
         default='.',
         help='Directory to process (default: current directory)'
     )
-    
+
     parser.add_argument(
         '--dry-run',
         action='store_true',
         help='Show what would be changed without modifying files'
     )
-    
+
     parser.add_argument(
         '--no-preserve',
         action='store_true',
         help='Remove all comments including shebang lines'
     )
-    
+
+    parser.add_argument(
+        '--keep-empty-dirs',
+        action='store_true',
+        help='Do not remove empty directories after processing'
+    )
+
     args = parser.parse_args()
-    
+
     directory = os.path.abspath(args.directory)
-    
+
     if not os.path.exists(directory):
         print(f"Error: Directory {directory} does not exist")
         sys.exit(1)
-    
+
     print(f"Processing shell script files in: {directory}")
-    
+
     remover = ShellCommentRemover(preserve_shebang=not args.no_preserve)
-    
+
     try:
-        remover.process_directory(directory, dry_run=args.dry_run)
+        remover.process_directory(directory, dry_run=args.dry_run, remove_empty_dirs=not args.keep_empty_dirs)
     except KeyboardInterrupt:
         print("\nOperation cancelled by user")
         sys.exit(1)

@@ -1,5 +1,3 @@
-# Makefile for devbox CLI tool
-
 # Go parameters
 GOCMD=go
 GOBUILD=$(GOCMD) build

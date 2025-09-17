@@ -10,7 +10,7 @@ export default defineConfig({
 		starlight({
 			title: 'devbox',
 			description: 'Isolated development environments using Docker containers',
-			favicon: './src/assets/logo.svg',
+			favicon: '/src/assets/logo.svg',
 			logo: {
 				replacesTitle: true,
         light: './src/assets/logo-dark.png',
@@ -29,9 +29,8 @@ export default defineConfig({
 				{
 					label: 'Getting Started',
 					items: [
-						{ label: 'Introduction', slug: 'index' },
-						{ label: 'Installation', slug: 'guides/install' },
 						{ label: 'Quick Start', slug: 'guides/intro' },
+						{ label: 'Installation', slug: 'guides/install' },
 					],
 				},
 				{

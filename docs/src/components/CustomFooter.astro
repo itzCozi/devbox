@@ -4,14 +4,14 @@ import Default from '@astrojs/starlight/components/Footer.astro';
 
 <Default />
 <footer class="sl-container custom-footer">
-  <p>Created by BadDeveloper with 💚</p>
+  <p>Created by <a href="https://github.com/itzcozi" title="BadDeveloper's Github">BadDeveloper</a> with 💚</p>
 </footer>
 
 <style>
   .custom-footer {
     padding-block: 0.5rem 2rem;
     text-align: center;
-    color: var(--sl-color-text-muted);
+    color: color-mix(in srgb, var(--sl-color-text-muted) 85%, transparent);
     font-size: 0.85rem;
   }
 </style>
