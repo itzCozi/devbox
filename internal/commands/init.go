@@ -154,7 +154,8 @@ Examples:
 		}
 
 		if projectConfig != nil && len(projectConfig.SetupCommands) > 0 {
-			if err := dockerClient.ExecuteSetupCommands(boxName, projectConfig.SetupCommands); err != nil {
+			fmt.Printf("Installing template packages (%d commands)...\n", len(projectConfig.SetupCommands))
+			if err := dockerClient.ExecuteSetupCommandsWithOutput(boxName, projectConfig.SetupCommands, false); err != nil {
 				return fmt.Errorf("failed to execute setup commands: %w", err)
 			}
 		}

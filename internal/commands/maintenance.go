@@ -492,7 +492,7 @@ func rebuildAllboxes() error {
 		}
 
 		if projectConfig != nil && len(projectConfig.SetupCommands) > 0 {
-			if err := dockerClient.ExecuteSetupCommands(project.BoxName, projectConfig.SetupCommands); err != nil {
+			if err := dockerClient.ExecuteSetupCommandsWithOutput(project.BoxName, projectConfig.SetupCommands, false); err != nil {
 				fmt.Printf("⚠️  Failed to execute setup commands: %v\n", err)
 			}
 		}
