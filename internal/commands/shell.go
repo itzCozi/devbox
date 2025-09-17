@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+	"os/exec"
 
 	"github.com/spf13/cobra"
 
@@ -51,9 +52,12 @@ var shellCmd = &cobra.Command{
 			}
 		}
 
-		fmt.Printf("Setting up devbox commands in box...\n")
-		if err := dockerClient.SetupDevboxInBox(project.BoxName, projectName); err != nil {
-			return fmt.Errorf("failed to setup devbox in box: %w", err)
+		checkCmd := exec.Command("docker", "exec", project.BoxName, "test", "-f", "/etc/devbox-initialized")
+		if checkCmd.Run() != nil {
+			fmt.Printf("Setting up devbox commands in box...\n")
+			if err := dockerClient.SetupDevboxInBox(project.BoxName, projectName); err != nil {
+				return fmt.Errorf("failed to setup devbox in box: %w", err)
+			}
 		}
 
 		fmt.Printf("Attaching to box '%s'...\n", project.BoxName)
