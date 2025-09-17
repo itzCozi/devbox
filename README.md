@@ -23,7 +23,7 @@ devbox creates isolated development environments, contained in a project's Docke
 
 ```bash
 # Using the install script
-curl -fsSL https://raw.githubusercontent.com/itzCozi/devbox/main/install.sh | bash
+curl -fsSL https://devbox.ar0.eu/install.sh | bash
 # Or manually: https://devbox.ar0.eu/docs/install/#manual-build-from-source
 ```
 

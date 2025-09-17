@@ -356,7 +356,7 @@ rm -rf ~/.devbox/
 # rm -rf ~/devbox/  # This deletes your code!
 
 # Reinstall devbox if needed
-curl -fsSL https://raw.githubusercontent.com/itzCozi/devbox/main/install.sh | bash
+curl -fsSL https://devbox.ar0.eu/install.sh | bash
 ```
 
 ##### "Recover project after container deletion"

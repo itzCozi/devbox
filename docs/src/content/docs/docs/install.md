@@ -4,7 +4,7 @@ description: How to install devbox on your Debian/Ubuntu system
 ---
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/itzCozi/devbox/main/install.sh | bash
+curl -fsSL https://devbox.ar0.eu/install.sh | bash
 ```
 
 This script will automatically:

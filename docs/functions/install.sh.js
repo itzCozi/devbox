@@ -2,7 +2,7 @@
 // Keeps https://devbox.ar0.eu/install.sh in sync with the repository's install.sh.
 
 export async function onRequest(context) {
-  const upstreamUrl = 'https://raw.githubusercontent.com/itzCozi/devbox/main/install.sh';
+  const upstreamUrl = 'https://devbox.ar0.eu/install.sh';
 
   // Forward conditional request headers for better caching (ETag support)
   const headers = new Headers();
