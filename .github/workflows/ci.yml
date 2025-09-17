@@ -46,6 +46,9 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     needs: [test]
+    permissions:
+      contents: read
+      actions: write
     
     strategy:
       matrix:
@@ -88,7 +91,7 @@ jobs:
         CGO_ENABLED=0 go build -ldflags="-w -s" -o build/${BINARY_NAME}-${GOOS}-${GOARCH} ./cmd/devbox
         
     - name: Upload artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: devbox-${{ matrix.goos }}-${{ matrix.goarch }}
         path: build/devbox*

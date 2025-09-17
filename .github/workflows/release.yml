@@ -9,6 +9,9 @@ jobs:
   release:
     name: Release Build
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: write
     
     strategy:
       matrix:
@@ -107,7 +110,7 @@ jobs:
         
     - name: Upload artifacts (manual trigger)
       if: github.event_name == 'workflow_dispatch'
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: devbox-${{ matrix.goos }}-${{ matrix.goarch }}
         path: build/devbox-*
