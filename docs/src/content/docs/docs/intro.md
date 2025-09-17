@@ -28,4 +28,4 @@ Traditional development environments can lead to "it works on my machine" issues
 
 ## Getting Started
 
-To get started with devbox, follow this guide on [installation and setup](/start).
+To get started with devbox, follow this guide on [installation and setup](/docs/start).

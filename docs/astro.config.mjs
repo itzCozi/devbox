@@ -16,6 +16,7 @@ export default defineConfig({
         light: './src/assets/logo-dark.png',
         dark: './src/assets/logo.png',
       },
+      lastUpdated: true,
 			components: {
 				Footer: './src/components/CustomFooter.astro',
 			},
@@ -30,31 +31,31 @@ export default defineConfig({
 				{
 					label: 'Getting Started',
 					items: [
-						{ label: 'Introduction', slug: 'intro' },
-						{ label: 'Quick Start', slug: 'start' },
-						{ label: 'Installation', slug: 'install' },
+						{ label: 'Introduction', slug: 'docs/intro' },
+						{ label: 'Quick Start', slug: 'docs/start' },
+						{ label: 'Installation', slug: 'docs/install' },
 					],
 				},
 				{
 					label: 'Configuration',
 					collapsed: true,
 					items: [
-						{ label: 'Configuration Files', slug: 'configuration' },
-						{ label: 'Templates & Setup', slug: 'templates' },
+						{ label: 'Configuration Files', slug: 'docs/configuration' },
+						{ label: 'Templates & Setup', slug: 'docs/templates' },
 					],
 				},
 				{
 					label: 'Maintenance',
 					collapsed: true,
 					items: [
-						{ label: 'Cleanup & Maintenance', slug: 'cleanup-maintenance' },
-						{ label: 'Troubleshooting', slug: 'troubleshooting' },
+						{ label: 'Cleanup & Maintenance', slug: 'docs/cleanup-maintenance' },
+						{ label: 'Troubleshooting', slug: 'docs/troubleshooting' },
 					],
 				},
 				{
 					label: 'Reference',
 					items: [
-						{ label: 'CLI Commands', slug: 'cli' },
+						{ label: 'CLI Commands', slug: 'docs/cli' },
 					],
 				},
 			],

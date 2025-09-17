@@ -8,7 +8,7 @@ This guide will get you up and running with devbox in just a few minutes. You'll
 ## Prerequisites
 ---
 
-Before starting, make sure you have devbox installed. If you haven't installed it yet, follow the [Installation Guide](/install/) first.
+Before starting, make sure you have devbox installed. If you haven't installed it yet, follow the [Installation Guide](/docs//install/) first.
 
 ## Create Your First Project
 ---
@@ -130,7 +130,7 @@ Here's the typical devbox workflow:
 
 Now that you understand the basics:
 
-1. **Learn about configuration**: [Configuration Guide](/configuration/)
-2. **Explore templates**: Try different [project templates](/templates/)
+1. **Learn about configuration**: [Configuration Guide](/docs/configuration/)
+2. **Explore templates**: Try different [project templates](/docs/templates/)
 3. **Customize**: Create a custom `devbox.json` config file
-4. **Maintenance**: [Cleanup and Maintenance](/cleanup-maintenance/)
+4. **Maintenance**: [Cleanup and Maintenance](/docs/cleanup-maintenance/)
