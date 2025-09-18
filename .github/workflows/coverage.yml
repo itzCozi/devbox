@@ -1,0 +1,74 @@
+name: Coverage
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  coverage:
+    name: Test Coverage
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.21'
+
+    - name: Cache Go modules
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cache/go-build
+          ~/go/pkg/mod
+        key: ${{ runner.os }}-go-coverage-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-coverage-
+
+    - name: Download dependencies
+      run: go mod download
+
+    - name: Run tests with coverage
+      run: |
+        go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
+        go tool cover -func=coverage.out
+
+    - name: Generate coverage reports
+      run: |
+        go tool cover -html=coverage.out -o coverage.html
+        go tool cover -func=coverage.out -o coverage.txt
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.out
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
+        verbose: true
+        token: ${{ secrets.CODECOV_TOKEN }}
+
+    - name: Upload coverage reports to artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: coverage-reports
+        path: |
+          coverage.out
+          coverage.html
+          coverage.txt
+        retention-days: 30
+
+    - name: Comment coverage on PR
+      if: github.event_name == 'pull_request'
+      run: |
+        if [ -f coverage.txt ]; then
+          COVERAGE=$(grep "total:" coverage.txt | awk '{print $3}')
+          echo "Coverage: $COVERAGE"
+          echo "Coverage report generated for this PR" >> $GITHUB_STEP_SUMMARY
+          echo "Total Coverage: $COVERAGE" >> $GITHUB_STEP_SUMMARY
+        fi

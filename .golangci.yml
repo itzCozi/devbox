@@ -4,8 +4,7 @@ run:
   skip-dirs:
     - build
     - docs
-  skip-files:
-    - ".*_test.go"
+  skip-files: []  # Enable linting for test files
 
 linters:
   enable:

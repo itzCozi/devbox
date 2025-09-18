@@ -10,9 +10,13 @@ Thank you for your interest in contributing to devbox! This document provides gu
 - [Development Setup](#development-setup)
 - [Coding Standards](#coding-standards)
 - [Testing](#testing)
+- [Continuous Integration](#continuous-integration)
 - [Submitting Changes](#submitting-changes)
 - [Reporting Issues](#reporting-issues)
 - [Feature Requests](#feature-requests)
+- [Documentation](#documentation)
+- [Community](#community)
+- [License](#license)
 
 ## Code of Conduct
 
@@ -37,12 +41,14 @@ This project adheres to a code of conduct that we expect all contributors to fol
 
 We welcome several types of contributions:
 
-- 🐛 **Bug fixes**
-- ✨ **New features**
-- 📚 **Documentation improvements**
-- 🧪 **Tests**
-- 🔧 **Code refactoring**
-- 🎨 **UI/UX improvements**
+- 🐛 **Bug fixes** - Fix issues and improve reliability
+- ✨ **New features** - Add functionality following our roadmap
+- 📚 **Documentation improvements** - Keep docs accurate and helpful
+- 🧪 **Tests** - Expand our comprehensive test suite
+- 🔧 **Code refactoring** - Improve code quality and maintainability
+- 🎨 **UI/UX improvements** - Enhance user experience
+- ⚡ **Performance optimizations** - Make devbox faster and more efficient
+- 🛡️ **Security enhancements** - Improve security posture
 
 ### Good First Issues
 
@@ -55,6 +61,12 @@ Look for issues labeled with:
 
 ### Prerequisites
 
+**⚠️ Operating System Requirement**: devbox only works on **Debian/Ubuntu** systems. For development and testing:
+- **Recommended**: Debian 11+ or Ubuntu 20.04+
+- **Alternative**: Docker container with Debian/Ubuntu
+- **Windows users**: Use WSL2 with Ubuntu distribution
+
+**Required Software**:
 - Go 1.21 or later
 - Docker
 - Make
@@ -161,6 +173,37 @@ test(docker): add integration tests for container management
 
 ## Testing
 
+### Overview
+
+**⚠️ Testing Environment**: For best results, run tests on **Debian/Ubuntu** systems where devbox is fully functional. Cross-platform tests verify compatibility but devbox only operates on Debian/Ubuntu.
+
+devbox has a comprehensive test suite that includes:
+- **Unit tests** for individual functions and components
+- **Integration tests** for CLI commands and end-to-end functionality (best on Debian/Ubuntu)
+- **Cross-platform tests** for Windows, macOS, and Linux compatibility verification
+- **Security tests** and vulnerability scanning
+- **Performance tests** with race condition detection
+
+### Test Structure
+
+```
+test/
+├── integration/           # End-to-end CLI tests
+│   └── cli_test.go
+internal/
+├── commands/
+│   ├── version_test.go    # Version command tests
+│   └── root_test.go       # Project validation tests
+├── config/
+│   ├── config_test.go     # Config struct tests
+│   └── config_manager_test.go  # File operations tests
+├── docker/
+│   └── client_test.go     # Docker client tests
+└── testutil/
+    ├── testutil.go        # Test helpers and utilities
+    └── testutil_test.go   # Tests for test utilities
+```
+
 ### Running Tests
 
 ```bash
@@ -170,17 +213,59 @@ make test
 # Run tests with coverage
 make test-coverage
 
-# Run tests with race detection
+# Run tests with race detection (Linux/macOS)
 go test -race ./...
+
+# Run specific test packages
+go test ./internal/commands -v
+go test ./internal/config -v
+go test ./test/integration -v
+
+# Generate coverage report
+go test -coverprofile=coverage.out ./...
+go tool cover -html=coverage.out -o coverage.html
 ```
 
 ### Writing Tests
 
+#### Unit Tests
 - Write unit tests for all new functions
-- Include integration tests for CLI commands
-- Aim for at least 50% test coverage
+- Include both success and failure cases
 - Use table-driven tests when appropriate
-- Mock external dependencies
+- Mock external dependencies (Docker, filesystem)
+- Aim for meaningful test coverage (not just percentage)
+
+#### Integration Tests
+- Test CLI commands end-to-end
+- Verify error messages and exit codes
+- Handle OS-specific behavior gracefully
+- Test argument validation and help text
+
+#### Test Utilities
+Use the `internal/testutil` package for common operations:
+
+```go
+import "devbox/internal/testutil"
+
+func TestMyFunction(t *testing.T) {
+    // Create test data
+    config := testutil.CreateTestConfig()
+    project := testutil.CreateTestProject("my-project")
+
+    // Use test assertions
+    testutil.AssertNoError(t, err)
+    testutil.AssertEqual(t, expected, actual)
+    testutil.AssertNotNil(t, result)
+}
+```
+
+### Test Guidelines
+
+- **Fast**: Unit tests should run quickly (< 100ms each)
+- **Isolated**: Tests shouldn't depend on external services
+- **Deterministic**: Tests should produce consistent results
+- **Clear**: Test names should describe what they verify
+- **Comprehensive**: Cover happy paths, edge cases, and error conditions
 
 ### Test Structure
 
@@ -192,31 +277,215 @@ func TestFunctionName(t *testing.T) {
         expected string
         wantErr  bool
     }{
-        // test cases
+        {
+            name:     "valid input",
+            input:    "test-project",
+            expected: "test-project",
+            wantErr:  false,
+        },
+        {
+            name:    "invalid input",
+            input:   "invalid@project",
+            wantErr: true,
+        },
     }
-    
+
     for _, tt := range tests {
         t.Run(tt.name, func(t *testing.T) {
-            // test implementation
+            result, err := FunctionName(tt.input)
+
+            if tt.wantErr {
+                testutil.AssertError(t, err, "")
+                return
+            }
+
+            testutil.AssertNoError(t, err)
+            testutil.AssertEqual(t, tt.expected, result)
         })
     }
 }
 ```
+
+## Continuous Integration
+
+### GitHub Actions Workflows
+
+The project uses GitHub Actions for automated testing and quality assurance:
+
+#### 1. Main CI Pipeline (`.github/workflows/ci.yml`)
+Runs on every push and pull request:
+- **Multi-version testing** (Go 1.21, 1.22)
+- **Comprehensive test suite** with race detection
+- **Cross-platform builds** (Linux, Windows, macOS)
+- **Code linting** with golangci-lint
+- **Security scanning** with gosec and govulncheck
+- **Coverage reporting** with Codecov integration
+
+#### 2. Cross-Platform Tests (`.github/workflows/cross-platform-tests.yml`)
+Ensures compatibility across operating systems:
+- **Ubuntu, Windows, macOS** testing
+- **Daily scheduled runs** for regression detection
+- **Binary execution verification**
+- **OS-specific test handling**
+
+#### 3. Coverage Reporting (`.github/workflows/coverage.yml`)
+Detailed test coverage analysis:
+- **Atomic coverage mode** for accuracy
+- **HTML and text reports** generation
+- **Coverage trend tracking**
+- **PR coverage comments**
+
+#### 4. Test Status Summary (`.github/workflows/test-status.yml`)
+Rich reporting in GitHub Actions:
+- **Test result summaries**
+- **Coverage percentage display**
+- **Markdown-formatted reports**
+
+### Quality Gates
+
+All pull requests must pass:
+- ✅ **All tests** (unit + integration)
+- ✅ **Linting checks** (golangci-lint)
+- ✅ **Security scans** (gosec, govulncheck)
+- ✅ **Cross-platform builds**
+- ✅ **Code coverage** maintained or improved
+
+### Local CI Simulation
+
+Run the same checks locally before pushing:
+
+```bash
+# Full quality check suite
+make quality
+
+# Individual checks
+make test          # Run all tests
+make test-coverage # Generate coverage
+make lint          # Code linting
+make security      # Security scanning
+make fmt           # Code formatting
+```
+
+### Automated Checks
+
+The CI system automatically:
+- **Runs tests** on multiple Go versions
+- **Builds binaries** for all target platforms
+- **Scans for vulnerabilities** in dependencies
+- **Checks code formatting** and style
+- **Validates documentation** changes
+- **Generates coverage reports**
+- **Creates build artifacts**
+
+### Working with CI
+
+#### When CI Fails:
+1. **Check the logs** in GitHub Actions tab
+2. **Run tests locally** to reproduce the issue
+3. **Fix the issue** and push again
+4. **Don't ignore CI failures** - they indicate real problems
+
+#### Tips for Success:
+- **Run tests locally** before pushing
+- **Keep commits atomic** and focused
+- **Write descriptive commit messages**
+- **Update tests** when changing functionality
+- **Check coverage** to ensure new code is tested
+
+### Debugging CI Failures
+
+Common CI issues and solutions:
+
+#### Test Failures
+```bash
+# Reproduce locally
+go test -v ./internal/package_name
+
+# Check for race conditions (Linux/macOS)
+go test -race ./...
+
+# Run integration tests
+go test -v ./test/integration
+```
+
+#### Linting Failures
+```bash
+# Run linter locally
+make lint
+
+# Auto-fix formatting issues
+make fmt
+
+# Check specific files
+golangci-lint run ./internal/commands/
+```
+
+#### Coverage Issues
+```bash
+# Generate local coverage report
+make test-coverage
+
+# View coverage by function
+go tool cover -func=coverage.out
+
+# Open HTML coverage report
+open coverage.html
+```
+
+#### Platform-Specific Issues
+
+**⚠️ Important Note**: devbox is designed to work only on **Debian/Ubuntu** systems. While we run cross-platform CI tests for compatibility checking, the actual devbox functionality requires a Debian or Ubuntu environment.
+
+**Recommended Testing Environment**:
+- **Debian 11+** or **Ubuntu 20.04+** for best results
+- **Docker containers** running Debian/Ubuntu for isolated testing
+- **WSL2 with Ubuntu** on Windows for development
+
+**Platform-Specific Behavior**:
+- **Windows**: Integration tests may skip due to OS compatibility checks - devbox functionality not supported
+- **macOS**: Tests run for compatibility verification only - devbox functionality not supported
+- **Linux (Debian/Ubuntu)**: Full functionality and testing supported
 
 ## Submitting Changes
 
 ### Pull Request Process
 
 1. **Update documentation** if needed
-2. **Add tests** for new functionality
-3. **Ensure CI passes** - all checks must be green
+2. **Add tests** for new functionality (unit and integration tests)
+3. **Ensure all CI checks pass**:
+   - ✅ Tests pass on all platforms
+   - ✅ Linting checks pass
+   - ✅ Security scans clear
+   - ✅ Builds succeed for all targets
+   - ✅ Coverage maintained or improved
 4. **Update CHANGELOG.md** if applicable
 5. **Request review** from maintainers
+
+### Pre-submission Checklist
+
+Before submitting your PR, run these commands locally:
+
+```bash
+# Run full test suite
+make test
+
+# Check code quality
+make lint
+
+# Verify security
+make security
+
+# Ensure proper formatting
+make fmt
+
+# Generate coverage report
+make test-coverage
+```
 
 ### Pull Request Guidelines
 
 - **Title**: Use a descriptive title following conventional commits
-- **Description**: 
+- **Description**:
   - Explain what changes you made and why
   - Reference any related issues
   - Include screenshots for UI changes
@@ -228,25 +497,42 @@ Your PR description should include:
 
 ```markdown
 ## Description
-Brief description of changes
+Brief description of changes and motivation
 
 ## Type of Change
-- [ ] Bug fix
-- [ ] New feature
-- [ ] Breaking change
+- [ ] Bug fix (non-breaking change that fixes an issue)
+- [ ] New feature (non-breaking change that adds functionality)
+- [ ] Breaking change (fix or feature that causes existing functionality to change)
 - [ ] Documentation update
+- [ ] Test improvement
+- [ ] Refactoring (no functional changes)
 
 ## Testing
-- [ ] Tests pass locally
-- [ ] Added tests for new functionality
-- [ ] Updated documentation
+- [ ] Unit tests pass locally (`go test ./internal/...`)
+- [ ] Integration tests pass locally (`go test ./test/...`)
+- [ ] Added unit tests for new functionality
+- [ ] Added integration tests if applicable
+- [ ] All CI checks pass (tests, linting, security)
+- [ ] Cross-platform compatibility verified
+- [ ] Coverage maintained or improved
+
+## Code Quality
+- [ ] Code follows Go formatting (`make fmt`)
+- [ ] Linting passes (`make lint`)
+- [ ] Security scans pass (`make security`)
+- [ ] No race conditions (`go test -race ./...`)
+
+## Documentation
+- [ ] Updated relevant documentation
+- [ ] Added code comments for complex logic
+- [ ] Updated CHANGELOG.md if applicable
+- [ ] README updated if needed
 
 ## Checklist
-- [ ] Code follows style guidelines
 - [ ] Self-review completed
-- [ ] Comments added for complex code
-- [ ] Documentation updated
 - [ ] No breaking changes (or clearly documented)
+- [ ] Related issues referenced
+- [ ] Screenshots included for UI changes
 ```
 
 ## Reporting Issues
@@ -295,7 +581,7 @@ We welcome feature requests! Please:
 - Write clear, concise prose
 - Include code examples
 - Test all examples
-- Keep documentation up-to-date with code changes
+- Keep documentation up-to-date with code changes (IMPORTANT)
 
 ## Community
 
@@ -311,13 +597,6 @@ We welcome feature requests! Please:
 - Search GitHub issues
 - Create a new issue with the `question` label
 - Join community discussions
-
-## Recognition
-
-Contributors will be recognized in:
-- GitHub contributors list
-- CHANGELOG.md for significant contributions
-- Special thanks in release notes
 
 ## License
 

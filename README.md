@@ -2,6 +2,10 @@
 
 **Isolated development environments for anything**
 
+[![CI](https://github.com/itzCozi/devbox/workflows/CI/badge.svg)](https://github.com/itzCozi/devbox/actions)
+[![Go Report Card](https://goreportcard.com/badge/github.com/itzCozi/devbox)](https://goreportcard.com/report/github.com/itzCozi/devbox)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 devbox creates isolated development environments, contained in a project's Docker box (container). Each project operates in its own disposable environment, while your code remains neatly organized in a simple, flat folder on the host machine.
 
 ## Features
@@ -13,11 +17,7 @@ devbox creates isolated development environments, contained in a project's Docke
 - 🗑️ **Disposable** - Easily destroy and recreate environments as needed
 - 🛡️ **Isolated** - Each project runs in its own box, preventing conflicts
 - 🔄 **Docker-in-Docker** - Use Docker within your devbox environments by default
-
-## Requirements
-
-- Linux (Debian/Ubuntu)
-- Docker
+- 🧪 **Well Tested** - Comprehensive test suite with cross-platform support
 
 ## Installation
 
@@ -78,6 +78,5 @@ For detailed documentation, guides, and examples, visit:
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
----
 
 **Created by BadDeveloper with 💚**
