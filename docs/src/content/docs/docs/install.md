@@ -14,7 +14,7 @@ This script will automatically:
 - Install devbox to `/usr/local/bin`
 - Set up proper permissions
 
-<sub>Don't have curl? Read this [quick guide](https://www.cyberciti.biz/faq/howto-install-curl-command-on-debian-linux-using-apt-get/) to install it.</sub>
+<sub>Already done here? Head over to the [Quick Start Guide](/docs/start/) to learn how to use devbox.</sub>
 
 ## Manual Build from Source
 ---
@@ -71,3 +71,8 @@ devbox --help
 - **Project files**: `~/devbox/<project>/` (on host)
 - **Box workspace**: `/workspace/` (inside box)
 - **Configuration**: `~/.devbox/config.json`
+
+## Next Steps
+---
+
+Now that you have devbox installed, quickly get started by following the [Quick Start Guide](/docs/start/).
