@@ -72,7 +72,7 @@ TEMP_DIR=$(mktemp -d)
 cd "$TEMP_DIR"
 
 
-git clone https://github.com/itzCozi/devbox.git
+git clone https://github.com/itzcozi/devbox.git
 cd devbox
 
 print_info "Building devbox..."
@@ -135,7 +135,7 @@ echo " devbox shell myproject"
 echo " 4. Get help anytime:"
 echo " devbox --help"
 echo
-print_info "For more information, visit: https://github.com/itzCozi/devbox"
+print_info "For more information, visit: https://github.com/itzcozi/devbox"
 echo
 }
 

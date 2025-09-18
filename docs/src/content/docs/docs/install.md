@@ -52,7 +52,7 @@ sudo usermod -aG docker $USER
 ### Build and Install
 ```bash
 # Clone the repository
-git clone https://github.com/itzCozi/devbox.git
+git clone https://github.com/itzcozi/devbox.git
 cd devbox
 
 # Build the binary

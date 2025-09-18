@@ -2,7 +2,7 @@
 
 
 export async function onRequest(context) {
-  const upstreamUrl = 'https://raw.githubusercontent.com/itzCozi/devbox/main/install.sh';
+  const upstreamUrl = 'https://raw.githubusercontent.com/itzcozi/devbox/main/install.sh';
   const headers = new Headers();
   const ifNoneMatch = context.request.headers.get('If-None-Match');
   const ifModifiedSince = context.request.headers.get('If-Modified-Since');
@@ -12,7 +12,7 @@ export async function onRequest(context) {
   try {
     const upstream = await fetch(upstreamUrl, {
       headers,
-      
+
       cf: { cacheEverything: true, cacheTtl: 300 },
     });
 
@@ -22,11 +22,11 @@ export async function onRequest(context) {
 
     if (upstream.ok) {
       const respHeaders = new Headers(upstream.headers);
-      
+
       respHeaders.set('Content-Type', 'text/x-shellscript; charset=utf-8');
-      
+
       respHeaders.set('Cache-Control', 'public, max-age=300, s-maxage=300');
-      
+
       respHeaders.set('Access-Control-Allow-Origin', '*');
       return new Response(upstream.body, { status: 200, headers: respHeaders });
     }

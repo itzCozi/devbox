@@ -2,8 +2,8 @@
 
 **Isolated development environments for anything**
 
-[![CI](https://github.com/itzCozi/devbox/workflows/CI/badge.svg)](https://github.com/itzCozi/devbox/actions)
-[![Go Report Card](https://goreportcard.com/badge/github.com/itzCozi/devbox)](https://goreportcard.com/report/github.com/itzCozi/devbox)
+[![CI](https://github.com/itzcozi/devbox/workflows/CI/badge.svg)](https://github.com/itzcozi/devbox/actions)
+[![Go Report Card](https://goreportcard.com/badge/github.com/itzcozi/devbox)](https://goreportcard.com/report/github.com/itzcozi/devbox)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 devbox creates isolated development environments, contained in a project's Docker box (container). Each project operates in its own disposable environment, while your code remains neatly organized in a simple, flat folder on the host machine.

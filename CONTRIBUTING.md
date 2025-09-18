@@ -32,7 +32,7 @@ This project adheres to a code of conduct that we expect all contributors to fol
    ```
 3. **Add the upstream repository**:
    ```bash
-   git remote add upstream https://github.com/itzCozi/devbox.git
+   git remote add upstream https://github.com/itzcozi/devbox.git
    ```
 
 ## How to Contribute
@@ -552,10 +552,6 @@ When reporting bugs, please include:
 5. **Actual behavior**
 6. **Error messages or logs**
 7. **Additional context**
-
-### Security Issues
-
-For security vulnerabilities, please email [security@yourdomain.com] instead of creating a public issue.
 
 ## Feature Requests
 
