@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "include": [
+    "/install.sh",
+    "/pagefind/*"
+  ],
+  "exclude": [
+    "/*"
+  ]
+}
