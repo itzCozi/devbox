@@ -21,8 +21,8 @@ export default defineConfig({
 				Footer: './src/components/CustomFooter.astro',
 			},
 			social: [
-				{ icon: 'github', label: 'GitHub', href: 'https://github.com/itzCozi/devbox' },
-				{ icon: 'discord', label: 'Discord', href: '/discord' }
+				{ icon: 'github', label: 'GitHub', href: 'https://github.com/itzcozi/devbox' },
+				{ icon: 'telegram', label: 'Telegram', href: 'http://t.me/devboxcli' }
 			],
 			editLink: {
         baseUrl: 'https://github.com/itzcozi/devbox/edit/main/docs/',
