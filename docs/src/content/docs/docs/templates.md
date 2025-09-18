@@ -202,8 +202,8 @@ cd ../backend && python3 -m flask --app app run
 ##### Creating from Templates
 
 ```bash
-# List available templates
-devbox config templates
+# List available templates (built-in + user)
+devbox templates list
 
 # Create project from template
 devbox init myproject --template <template-name>
@@ -254,6 +254,20 @@ Create your own reusable configurations:
   "ports": ["8888:8888", "8501:8501"],
   "working_dir": "/workspace"
 }
+```
+
+Save and reuse custom templates locally:
+
+```bash
+# Save current folder's devbox.json as a template named "data-science"
+devbox templates save data-science
+
+# List templates (now includes data-science)
+devbox templates list
+
+# Create a new devbox.json from your template in a different project
+mkdir ~/devbox/analysis && cd ~/devbox/analysis
+devbox templates create data-science AnalysisProject
 ```
 
 ##### Database Development
@@ -364,6 +378,36 @@ project/
 │   └── production.json
 └── scripts/
     └── setup.sh         # Additional setup scripts
+```
+
+User templates are stored under:
+
+```
+~/.devbox/templates/
+```
+
+Each template is a JSON file named `<template>.json` with this shape:
+
+```json
+{
+  "name": "my-template",
+  "description": "Custom template for X development",
+  "config": {
+    "name": "project-name",
+    "base_image": "ubuntu:22.04",
+    "setup_commands": ["apt install -y ..."],
+    "environment": {},
+    "ports": [],
+    "volumes": [],
+    "working_dir": "/workspace"
+  }
+}
+```
+
+You can remove a user template with:
+
+```bash
+devbox templates delete my-template
 ```
 
 ## Best Practices

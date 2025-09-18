@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 type Config struct {
@@ -81,6 +82,9 @@ func NewConfigManager() (*ConfigManager, error) {
 	if err := os.MkdirAll(configDir, 0755); err != nil {
 		return nil, fmt.Errorf("failed to create config directory: %w", err)
 	}
+
+	templatesDir := filepath.Join(configDir, "templates")
+	_ = os.MkdirAll(templatesDir, 0755)
 
 	configPath := filepath.Join(configDir, "config.json")
 	return &ConfigManager{configPath: configPath}, nil
@@ -287,6 +291,15 @@ func (cm *ConfigManager) CreateProjectConfigFromTemplate(templateName, projectNa
 
 	template, exists := templates[templateName]
 	if !exists {
+
+		if t, err := cm.LoadUserTemplate(templateName); err == nil && t != nil {
+
+			data, _ := json.Marshal(t.Config)
+			var cfg ProjectConfig
+			_ = json.Unmarshal(data, &cfg)
+			cfg.Name = projectName
+			return &cfg, nil
+		}
 		return nil, fmt.Errorf("template '%s' not found", templateName)
 	}
 
@@ -299,7 +312,88 @@ func (cm *ConfigManager) CreateProjectConfigFromTemplate(templateName, projectNa
 }
 
 func (cm *ConfigManager) GetAvailableTemplates() []string {
-	return []string{"python", "nodejs", "go", "web"}
+	builtins := []string{"python", "nodejs", "go", "web"}
+
+	user := cm.ListUserTemplates()
+	if len(user) == 0 {
+		return builtins
+	}
+	return append(builtins, user...)
+}
+
+func (cm *ConfigManager) templatesDir() (string, error) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(home, ".devbox", "templates"), nil
+}
+
+func (cm *ConfigManager) ListUserTemplates() []string {
+	dir, err := cm.templatesDir()
+	if err != nil {
+		return nil
+	}
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return nil
+	}
+	var names []string
+	for _, e := range entries {
+		if e.IsDir() {
+			continue
+		}
+		name := e.Name()
+		if strings.HasSuffix(strings.ToLower(name), ".json") {
+			name = name[:len(name)-5]
+			names = append(names, name)
+		}
+	}
+	return names
+}
+
+func (cm *ConfigManager) LoadUserTemplate(name string) (*ConfigTemplate, error) {
+	dir, err := cm.templatesDir()
+	if err != nil {
+		return nil, err
+	}
+	path := filepath.Join(dir, name+".json")
+	b, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	var tpl ConfigTemplate
+	if err := json.Unmarshal(b, &tpl); err != nil {
+		return nil, err
+	}
+	return &tpl, nil
+}
+
+func (cm *ConfigManager) SaveUserTemplate(tpl *ConfigTemplate) error {
+	dir, err := cm.templatesDir()
+	if err != nil {
+		return err
+	}
+	if tpl.Name == "" {
+		return fmt.Errorf("template name is required")
+	}
+	b, err := json.MarshalIndent(tpl, "", "  ")
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(filepath.Join(dir, tpl.Name+".json"), b, 0644)
+}
+
+func (cm *ConfigManager) DeleteUserTemplate(name string) error {
+	dir, err := cm.templatesDir()
+	if err != nil {
+		return err
+	}
+	path := filepath.Join(dir, name+".json")
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		return fmt.Errorf("template '%s' not found", name)
+	}
+	return os.Remove(path)
 }
 
 func (config *Config) AddProject(project *Project) {

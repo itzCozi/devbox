@@ -597,3 +597,127 @@ func (c *Client) RunDockerCommand(args []string) error {
 	}
 	return nil
 }
+
+type ContainerStats struct {
+	CPUPercent string
+	MemUsage   string
+	MemPercent string
+	NetIO      string
+	BlockIO    string
+	PIDs       string
+}
+
+func (c *Client) GetContainerStats(boxName string) (*ContainerStats, error) {
+
+	format := "{{.CPUPerc}}\t{{.MemUsage}}\t{{.MemPerc}}\t{{.NetIO}}\t{{.BlockIO}}\t{{.PIDs}}"
+	cmd := exec.Command("docker", "stats", "--no-stream", "--format", format, boxName)
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+
+	if err := cmd.Run(); err != nil {
+		if s := strings.TrimSpace(stderr.String()); s != "" {
+			return nil, fmt.Errorf("failed to get stats: %s", s)
+		}
+		return nil, fmt.Errorf("failed to get stats: %w", err)
+	}
+	line := strings.TrimSpace(stdout.String())
+	if line == "" {
+
+		return &ContainerStats{}, nil
+	}
+	parts := strings.Split(line, "\t")
+
+	for len(parts) < 6 {
+		parts = append(parts, "")
+	}
+	return &ContainerStats{
+		CPUPercent: strings.TrimSpace(parts[0]),
+		MemUsage:   strings.TrimSpace(parts[1]),
+		MemPercent: strings.TrimSpace(parts[2]),
+		NetIO:      strings.TrimSpace(parts[3]),
+		BlockIO:    strings.TrimSpace(parts[4]),
+		PIDs:       strings.TrimSpace(parts[5]),
+	}, nil
+}
+
+func (c *Client) GetContainerID(boxName string) (string, error) {
+	cmd := exec.Command("docker", "inspect", "--format", "{{.Id}}", boxName)
+	out, err := cmd.Output()
+	if err != nil {
+		return "", fmt.Errorf("failed to get container ID: %w", err)
+	}
+	return strings.TrimSpace(string(out)), nil
+}
+
+func (c *Client) GetUptime(boxName string) (time.Duration, error) {
+	cmd := exec.Command("docker", "inspect", "--format", "{{.State.StartedAt}}\t{{.State.Running}}", boxName)
+	out, err := cmd.Output()
+	if err != nil {
+		return 0, fmt.Errorf("failed to inspect container: %w", err)
+	}
+	s := strings.TrimSpace(string(out))
+	parts := strings.Split(s, "\t")
+	if len(parts) < 2 {
+		return 0, nil
+	}
+	startedAt := strings.TrimSpace(parts[0])
+	running := strings.TrimSpace(parts[1])
+	if running != "true" {
+		return 0, nil
+	}
+
+	t, parseErr := time.Parse(time.RFC3339Nano, startedAt)
+	if parseErr != nil {
+
+		if t2, err2 := time.Parse(time.RFC3339, startedAt); err2 == nil {
+			return time.Since(t2), nil
+		}
+		return 0, nil
+	}
+	return time.Since(t), nil
+}
+
+func (c *Client) GetPortMappings(boxName string) ([]string, error) {
+	cmd := exec.Command("docker", "port", boxName)
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+	if err := cmd.Run(); err != nil {
+
+		return []string{}, nil
+	}
+	var ports []string
+	scanner := bufio.NewScanner(&stdout)
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if line != "" {
+			ports = append(ports, line)
+		}
+	}
+	return ports, nil
+}
+
+func (c *Client) GetMounts(boxName string) ([]string, error) {
+	template := `{{range .Mounts}}{{.Type}} {{.Source}} -> {{.Destination}} (rw={{.RW}})
+{{end}}`
+	cmd := exec.Command("docker", "inspect", "--format", template, boxName)
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+	if err := cmd.Run(); err != nil {
+		if s := strings.TrimSpace(stderr.String()); s != "" {
+			return nil, fmt.Errorf("failed to get mounts: %s", s)
+		}
+		return nil, fmt.Errorf("failed to get mounts: %w", err)
+	}
+	var mounts []string
+	scanner := bufio.NewScanner(&stdout)
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if line != "" {
+			mounts = append(mounts, line)
+		}
+	}
+	return mounts, nil
+}

@@ -17,6 +17,30 @@ All commands support these global options:
 
 ---
 
+##### `devbox status`
+
+Show detailed container status and resource usage for a project. With no project specified, prints a quick overview of all devbox containers.
+
+**Syntax:**
+```bash
+devbox status [project]
+```
+
+**Behavior:**
+- With a project: shows state, uptime, CPU%, memory usage/%, network I/O, block I/O, PIDs, ports, and mounts
+- Without a project: lists all devbox containers with status and image
+
+**Examples:**
+```bash
+# Overview of all devbox containers
+devbox status
+
+# Detailed status for a specific project
+devbox status myproject
+```
+
+---
+
 ##### `devbox up`
 
 Start a devbox environment from a shared devbox.json in the current directory. Perfect for onboarding: clone the repo and run `devbox up`.
@@ -237,6 +261,63 @@ Total projects: 2
 
 ---
 
+##### `devbox templates`
+
+Manage devbox project templates (built-in and user-defined).
+
+**Subcommands:**
+
+###### `devbox templates list`
+List available templates (built-in + user templates in `~/.devbox/templates`).
+
+**Syntax:**
+```bash
+devbox templates list
+```
+
+###### `devbox templates show`
+Show a template’s JSON (name, description, and config).
+
+**Syntax:**
+```bash
+devbox templates show <name>
+```
+
+###### `devbox templates create`
+Create `devbox.json` in the current directory from a template.
+
+**Syntax:**
+```bash
+devbox templates create <name> [project]
+```
+
+**Examples:**
+```bash
+cd ~/devbox/myapp
+devbox templates create python MyApp
+
+# If project name omitted, folder name is used
+devbox templates create nodejs
+```
+
+###### `devbox templates save`
+Save the current folder’s `devbox.json` as a reusable user template in `~/.devbox/templates/<name>.json`.
+
+**Syntax:**
+```bash
+devbox templates save <name>
+```
+
+###### `devbox templates delete`
+Delete a user template by name.
+
+**Syntax:**
+```bash
+devbox templates delete <name>
+```
+
+---
+
 ##### `devbox config`
 
 Manage devbox configurations.
@@ -279,13 +360,7 @@ Display project configuration details.
 devbox config show <project>
 ```
 
-###### `devbox config templates`
-List available configuration templates.
-
-**Syntax:**
-```bash
-devbox config templates
-```
+Note: Template listing and management has moved to the top-level `devbox templates` command.
 
 ###### `devbox config global`
 Show global devbox configuration.

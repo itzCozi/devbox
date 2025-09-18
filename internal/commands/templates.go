@@ -1,0 +1,126 @@
+package commands
+
+import (
+	"encoding/json"
+	"fmt"
+	"os"
+	"path/filepath"
+
+	"github.com/spf13/cobra"
+
+	"devbox/internal/config"
+)
+
+var templatesCmd = &cobra.Command{
+	Use:   "templates",
+	Short: "Manage devbox project templates",
+}
+
+var templatesListCmd = &cobra.Command{
+	Use:   "list",
+	Short: "List available templates",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		names := configManager.GetAvailableTemplates()
+		if len(names) == 0 {
+			fmt.Println("No templates available.")
+			return nil
+		}
+		fmt.Println("Available templates:")
+		for _, n := range names {
+			fmt.Printf("- %s\n", n)
+		}
+		return nil
+	},
+}
+
+var templatesShowCmd = &cobra.Command{
+	Use:   "show <name>",
+	Short: "Show template JSON",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		name := args[0]
+
+		tplCfg, err := configManager.CreateProjectConfigFromTemplate(name, "example")
+		if err != nil {
+			return fmt.Errorf("template '%s' not found", name)
+		}
+		out := config.ConfigTemplate{Name: name, Description: "", Config: *tplCfg}
+		b, _ := json.MarshalIndent(out, "", "  ")
+		fmt.Println(string(b))
+		return nil
+	},
+}
+
+var templatesCreateCmd = &cobra.Command{
+	Use:   "create <name> [project]",
+	Short: "Create devbox.json from a template in the current directory",
+	Args:  cobra.RangeArgs(1, 2),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		name := args[0]
+		project := ""
+		if len(args) == 2 {
+			project = args[1]
+		}
+		if project == "" {
+
+			wd, _ := os.Getwd()
+			project = filepath.Base(wd)
+		}
+		cfg, err := configManager.CreateProjectConfigFromTemplate(name, project)
+		if err != nil {
+			return err
+		}
+		wd, _ := os.Getwd()
+		if err := configManager.SaveProjectConfig(wd, cfg); err != nil {
+			return err
+		}
+		fmt.Printf("Generated devbox.json from template '%s' for project '%s'\n", name, project)
+		return nil
+	},
+}
+
+var templatesSaveCmd = &cobra.Command{
+	Use:   "save <name>",
+	Short: "Save current devbox.json as a reusable template",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		name := args[0]
+		wd, _ := os.Getwd()
+		pc, err := configManager.LoadProjectConfig(wd)
+		if err != nil {
+			return err
+		}
+		if pc == nil {
+			return fmt.Errorf("no devbox.json found in %s", wd)
+		}
+		tpl := &config.ConfigTemplate{Name: name, Description: fmt.Sprintf("Saved from %s", filepath.Base(wd)), Config: *pc}
+		if err := configManager.SaveUserTemplate(tpl); err != nil {
+			return err
+		}
+		fmt.Printf("Saved template '%s'\n", name)
+		return nil
+	},
+}
+
+var templatesDeleteCmd = &cobra.Command{
+	Use:   "delete <name>",
+	Short: "Delete a user template",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		name := args[0]
+		if err := configManager.DeleteUserTemplate(name); err != nil {
+			return err
+		}
+		fmt.Printf("Deleted template '%s'\n", name)
+		return nil
+	},
+}
+
+func init() {
+	templatesCmd.AddCommand(templatesListCmd)
+	templatesCmd.AddCommand(templatesShowCmd)
+	templatesCmd.AddCommand(templatesCreateCmd)
+	templatesCmd.AddCommand(templatesSaveCmd)
+	templatesCmd.AddCommand(templatesDeleteCmd)
+	rootCmd.AddCommand(templatesCmd)
+}
