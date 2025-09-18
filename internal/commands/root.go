@@ -36,7 +36,7 @@ var rootCmd = &cobra.Command{
 		}
 
 		if err := docker.IsDockerAvailable(); err != nil {
-			return err
+			return fmt.Errorf("docker availability check failed: %w", err)
 		}
 
 		dockerClient, err = docker.NewClient()

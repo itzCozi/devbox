@@ -324,7 +324,7 @@ func (cm *ConfigManager) GetAvailableTemplates() []string {
 func (cm *ConfigManager) templatesDir() (string, error) {
 	home, err := os.UserHomeDir()
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to get user home directory: %w", err)
 	}
 	return filepath.Join(home, ".devbox", "templates"), nil
 }
@@ -355,16 +355,16 @@ func (cm *ConfigManager) ListUserTemplates() []string {
 func (cm *ConfigManager) LoadUserTemplate(name string) (*ConfigTemplate, error) {
 	dir, err := cm.templatesDir()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get templates directory: %w", err)
 	}
 	path := filepath.Join(dir, name+".json")
 	b, err := os.ReadFile(path)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to read template file: %w", err)
 	}
 	var tpl ConfigTemplate
 	if err := json.Unmarshal(b, &tpl); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to unmarshal template: %w", err)
 	}
 	return &tpl, nil
 }
@@ -372,14 +372,14 @@ func (cm *ConfigManager) LoadUserTemplate(name string) (*ConfigTemplate, error) 
 func (cm *ConfigManager) SaveUserTemplate(tpl *ConfigTemplate) error {
 	dir, err := cm.templatesDir()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get templates directory: %w", err)
 	}
 	if tpl.Name == "" {
 		return fmt.Errorf("template name is required")
 	}
 	b, err := json.MarshalIndent(tpl, "", "  ")
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to marshal template: %w", err)
 	}
 	return os.WriteFile(filepath.Join(dir, tpl.Name+".json"), b, 0644)
 }
@@ -387,7 +387,7 @@ func (cm *ConfigManager) SaveUserTemplate(tpl *ConfigTemplate) error {
 func (cm *ConfigManager) DeleteUserTemplate(name string) error {
 	dir, err := cm.templatesDir()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get templates directory: %w", err)
 	}
 	path := filepath.Join(dir, name+".json")
 	if _, err := os.Stat(path); os.IsNotExist(err) {

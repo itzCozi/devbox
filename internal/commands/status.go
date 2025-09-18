@@ -21,7 +21,7 @@ var statusCmd = &cobra.Command{
 
 			boxes, err := dockerClient.ListBoxes()
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to list boxes: %w", err)
 			}
 			if len(boxes) == 0 {
 				fmt.Println("No devbox containers found.")
@@ -40,7 +40,7 @@ var statusCmd = &cobra.Command{
 		}
 
 		if err := validateProjectName(projectName); err != nil {
-			return err
+			return fmt.Errorf("invalid project name: %w", err)
 		}
 
 		cfg, err := configManager.Load()
@@ -60,7 +60,7 @@ var statusCmd = &cobra.Command{
 
 		exists, err := dockerClient.BoxExists(box)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to check if box exists: %w", err)
 		}
 		if !exists {
 			fmt.Printf("Project: %s\nBox: %s (not found)\n", projectName, box)
@@ -69,7 +69,7 @@ var statusCmd = &cobra.Command{
 
 		status, err := dockerClient.GetBoxStatus(box)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to get box status: %w", err)
 		}
 		stats, _ := dockerClient.GetContainerStats(box)
 		uptime, _ := dockerClient.GetUptime(box)

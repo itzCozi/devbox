@@ -68,11 +68,11 @@ var templatesCreateCmd = &cobra.Command{
 		}
 		cfg, err := configManager.CreateProjectConfigFromTemplate(name, project)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to create project config from template: %w", err)
 		}
 		wd, _ := os.Getwd()
 		if err := configManager.SaveProjectConfig(wd, cfg); err != nil {
-			return err
+			return fmt.Errorf("failed to save project config: %w", err)
 		}
 		fmt.Printf("Generated devbox.json from template '%s' for project '%s'\n", name, project)
 		return nil
@@ -88,14 +88,14 @@ var templatesSaveCmd = &cobra.Command{
 		wd, _ := os.Getwd()
 		pc, err := configManager.LoadProjectConfig(wd)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to load project config: %w", err)
 		}
 		if pc == nil {
 			return fmt.Errorf("no devbox.json found in %s", wd)
 		}
 		tpl := &config.ConfigTemplate{Name: name, Description: fmt.Sprintf("Saved from %s", filepath.Base(wd)), Config: *pc}
 		if err := configManager.SaveUserTemplate(tpl); err != nil {
-			return err
+			return fmt.Errorf("failed to save user template: %w", err)
 		}
 		fmt.Printf("Saved template '%s'\n", name)
 		return nil
@@ -109,7 +109,7 @@ var templatesDeleteCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		name := args[0]
 		if err := configManager.DeleteUserTemplate(name); err != nil {
-			return err
+			return fmt.Errorf("failed to delete user template: %w", err)
 		}
 		fmt.Printf("Deleted template '%s'\n", name)
 		return nil

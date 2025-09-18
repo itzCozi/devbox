@@ -23,7 +23,6 @@ linters:
     - errname
     - errorlint
     - exhaustive
-    - exportloopref
     - forbidigo
     - funlen
     - gochecknoinits
@@ -66,7 +65,6 @@ linters:
     - rowserrcheck
     - sqlclosecheck
     - stylecheck
-    - tenv
     - testableexamples
     - thelper
     - tparallel

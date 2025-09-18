@@ -30,11 +30,9 @@ func IsDockerAvailable() error {
 }
 
 func (c *Client) PullImage(image string) error {
-
 	cmd := exec.Command("docker", "images", "-q", image)
 	output, err := cmd.Output()
 	if err == nil && len(strings.TrimSpace(string(output))) > 0 {
-
 		return nil
 	}
 
@@ -90,7 +88,6 @@ func (c *Client) CreateBoxWithConfig(name, image, workspaceHost, workspaceBox st
 }
 
 func (c *Client) applyProjectConfigToArgs(args []string, config map[string]interface{}) []string {
-
 	if env, ok := config["environment"].(map[string]interface{}); ok {
 		for key, value := range env {
 			if valueStr, ok := value.(string); ok {
@@ -384,7 +381,7 @@ sed -i '/devbox() {/,/^}$/d' /root/.bashrc 2>/dev/null || true
 # Add new devbox configuration
 cat >> /root/.bashrc << 'BASHRC_EOF'
 
-# Devbox welcome message  
+# Devbox welcome message
 if [ -t 1 ]; then
     echo "🚀 Welcome to devbox project: ` + projectName + `"
     echo "📁 Your files are in: /workspace"
@@ -530,7 +527,7 @@ func (c *Client) WaitForBox(boxName string, timeout time.Duration) error {
 
 		status, err := c.GetBoxStatus(boxName)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to get box status: %w", err)
 		}
 
 		if status == "running" {
@@ -584,7 +581,7 @@ func (c *Client) ListBoxes() ([]BoxInfo, error) {
 		}
 	}
 
-	return boxes, scanner.Err()
+	return boxes, fmt.Errorf("failed to scan containers: %w", scanner.Err())
 }
 
 func (c *Client) RunDockerCommand(args []string) error {

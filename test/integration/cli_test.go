@@ -9,7 +9,6 @@ import (
 )
 
 func TestMain(m *testing.M) {
-
 	if err := buildDevboxBinary(); err != nil {
 		panic("Failed to build devbox binary for testing: " + err.Error())
 	}
@@ -22,7 +21,6 @@ func TestMain(m *testing.M) {
 }
 
 func buildDevboxBinary() error {
-
 	binaryName := "devbox-test"
 	if os.Getenv("OS") == "Windows_NT" {
 		binaryName = "devbox-test.exe"
@@ -34,7 +32,6 @@ func buildDevboxBinary() error {
 }
 
 func cleanupTestBinary() {
-
 	testBinary := filepath.Join(getProjectRoot(), "devbox-test")
 	testBinaryExe := filepath.Join(getProjectRoot(), "devbox-test.exe")
 	os.Remove(testBinary)
@@ -42,7 +39,6 @@ func cleanupTestBinary() {
 }
 
 func getProjectRoot() string {
-
 	wd, _ := os.Getwd()
 	return filepath.Join(wd, "..", "..")
 }

@@ -108,7 +108,7 @@ Special usage:
 func isDirEmpty(dirPath string) (bool, error) {
 	f, err := os.Open(dirPath)
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("failed to open directory: %w", err)
 	}
 	defer f.Close()
 
@@ -116,7 +116,7 @@ func isDirEmpty(dirPath string) (bool, error) {
 	if err == io.EOF {
 		return true, nil
 	}
-	return false, err
+	return false, fmt.Errorf("failed to read directory names: %w", err)
 }
 
 func cleanupOrphanedboxes() error {

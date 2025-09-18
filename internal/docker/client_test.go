@@ -28,7 +28,6 @@ func TestClientClose(t *testing.T) {
 }
 
 func TestIsDockerAvailable(t *testing.T) {
-
 	err := IsDockerAvailable()
 
 	if err != nil {
