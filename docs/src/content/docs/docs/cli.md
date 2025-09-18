@@ -1,6 +1,9 @@
 ---
 title: CLI Reference
 description: Comprehensive reference for all devbox commands and options
+tableOfContents:
+  minHeadingLevel: 2
+  maxHeadingLevel: 4
 ---
 
 Complete reference for all devbox commands, options, and usage patterns.
@@ -17,7 +20,7 @@ All commands support these global options:
 
 ---
 
-##### `devbox status`
+### `devbox status`
 
 Show detailed container status and resource usage for a project. With no project specified, prints a quick overview of all devbox containers.
 
@@ -41,7 +44,7 @@ devbox status myproject
 
 ---
 
-##### `devbox up`
+### `devbox up`
 
 Start a devbox environment from a shared devbox.json in the current directory. Perfect for onboarding: clone the repo and run `devbox up`.
 
@@ -71,7 +74,7 @@ devbox up --dotfiles ~/.dotfiles
 
 ---
 
-##### `devbox init`
+### `devbox init`
 
 Create a new devbox project with its own Docker box (container).
 
@@ -112,7 +115,7 @@ devbox init webapp --generate-config
 
 ---
 
-##### `devbox shell`
+### `devbox shell`
 
 Open an interactive bash shell in the project's box.
 
@@ -140,7 +143,7 @@ devbox shell python-app
 
 ---
 
-##### `devbox run`
+### `devbox run`
 
 Run an arbitrary command inside the project's box.
 
@@ -173,7 +176,7 @@ devbox run myproject bash /workspace/setup.sh
 
 ---
 
-##### `devbox stop`
+### `devbox stop`
 
 Stop a project's box if it's running.
 
@@ -197,7 +200,7 @@ devbox stop webapp
 
 ---
 
-##### `devbox destroy`
+### `devbox destroy`
 
 Stop and remove the project's box.
 
@@ -225,7 +228,7 @@ devbox destroy myproject --force
 
 ---
 
-##### `devbox list`
+### `devbox list`
 
 Show all managed projects and their box status.
 
@@ -261,13 +264,13 @@ Total projects: 2
 
 ---
 
-##### `devbox templates`
+### `devbox templates`
 
 Manage devbox project templates (built-in and user-defined).
 
 **Subcommands:**
 
-###### `devbox templates list`
+#### `devbox templates list`
 List available templates (built-in + user templates in `~/.devbox/templates`).
 
 **Syntax:**
@@ -275,7 +278,7 @@ List available templates (built-in + user templates in `~/.devbox/templates`).
 devbox templates list
 ```
 
-###### `devbox templates show`
+#### `devbox templates show`
 Show a template’s JSON (name, description, and config).
 
 **Syntax:**
@@ -283,7 +286,7 @@ Show a template’s JSON (name, description, and config).
 devbox templates show <name>
 ```
 
-###### `devbox templates create`
+#### `devbox templates create`
 Create `devbox.json` in the current directory from a template.
 
 **Syntax:**
@@ -300,7 +303,7 @@ devbox templates create python MyApp
 devbox templates create nodejs
 ```
 
-###### `devbox templates save`
+#### `devbox templates save`
 Save the current folder’s `devbox.json` as a reusable user template in `~/.devbox/templates/<name>.json`.
 
 **Syntax:**
@@ -308,7 +311,7 @@ Save the current folder’s `devbox.json` as a reusable user template in `~/.dev
 devbox templates save <name>
 ```
 
-###### `devbox templates delete`
+#### `devbox templates delete`
 Delete a user template by name.
 
 **Syntax:**
@@ -318,13 +321,13 @@ devbox templates delete <name>
 
 ---
 
-##### `devbox config`
+### `devbox config`
 
 Manage devbox configurations.
 
 **Subcommands:**
 
-###### `devbox config generate`
+#### `devbox config generate`
 Generate devbox.json configuration file for a project.
 
 **Syntax:**
@@ -344,7 +347,7 @@ devbox config generate myproject
 devbox config generate myproject --template python
 ```
 
-###### `devbox config validate`
+#### `devbox config validate`
 Validate project configuration file.
 
 **Syntax:**
@@ -352,7 +355,7 @@ Validate project configuration file.
 devbox config validate <project>
 ```
 
-###### `devbox config show`
+#### `devbox config show`
 Display project configuration details.
 
 **Syntax:**
@@ -362,7 +365,7 @@ devbox config show <project>
 
 Note: Template listing and management has moved to the top-level `devbox templates` command.
 
-###### `devbox config global`
+#### `devbox config global`
 Show global devbox configuration.
 
 **Syntax:**
@@ -374,7 +377,7 @@ devbox config global
 
 ---
 
-##### `devbox version`
+### `devbox version`
 
 Display the version information for devbox.
 
@@ -394,7 +397,9 @@ devbox version
 devbox (v1.0)
 ```
 
-##### `devbox cleanup`
+---
+
+### `devbox cleanup`
 
 Clean up Docker resources and devbox artifacts.
 
@@ -434,7 +439,7 @@ devbox cleanup --all --force
 
 ---
 
-##### `devbox maintenance`
+### `devbox maintenance`
 
 Perform maintenance tasks on devbox projects and boxes.
 
@@ -474,7 +479,7 @@ devbox maintenance --force --rebuild
 
 ---
 
-##### `devbox update`
+### `devbox update`
 
 Pull the latest base image(s) and rebuild environment box(es).
 
@@ -560,7 +565,7 @@ When you create a project, devbox sets up:
 
 ---
 
-##### `devbox completion`
+### `devbox completion`
 
 Generate completion scripts for your shell to enable tab autocompletion for devbox commands, flags, project names, and template names.
 
