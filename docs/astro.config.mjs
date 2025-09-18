@@ -20,6 +20,15 @@ export default defineConfig({
 			components: {
 				Footer: './src/components/CustomFooter.astro',
 			},
+			head: [
+				{
+					tag: 'style',
+					content: `
+					  /* Hide Starlight search button/modal */
+					  site-search { display: none !important; }
+					`
+				},
+			],
 			social: [
 				{ icon: 'github', label: 'GitHub', href: 'https://github.com/itzcozi/devbox' },
 				{ icon: 'telegram', label: 'Telegram', href: 'http://t.me/devboxcli' }
