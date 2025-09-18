@@ -1,10 +1,6 @@
 run:
   timeout: 5m
   tests: true
-  skip-dirs:
-    - build
-    - docs
-  skip-files: []  # Enable linting for test files
 
 linters:
   enable:
@@ -40,7 +36,7 @@ linters:
     - gofumpt
     - goheader
     - goimports
-    - gomnd
+    - mnd
     - gomoddirectives
     - gomodguard
     - goprintffuncname
@@ -105,7 +101,7 @@ linters-settings:
     simplify: true
   goimports:
     local-prefixes: devbox
-  gomnd:
+  mnd:
     checks:
       - argument
       - case
@@ -127,7 +123,6 @@ linters-settings:
   nlreturn:
     block-size: 1
   nolintlint:
-    allow-leading-space: true
     allow-unused: false
     require-explanation: false
     require-specific: false
@@ -147,12 +142,16 @@ issues:
   exclude-rules:
     - path: _test\.go
       linters:
-        - gomnd
+        - mnd
         - funlen
         - gocognit
         - gocyclo
     - path: cmd/
       linters:
         - forbidigo
+    - path: build/
+      linters-use-default: false
+    - path: docs/
+      linters-use-default: false
   max-issues-per-linter: 0
   max-same-issues: 0

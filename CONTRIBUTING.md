@@ -27,7 +27,7 @@ This project adheres to a code of conduct that we expect all contributors to fol
 1. **Fork the repository** on GitHub
 2. **Clone your fork** locally:
    ```bash
-   git clone https://github.com/YOUR_USERNAME/devbox.git
+   git clone https://github.com/itzcozi/devbox.git
    cd devbox
    ```
 3. **Add the upstream repository**:
