@@ -67,7 +67,6 @@ var shellCmd = &cobra.Command{
 			return fmt.Errorf("failed to attach shell: %w", err)
 		}
 
-		// After shell exits, optionally stop the container when not being used
 		if !keepRunningFlag {
 			cfg, err := configManager.Load()
 			if err == nil && cfg.Settings != nil && cfg.Settings.AutoStopOnExit {

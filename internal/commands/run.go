@@ -58,7 +58,6 @@ var runCmd = &cobra.Command{
 			return fmt.Errorf("failed to run command: %w", err)
 		}
 
-		// After command completes, optionally stop the container when not being used
 		if !keepRunningRunFlag {
 			cfg, err := configManager.Load()
 			if err == nil && cfg.Settings != nil && cfg.Settings.AutoStopOnExit {

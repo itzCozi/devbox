@@ -2,9 +2,7 @@
 
 
 export async function onRequest(context) {
-  const upstreamUrl = 'https://devbox.ar0.eu/install.sh';
-
-  
+  const upstreamUrl = 'https://raw.githubusercontent.com/itzCozi/devbox/main/install.sh';
   const headers = new Headers();
   const ifNoneMatch = context.request.headers.get('If-None-Match');
   const ifModifiedSince = context.request.headers.get('If-Modified-Since');
@@ -33,9 +31,8 @@ export async function onRequest(context) {
       return new Response(upstream.body, { status: 200, headers: respHeaders });
     }
 
-    
-    return Response.redirect(upstreamUrl, 302);
+    return new Response('Failed to fetch install script', { status: 502 });
   } catch (err) {
-    return Response.redirect(upstreamUrl, 302);
+    return new Response('Failed to fetch install script', { status: 502 });
   }
 }
