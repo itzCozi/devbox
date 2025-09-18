@@ -316,6 +316,7 @@ func showGlobalConfig() error {
 		fmt.Printf("Settings:\n")
 		fmt.Printf("  Default base image: %s\n", cfg.Settings.DefaultBaseImage)
 		fmt.Printf("  Auto update: %t\n", cfg.Settings.AutoUpdate)
+		fmt.Printf("  Auto stop on exit: %t\n", cfg.Settings.AutoStopOnExit)
 
 		if cfg.Settings.ConfigTemplatesPath != "" {
 			fmt.Printf("  Templates path: %s\n", cfg.Settings.ConfigTemplatesPath)

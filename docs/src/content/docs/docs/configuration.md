@@ -5,14 +5,7 @@ description: Comprehensive configuration management with devbox.json and global 
 
 Devbox supports comprehensive configuration management through both global settings and project-specific configuration files.
 
-## Overview
----
-
-- **Global Configuration**: Stored in `~/.devbox/config.json` - manages projects and global settings
-- **Project Configuration**: Stored as `devbox.json` in each project workspace - defines development environment
-- **Templates**: Built-in templates for common development environments (Python, Node.js, Go, Web)
-
-## Project Configuration File
+## Project Configuration
 ---
 
 Each project can have a `devbox.json` file in its workspace directory that defines the development environment configuration.
@@ -57,6 +50,7 @@ Each project can have a `devbox.json` file in its workspace directory that defin
     "/workspace/data:/data",
     "/workspace/logs:/var/log/app"
   ],
+  "dotfiles": ["~/.dotfiles"],
   "working_dir": "/workspace",
   "shell": "/bin/bash",
   "user": "root",
@@ -88,9 +82,10 @@ Each project can have a `devbox.json` file in its workspace directory that defin
 | `base_image` | string | Docker base image |
 | `setup_commands` | array | Commands to run during initialization (after system update) |
 | `environment` | object | Environment variables |
-| `ports` | array | Port mappings (host:container) |
+| `ports` | array | Port mappings (host:box) |
 | `volumes` | array | Volume mappings |
-| `working_dir` | string | Working directory in container |
+| `dotfiles` | array | Optional host dotfiles directory path(s) to mount; first entry is mounted to /dotfiles and sourced/symlinked on shell init |
+| `working_dir` | string | Working directory in box |
 | `shell` | string | Default shell |
 | `user` | string | User to run as |
 | `capabilities` | array | Linux capabilities to add |
@@ -101,42 +96,8 @@ Each project can have a `devbox.json` file in its workspace directory that defin
 | `health_check` | object | Health check configuration |
 
 :::note
-Regardless of configuration, devbox always runs `apt update -y && apt full-upgrade -y` first when initializing any container to ensure the system is up to date. Your `setup_commands` will run after this system update.
+Regardless of configuration, devbox always runs `apt update -y && apt full-upgrade -y` first when initializing any box to ensure the system is up to date. Your `setup_commands` will run after this system update.
 :::
-
-## System Updates
----
-
-Devbox automatically ensures that all containers start with up-to-date system packages. When you initialize any project (regardless of configuration), devbox will:
-
-1. **System Update**: Always run `apt update -y && apt full-upgrade -y` first
-2. **Setup Commands**: Then execute any commands defined in your `setup_commands` array
-3. **Devbox Setup**: Finally configure the devbox environment and shell
-
-This ensures:
-- Security patches are applied
-- Package repositories are current
-- Base system is consistent
-- Your setup commands work with the latest packages
-
-##### Execution Order
-
-```bash
-# 1. System update (automatic, always runs)
-apt update -y
-apt full-upgrade -y
-
-# 2. Your setup commands (from devbox.json)
-apt install -y python3 python3-pip
-pip3 install flask
-
-# 3. Devbox environment setup (automatic)
-# - Install devbox wrapper script
-# - Configure shell environment
-# - Set up project-specific settings
-```
-
-You don't need to include `apt update` in your `setup_commands` - it's handled automatically.
 
 ## Initialize with Configuration
 ---
@@ -147,9 +108,6 @@ devbox init myproject
 
 # Initialize with template
 devbox init myproject --template python
-devbox init myproject --template nodejs
-devbox init myproject --template go
-devbox init myproject --template web
 
 # Generate config file only
 devbox init myproject --config-only --template python
@@ -157,6 +115,38 @@ devbox init myproject --config-only --template python
 # Initialize and generate config
 devbox init myproject --generate-config
 ```
+
+### Shared Configs
+
+To make onboarding easy, commit your `devbox.json` to the repository. New teammates can simply run:
+
+```bash
+devbox up
+```
+
+This reads `./devbox.json` and starts the environment without requiring prior project registration.
+
+### Dotfile Injection
+
+You can mount your personal dotfiles into the box to keep your editor/shell preferences:
+
+```bash
+# One-off via flag
+devbox up --dotfiles ~/.dotfiles
+
+# Or persist via config
+{
+  "name": "my-project",
+  "dotfiles": ["~/.dotfiles"]
+}
+```
+
+Behavior:
+- The specified directory is mounted to `/dotfiles` in the box
+- On shell init, devbox will:
+  - source `/dotfiles/.bashrc` if present
+  - symlink common files (.gitconfig, .vimrc, .zshrc, .bash_profile)
+  - symlink contents of `/dotfiles/.config/*` into `/root/.config/` if not already present
 
 ## Configuration Management
 ---
@@ -177,36 +167,6 @@ devbox config templates
 # Show global configuration
 devbox config global
 ```
-
-## Built-in Templates
----
-
-##### Python Template
-- Ubuntu 22.04 base
-- Python 3, pip, venv, development tools
-- Common Python packages
-- PYTHONPATH and PYTHONUNBUFFERED environment
-- Ports 5000, 8000
-
-##### Node.js Template  
-- Ubuntu 22.04 base
-- Node.js 18, npm, build tools
-- Latest npm version
-- NODE_ENV development environment
-- Ports 3000, 8080
-
-##### Go Template
-- Ubuntu 22.04 base
-- Go 1.21, git, build tools
-- GOPATH environment setup
-- Port 8080
-
-##### Web Template
-- Ubuntu 22.04 base
-- Python, Node.js, nginx
-- Flask, Django, FastAPI
-- TypeScript, Vue CLI, Create React App
-- Multiple ports for different services
 
 ## Usage Examples
 ---
@@ -272,12 +232,24 @@ Global settings are stored in `~/.devbox/config.json`:
   "settings": {
     "default_base_image": "ubuntu:22.04",
     "auto_update": true,
+    "auto_stop_on_exit": true,
     "default_environment": {
       "TZ": "UTC"
     }
   }
 }
 ```
+
+### Global Settings
+
+| Setting | Type | Default | Description |
+|--------|------|---------|-------------|
+| `default_base_image` | string | `ubuntu:22.04` | Default base image for new projects |
+| `auto_update` | boolean | `true` | Whether to run updates during initialization |
+| `auto_stop_on_exit` | boolean | `true` | If enabled, devbox stops a project's box automatically after exiting an interactive shell or finishing a one-off `run` command. Override per-invocation with `--keep-running`. |
+
+Notes:
+- Existing installations may not have `auto_stop_on_exit` until you add it. You can also view it with `devbox config global`.
 
 ## Migration
 ---
@@ -300,22 +272,11 @@ devbox destroy old-project
 devbox init old-project --template nodejs
 ```
 
-## Best Practices
----
-
-1. **Use Templates**: Start with built-in templates for common environments
-2. **Version Control**: Include `devbox.json` in your project repository
-3. **Environment Variables**: Store non-sensitive config in environment section
-4. **Port Management**: Define all needed ports in configuration
-5. **Setup Commands**: Use for environment setup, package installation
-6. **Resource Limits**: Set appropriate CPU and memory limits
-7. **Health Checks**: Define health checks for long-running services
-
 ## Error Handling
 ---
 
 - Invalid JSON in `devbox.json` will show parsing errors
-- Missing required fields are validated before container creation
+- Missing required fields are validated before box creation
 - Invalid port/volume formats are caught during validation
 - Failed setup commands stop initialization with clear error messages
 

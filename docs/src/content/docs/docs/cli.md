@@ -17,9 +17,39 @@ All commands support these global options:
 
 ---
 
+##### `devbox up`
+
+Start a devbox environment from a shared devbox.json in the current directory. Perfect for onboarding: clone the repo and run `devbox up`.
+
+**Syntax:**
+```bash
+devbox up [--dotfiles <path>]
+```
+
+**Options:**
+- `--dotfiles <path>`: Mount a local dotfiles directory into common locations inside the box
+
+**Behavior:**
+- Reads `./devbox.json`
+- Creates/starts a box named `devbox_<name>` where `<name>` comes from `devbox.json`'s `name` (or the folder name)
+- Applies ports, env, and volumes from configuration
+- Runs a system update, then `setup_commands`
+- Installs the devbox wrapper for nice shell UX
+
+**Examples:**
+```bash
+# Start from current folder's devbox.json
+devbox up
+
+# Mount your dotfiles
+devbox up --dotfiles ~/.dotfiles
+```
+
+---
+
 ##### `devbox init`
 
-Create a new devbox project with its own Docker container.
+Create a new devbox project with its own Docker box (container).
 
 **Syntax:**
 ```bash
@@ -30,7 +60,7 @@ devbox init <project> [flags]
 - `--force, -f`: Force initialization, overwriting existing project
 - `--template, -t <template>`: Initialize from template (python, nodejs, go, web)
 - `--generate-config, -g`: Generate devbox.json configuration file
-- `--config-only, -c`: Generate configuration file only (don't create container)
+- `--config-only, -c`: Generate configuration file only (don't create box)
 
 **Examples:**
 ```bash
@@ -60,11 +90,11 @@ devbox init webapp --generate-config
 
 ##### `devbox shell`
 
-Open an interactive bash shell in the project's container.
+Open an interactive bash shell in the project's box.
 
 **Syntax:**
 ```bash
-devbox shell <project>
+devbox shell <project> [--keep-running]
 ```
 
 **Examples:**
@@ -72,25 +102,27 @@ devbox shell <project>
 # Enter project environment
 devbox shell myproject
 
-# Start stopped container and enter shell
+# Start stopped box and enter shell
 devbox shell python-app
 ```
 
 **Notes:**
-- Automatically starts the container if stopped
+- Automatically starts the box if stopped
 - Sets working directory to `/workspace`
 - Your project files are available at `/workspace`
 - Exit with `exit`, `logout`, or `Ctrl+D`
+- By default, the box stops automatically after you exit the shell when global setting `auto_stop_on_exit` is enabled (default)
+- Use `--keep-running` to keep the box running after you exit the shell
 
 ---
 
 ##### `devbox run`
 
-Run an arbitrary command inside the project's container.
+Run an arbitrary command inside the project's box.
 
 **Syntax:**
 ```bash
-devbox run <project> <command> [args...]
+devbox run <project> <command> [args...] [--keep-running]
 ```
 
 **Examples:**
@@ -111,13 +143,39 @@ devbox run myproject bash /workspace/setup.sh
 **Notes:**
 - Commands run in `/workspace` by default
 - Use quotes for complex commands with pipes, redirects, etc.
-- Container starts automatically if stopped
+- Box starts automatically if stopped
+- By default, the box stops automatically after the command finishes when global setting `auto_stop_on_exit` is enabled (default)
+- Use `--keep-running` to keep the box running after the command finishes
+
+---
+
+##### `devbox stop`
+
+Stop a project's box if it's running.
+
+**Syntax:**
+```bash
+devbox stop <project>
+```
+
+**Examples:**
+```bash
+# Stop a running box
+devbox stop myproject
+
+# Stop another project's box
+devbox stop webapp
+```
+
+**Notes:**
+- Safe to run if the box is already stopped (no-op)
+- Complements the default auto-stop behavior after `shell` and `run`
 
 ---
 
 ##### `devbox destroy`
 
-Stop and remove the project's container.
+Stop and remove the project's box.
 
 **Syntax:**
 ```bash
@@ -138,14 +196,14 @@ devbox destroy myproject --force
 
 **Notes:**
 - Preserves project files in `~/devbox/<project>/`
-- Container can be recreated with `devbox init`
+- Box can be recreated with `devbox init`
 - Use `rm -rf ~/devbox/<project>/` to remove files
 
 ---
 
 ##### `devbox list`
 
-Show all managed projects and their container status.
+Show all managed projects and their box status.
 
 **Syntax:**
 ```bash
@@ -167,7 +225,7 @@ devbox list --verbose
 **Output Format:**
 ```
 DEVBOX PROJECTS
-PROJECT              CONTAINER            STATUS          CONFIG       WORKSPACE
+PROJECT              BOX                  STATUS          CONFIG       WORKSPACE
 --------------------  --------------------  ---------------  ------------  ------------------------------
 myproject            devbox_myproject     Up 2 hours      devbox.json  /home/user/devbox/myproject
 webapp               devbox_webapp        Exited          none         /home/user/devbox/webapp
@@ -303,7 +361,7 @@ devbox cleanup --all --force
 
 ##### `devbox maintenance`
 
-Perform maintenance tasks on devbox projects and containers.
+Perform maintenance tasks on devbox projects and boxes.
 
 **Syntax:**
 ```bash
@@ -313,9 +371,9 @@ devbox maintenance [flags]
 **Options:**
 - `--status`: Show detailed system status
 - `--health-check`: Check health of all projects
-- `--update`: Update all containers
-- `--restart`: Restart stopped containers
-- `--rebuild`: Rebuild all containers
+- `--update`: Update all boxes
+- `--restart`: Restart stopped boxes
+- `--rebuild`: Rebuild all boxes
 - `--auto-repair`: Auto-fix common issues
 - `--force`: Skip confirmation prompts
 
@@ -343,9 +401,9 @@ devbox maintenance --force --rebuild
 
 ##### `devbox update`
 
-Pull the latest base image(s) and rebuild environment container(s).
+Pull the latest base image(s) and rebuild environment box(es).
 
-This command replaces containers to ensure they are based on the newest upstream images, while preserving your workspace files on the host.
+This command replaces boxes to ensure they are based on the newest upstream images, while preserving your workspace files on the host.
 
 **Syntax:**
 ```bash
@@ -355,7 +413,7 @@ devbox update [project]
 **Behavior:**
 - When a project is specified, only that environment is updated
 - With no project, all registered projects are updated
-- Pulls the latest base image, recreates the container with current devbox.json config, and re-runs setup commands
+- Pulls the latest base image, recreates the box with current devbox.json config, and re-runs setup commands
 
 **Options:**
 - None currently. Uses your existing configuration in `devbox.json` if present.
@@ -370,10 +428,10 @@ devbox update
 ```
 
 **Notes:**
-- Your files remain in ~/devbox/<project>/ and are re-mounted into the new container
+- Your files remain in ~/devbox/<project>/ and are re-mounted into the new box
 - If the project has a devbox.json, its settings (ports, env, volumes, etc.) are applied on rebuild
-- System packages inside the container are updated as part of the rebuild
- - If the container exists, it will be stopped and replaced; if missing, it will be created
+- System packages inside the box are updated as part of the rebuild
+ - If the box exists, it will be stopped and replaced; if missing, it will be created
 
 ## Exit Codes
 
@@ -415,7 +473,7 @@ When you create a project, devbox sets up:
 └── ...
 ```
 
-**Inside Container:**
+**Inside Box:**
 ```
 /workspace/                 # Mounted from ~/devbox/<project>/
 ├── devbox.json            # Same files as host
@@ -427,14 +485,14 @@ When you create a project, devbox sets up:
 
 ---
 
-Devbox creates containers with these characteristics:
+Devbox creates boxes (Docker containers) with these characteristics:
 
 - **Name**: `devbox_<project>`
 - **Base Image**: `ubuntu:22.04` (configurable)
 - **Working Directory**: `/workspace`
 - **Mount**: `~/devbox/<project>` → `/workspace`
 - **Restart Policy**: `unless-stopped`
-- **Command**: `sleep infinity` (keeps container alive)
+- **Command**: `sleep infinity` (keeps box alive)
 
 **Docker Commands Equivalent:**
 ```bash

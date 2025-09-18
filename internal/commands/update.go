@@ -10,8 +10,8 @@ import (
 
 var updateCmd = &cobra.Command{
 	Use:   "update [project]",
-	Short: "Pull latest base image(s) and rebuild container(s)",
-	Long:  "Update environments by pulling the latest base images and rebuilding the project containers using current configuration.",
+	Short: "Pull latest base image(s) and rebuild box(es)",
+	Long:  "Update environments by pulling the latest base images and rebuilding the project boxes using current configuration.",
 	Args:  cobra.MaximumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) == 1 {
@@ -50,11 +50,11 @@ func updateSingleProject(projectName string) error {
 		return fmt.Errorf("failed to check box existence: %w", err)
 	}
 	if existsBox {
-		fmt.Printf("🛑 Stopping and removing existing container '%s'...\n", project.BoxName)
+		fmt.Printf("🛑 Stopping and removing existing box '%s'...\n", project.BoxName)
 
 		_ = dockerClient.StopBox(project.BoxName)
 		if err := dockerClient.RemoveBox(project.BoxName); err != nil {
-			return fmt.Errorf("failed to remove existing container: %w", err)
+			return fmt.Errorf("failed to remove existing box: %w", err)
 		}
 	}
 
@@ -70,18 +70,18 @@ func updateSingleProject(projectName string) error {
 		}
 	}
 
-	fmt.Printf("🚀 Recreating container '%s' with image '%s'...\n", project.BoxName, baseImage)
+	fmt.Printf("🚀 Recreating box '%s' with image '%s'...\n", project.BoxName, baseImage)
 	boxID, err := dockerClient.CreateBoxWithConfig(project.BoxName, baseImage, project.WorkspacePath, workspaceBox, configMap)
 	if err != nil {
-		return fmt.Errorf("failed to create container: %w", err)
+		return fmt.Errorf("failed to create box: %w", err)
 	}
 
 	if err := dockerClient.StartBox(boxID); err != nil {
-		return fmt.Errorf("failed to start container: %w", err)
+		return fmt.Errorf("failed to start box: %w", err)
 	}
 
 	if err := dockerClient.WaitForBox(project.BoxName, 30*time.Second); err != nil {
-		return fmt.Errorf("container failed to become ready: %w", err)
+		return fmt.Errorf("box failed to become ready: %w", err)
 	}
 
 	updateCommands := []string{

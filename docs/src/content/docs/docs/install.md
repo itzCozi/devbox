@@ -65,34 +65,9 @@ sudo make install
 devbox --help
 ```
 
-## System Maintenance
----
-
-```bash
-# Check system health
-devbox maintenance --health-check
-
-# Clean up unused resources
-devbox cleanup --all
-
-# Update all containers
-devbox maintenance --update
-```
-
 ## File Locations
 ---
 
 - **Project files**: `~/devbox/<project>/` (on host)
-- **Container workspace**: `/workspace/` (inside container)
+- **Box workspace**: `/workspace/` (inside box)
 - **Configuration**: `~/.devbox/config.json`
-
-## Docker Access
----
-
-By default, all devbox environments have access to the host's Docker daemon, allowing you to:
-
-- Build and manage Docker containers from within your devbox environment
-- Run Docker commands without additional configuration
-- Execute Docker Compose for multi-container applications
-
-This works by mounting the host's Docker socket (`/var/run/docker.sock`) in your devbox container and installing the Docker CLI tools automatically.

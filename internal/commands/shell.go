@@ -9,6 +9,8 @@ import (
 	"devbox/internal/docker"
 )
 
+var keepRunningFlag bool
+
 var shellCmd = &cobra.Command{
 	Use:   "shell <project>",
 	Short: "Open an interactive shell in the project box",
@@ -65,6 +67,21 @@ var shellCmd = &cobra.Command{
 			return fmt.Errorf("failed to attach shell: %w", err)
 		}
 
+		// After shell exits, optionally stop the container when not being used
+		if !keepRunningFlag {
+			cfg, err := configManager.Load()
+			if err == nil && cfg.Settings != nil && cfg.Settings.AutoStopOnExit {
+				fmt.Printf("Stopping box '%s' (auto-stop enabled)...\n", project.BoxName)
+				if err := dockerClient.StopBox(project.BoxName); err != nil {
+					fmt.Printf("Warning: failed to stop box: %v\n", err)
+				}
+			}
+		}
+
 		return nil
 	},
+}
+
+func init() {
+	shellCmd.Flags().BoolVar(&keepRunningFlag, "keep-running", false, "Keep the box running after exiting the shell")
 }

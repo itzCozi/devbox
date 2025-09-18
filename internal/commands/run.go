@@ -8,6 +8,8 @@ import (
 	"devbox/internal/docker"
 )
 
+var keepRunningRunFlag bool
+
 var runCmd = &cobra.Command{
 	Use:   "run <project> <command> [args...]",
 	Short: "Run a command in the project box",
@@ -56,6 +58,21 @@ var runCmd = &cobra.Command{
 			return fmt.Errorf("failed to run command: %w", err)
 		}
 
+		// After command completes, optionally stop the container when not being used
+		if !keepRunningRunFlag {
+			cfg, err := configManager.Load()
+			if err == nil && cfg.Settings != nil && cfg.Settings.AutoStopOnExit {
+				fmt.Printf("Stopping box '%s' (auto-stop enabled)...\n", project.BoxName)
+				if err := dockerClient.StopBox(project.BoxName); err != nil {
+					fmt.Printf("Warning: failed to stop box: %v\n", err)
+				}
+			}
+		}
+
 		return nil
 	},
+}
+
+func init() {
+	runCmd.Flags().BoolVar(&keepRunningRunFlag, "keep-running", false, "Keep the box running after the command finishes")
 }

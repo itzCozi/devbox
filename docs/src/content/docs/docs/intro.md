@@ -3,7 +3,7 @@ title: Introduction
 description: Learn about devbox and its principles
 ---
 
-Welcome to the devbox documentation! This guide provides an overview of what devbox is, its core principles, and how it can help you manage your development environments effectively. devbox is a tool designed to create isolated, reproducible development environments using containers. It simplifies the process of setting up and managing dependencies, ensuring that your projects run consistently across different machines.
+Welcome to the devbox documentation! This guide provides an overview of what devbox is, its core principles, and how it can help you manage your development environments effectively. devbox is a tool designed to create isolated, reproducible development environments using boxes (Docker containers). It simplifies the process of setting up and managing dependencies, ensuring that your projects run consistently across different machines.
 
 #### Key Features of devbox
 - **Isolation**: Each project gets its own isolated environment, preventing dependency conflicts.
@@ -11,6 +11,7 @@ Welcome to the devbox documentation! This guide provides an overview of what dev
 - **Simplicity**: Easy to set up and manage environments with simple commands.
 - **Flexibility**: Supports a wide range of programming languages and frameworks.
 - **Portability**: Environments can be shared and versioned alongside your code.
+- **Resource-friendly**: Environments stop automatically when not in use (after shell exit or one-off runs), with an option to keep them running when needed.
 
 ## The Problem
 ---
@@ -20,7 +21,7 @@ Traditional development environments can lead to "it works on my machine" issues
 ## Principles of devbox
 ---
 
-1. **Containerization**: Each development environment runs in a container, ensuring isolation from the host system and other projects.
+1. **Box-based isolation**: Each development environment runs in a dedicated box (container), ensuring isolation from the host system and other projects.
 2. **Configuration as Code**: Environments are defined using configuration files, allowing for version control and easy sharing.
 3. **On-Demand Environments**: Environments are created and destroyed as needed, reducing resource usage.
 4. **User-Centric Design**: Focused on developer experience, making it easy to switch between projects and manage dependencies.
@@ -28,4 +29,4 @@ Traditional development environments can lead to "it works on my machine" issues
 
 ## Getting Started
 
-To get started with devbox, follow this guide on [installation and setup](/docs/start).
+To get started with devbox, follow this guide on [installation and setup](/docs/install).

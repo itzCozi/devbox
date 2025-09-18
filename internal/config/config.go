@@ -17,6 +17,7 @@ type GlobalSettings struct {
 	DefaultEnvironment  map[string]string `json:"default_environment,omitempty"`
 	ConfigTemplatesPath string            `json:"config_templates_path,omitempty"`
 	AutoUpdate          bool              `json:"auto_update,omitempty"`
+	AutoStopOnExit      bool              `json:"auto_stop_on_exit,omitempty"`
 }
 
 type Project struct {
@@ -35,6 +36,7 @@ type ProjectConfig struct {
 	Environment   map[string]string `json:"environment,omitempty"`
 	Ports         []string          `json:"ports,omitempty"`
 	Volumes       []string          `json:"volumes,omitempty"`
+	Dotfiles      []string          `json:"dotfiles,omitempty"`
 	WorkingDir    string            `json:"working_dir,omitempty"`
 	Shell         string            `json:"shell,omitempty"`
 	User          string            `json:"user,omitempty"`
@@ -90,6 +92,7 @@ func (cm *ConfigManager) Load() (*Config, error) {
 		Settings: &GlobalSettings{
 			DefaultBaseImage: "ubuntu:22.04",
 			AutoUpdate:       true,
+			AutoStopOnExit:   true,
 		},
 	}
 
@@ -114,6 +117,7 @@ func (cm *ConfigManager) Load() (*Config, error) {
 		config.Settings = &GlobalSettings{
 			DefaultBaseImage: "ubuntu:22.04",
 			AutoUpdate:       true,
+			AutoStopOnExit:   true,
 		}
 	}
 

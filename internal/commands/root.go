@@ -60,8 +60,10 @@ func Execute() error {
 func init() {
 
 	rootCmd.AddCommand(initCmd)
+	rootCmd.AddCommand(upCmd)
 	rootCmd.AddCommand(shellCmd)
 	rootCmd.AddCommand(runCmd)
+	rootCmd.AddCommand(stopCmd)
 	rootCmd.AddCommand(destroyCmd)
 	rootCmd.AddCommand(listCmd)
 	rootCmd.AddCommand(configCmd)

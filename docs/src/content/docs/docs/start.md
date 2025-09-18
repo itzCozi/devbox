@@ -22,7 +22,7 @@ devbox init my-python-app --template python
 This command:
 - Creates a new project called `my-python-app`
 - Uses the Python template (includes Python 3, pip, and common tools)
-- Sets up a Docker container with Ubuntu 22.04
+- Sets up a Docker box (container) with Ubuntu 22.04
 - Creates a workspace directory at `~/devbox/my-python-app/`
 
 ## Enter Your Development Environment
@@ -32,12 +32,13 @@ This command:
 devbox shell my-python-app
 ```
 
-You're now inside an isolated Ubuntu container! Notice how your prompt changes to indicate you're in the devbox environment.
+You're now inside an isolated Ubuntu box! Notice how your prompt changes to indicate you're in the devbox environment.
+By default, the box will stop automatically when you exit the shell. To keep it running after you exit, pass `--keep-running`.
 
 ## Explore the Environment
 ---
 
-Inside the container, you can:
+Inside the box, you can:
 
 ```bash
 # Check what's available
@@ -103,8 +104,11 @@ devbox shell go-service  # Go environment
 When you're done with a project:
 
 ```bash
-# Stop and remove the container (keeps your files)
+# Stop and remove the box (keeps your files)
 devbox destroy my-python-app
+
+# Or just stop the box without removing it
+devbox stop my-python-app
 
 # Your files are still in ~/devbox/my-python-app/
 ls ~/devbox/my-python-app/
@@ -113,24 +117,24 @@ ls ~/devbox/my-python-app/
 devbox init my-python-app --template python
 ```
 
-## Understanding the Workflow
+## Docker Access
 ---
 
-Here's the typical devbox workflow:
+By default, all devbox environments have access to the host's Docker daemon, allowing you to:
 
-1. **Create**: `devbox init <project>` - Creates isolated environment
-2. **Develop**: `devbox shell <project>` - Enter the environment
-3. **Code**: Edit files on host, run inside container
-4. **Execute**: `devbox run <project> <command>` - Run commands without entering
-5. **Manage**: `devbox list` - See all projects
-6. **Cleanup**: `devbox destroy <project>` - Remove when done
+- Build and manage Docker boxes/containers from within your devbox environment
+- Run Docker commands without additional configuration
+- Execute Docker Compose for multi-box (multi-container) applications
+
+This works by mounting the host's Docker socket (`/var/run/docker.sock`) in your devbox box (container) and installing the Docker CLI tools automatically.
 
 ## Next Steps
 ---
 
 Now that you understand the basics:
 
-1. **Learn about configuration**: [Configuration Guide](/docs/configuration/)
-2. **Explore templates**: Try different [project templates](/docs/templates/)
-3. **Customize**: Create a custom `devbox.json` config file
-4. **Maintenance**: [Cleanup and Maintenance](/docs/cleanup-maintenance/)
+1. **Explore the commands**: [Command Reference](/docs/commands/)
+2. **Learn about configuration**: [Configuration Guide](/docs/configuration/)
+3. **Explore templates**: Try different [project templates](/docs/templates/)
+4. **Customize**: Create a custom `devbox.json` config file
+5. **Maintenance**: [Cleanup and Maintenance](/docs/cleanup-maintenance/)

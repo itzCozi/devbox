@@ -67,22 +67,22 @@ sudo usermod -aG docker $USER
 sudo devbox init myproject
 ```
 
-## Container Issues
+## Box Issues
 ---
 
-##### "Container not found" or "No such container"
+##### "Box not found" or "No such box"
 
-**Problem**: Container was manually deleted or doesn't exist.
+**Problem**: Box was manually deleted or doesn't exist.
 
 **Solutions**:
 ```bash
-# Check what containers exist
+# Check what boxes exist
 docker ps -a --filter "name=devbox_"
 
 # List devbox projects
 devbox list
 
-# Recreate missing container
+# Recreate missing box
 devbox destroy myproject  # Clean up tracking
 devbox init myproject     # Recreate
 
@@ -90,28 +90,28 @@ devbox init myproject     # Recreate
 devbox init myproject --force
 ```
 
-##### "Container won't start"
+##### "Box won't start"
 
-**Problem**: Container fails to start or immediately exits.
+**Problem**: Box fails to start or immediately exits.
 
 **Diagnosis**:
 ```bash
-# Check container status
+# Check box status
 docker ps -a --filter "name=devbox_myproject"
 
-# Check container logs
+# Check box logs
 docker logs devbox_myproject
 
-# Inspect container configuration
+# Inspect box configuration
 docker inspect devbox_myproject
 ```
 
 **Solutions**:
 ```bash
-# Try restarting container
+# Try restarting box
 docker start devbox_myproject
 
-# If still fails, recreate container
+# If still fails, recreate box
 devbox destroy myproject
 devbox init myproject
 
@@ -119,16 +119,16 @@ devbox init myproject
 sudo systemctl restart docker
 ```
 
-##### "Container stops immediately after starting"
+##### "Box stops immediately after starting"
 
-**Problem**: Container keeps exiting instead of staying running.
+**Problem**: Box keeps exiting instead of staying running.
 
 **Solutions**:
 ```bash
-# Check what command container is running
+# Check what command box is running
 docker inspect devbox_myproject | grep -A 5 '"Cmd"'
 
-# Container should run 'sleep infinity'
+# Box should run 'sleep infinity'
 # If not, recreate:
 devbox destroy myproject
 devbox init myproject
@@ -140,9 +140,9 @@ docker stats --no-stream
 ## File Access Issues
 ---
 
-##### "Files not showing up in container"
+##### "Files not showing up in box"
 
-**Problem**: Files created on host don't appear in `/workspace/` inside container.
+**Problem**: Files created on host don't appear in `/workspace/` inside box.
 
 **Diagnosis**:
 ```bash
@@ -157,18 +157,18 @@ docker inspect devbox_myproject | grep -A 10 '"Mounts"'
 # Verify workspace directory exists
 ls -la ~/devbox/myproject/
 
-# Create file on host and check in container
+# Create file on host and check in box
 echo "test" > ~/devbox/myproject/test.txt
 devbox run myproject cat /workspace/test.txt
 
-# If mount is wrong, recreate container
+# If mount is wrong, recreate box
 devbox destroy myproject
 devbox init myproject
 ```
 
 ##### "Permission denied accessing files"
 
-**Problem**: Can't read/write files in container workspace.
+**Problem**: Can't read/write files in box workspace.
 
 **Solutions**:
 ```bash
@@ -178,11 +178,11 @@ ls -la ~/devbox/myproject/
 # Fix ownership if needed
 sudo chown -R $USER:$USER ~/devbox/myproject/
 
-# Check container user
+# Check box user
 devbox run myproject whoami
 devbox run myproject id
 
-# If running as different user, use sudo inside container
+# If running as different user, use sudo inside box
 devbox run myproject "sudo chown -R root:root /workspace/"
 ```
 
@@ -206,27 +206,27 @@ sudo kill -9 <PID>
 # Or use different port in devbox.json
 # Change "5000:5000" to "5001:5000"
 
-# Recreate container with new config
+# Recreate box with new config
 devbox destroy myproject
 devbox init myproject
 ```
 
 ##### "Can't access web application from host"
 
-**Problem**: Web app running in container but not accessible from host.
+**Problem**: Web app running in box but not accessible from host.
 
 **Solutions**:
 ```bash
 # Ensure app binds to 0.0.0.0, not localhost
 # In your app: app.run(host='0.0.0.0', port=5000)
 
-# Check port mapping in container
+# Check port mapping in box
 docker port devbox_myproject
 
 # Verify ports in devbox.json
 cat ~/devbox/myproject/devbox.json
 
-# Test from inside container
+# Test from inside box
 devbox run myproject "curl http://localhost:5000"
 
 # Test from host
@@ -261,7 +261,7 @@ devbox config validate myproject
 
 **Diagnosis**:
 ```bash
-# Check container logs during init
+# Check box logs during init
 docker logs devbox_myproject
 
 # Test commands manually
@@ -295,9 +295,9 @@ pip3 install flask          # Should work
 ## Performance Issues
 ---
 
-##### "Container startup is slow"
+##### "Box startup is slow"
 
-**Problem**: Takes a long time to start containers or run commands.
+**Problem**: Takes a long time to start boxes or run commands.
 
 **Solutions**:
 ```bash
@@ -327,7 +327,7 @@ docker system df -v
 devbox cleanup --all
 docker system prune -a
 
-# Check individual containers
+# Check individual boxes
 docker exec devbox_myproject du -sh /var/cache/apt
 devbox run myproject "apt autoclean"
 ```
@@ -340,10 +340,10 @@ devbox run myproject "apt autoclean"
 If everything is broken, start fresh:
 
 ```bash
-# Stop all devbox containers
+# Stop all devbox boxes
 docker stop $(docker ps -q --filter "name=devbox_")
 
-# Remove all devbox containers
+# Remove all devbox boxes
 docker rm $(docker ps -aq --filter "name=devbox_")
 
 # Clean up Docker resources
@@ -359,15 +359,15 @@ rm -rf ~/.devbox/
 curl -fsSL https://devbox.ar0.eu/install.sh | bash
 ```
 
-##### "Recover project after container deletion"
+##### "Recover project after box deletion"
 
-If container was deleted but files remain:
+If box was deleted but files remain:
 
 ```bash
 # Check if files exist
 ls ~/devbox/myproject/
 
-# Recreate container
+# Recreate box
 devbox init myproject
 
 # If you had custom configuration
@@ -414,7 +414,7 @@ docker info
 devbox --version
 devbox list --verbose
 
-# Container information (if applicable)
+# Box information (if applicable)
 docker logs devbox_myproject
 docker inspect devbox_myproject
 
@@ -427,7 +427,7 @@ cat ~/devbox/myproject/devbox.json
 
 Useful log locations:
 - Docker daemon: `journalctl -u docker.service`
-- Container logs: `docker logs devbox_<project>`
+- Box logs: `docker logs devbox_<project>`
 - System messages: `/var/log/syslog`
 
 ##### Common Commands for Diagnosis
@@ -436,7 +436,7 @@ Useful log locations:
 # Check Docker daemon
 sudo systemctl status docker
 
-# List all containers
+# List all boxes
 docker ps -a
 
 # Check Docker disk usage
@@ -453,5 +453,3 @@ devbox maintenance --health-check
 df -h
 free -h
 ```
-
-This troubleshooting guide should help resolve most common issues with devbox. If you encounter problems not covered here, check the container logs and Docker status for more specific error messages.

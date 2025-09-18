@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"time"
 )
@@ -109,8 +110,31 @@ func (c *Client) applyProjectConfigToArgs(args []string, config map[string]inter
 	if volumes, ok := config["volumes"].([]interface{}); ok {
 		for _, volume := range volumes {
 			if volumeStr, ok := volume.(string); ok {
+
+				if strings.HasPrefix(volumeStr, "~") {
+					if home, err := os.UserHomeDir(); err == nil {
+						volumeStr = filepath.Join(home, strings.TrimPrefix(volumeStr, "~"))
+					}
+				}
 				args = append(args, "-v", volumeStr)
 			}
+		}
+	}
+
+	if dotfiles, ok := config["dotfiles"].([]interface{}); ok {
+		for _, item := range dotfiles {
+			pathStr, ok := item.(string)
+			if !ok || pathStr == "" {
+				continue
+			}
+			host := pathStr
+			if strings.HasPrefix(host, "~") {
+				if home, err := os.UserHomeDir(); err == nil {
+					host = filepath.Join(home, strings.TrimPrefix(host, "~"))
+				}
+			}
+			args = append(args, "-v", fmt.Sprintf("%s:%s", host, "/dotfiles"))
+			break
 		}
 	}
 
@@ -367,6 +391,31 @@ if [ -t 1 ]; then
     echo "💡 Type 'devbox help' for available commands"
     echo "🚪 Type 'devbox exit' to leave the box"
     echo ""
+fi
+
+# Dotfiles injection (optional)
+if [ -d "/dotfiles" ]; then
+	# Source custom bashrc if present
+	if [ -f "/dotfiles/.bashrc" ]; then
+		. /dotfiles/.bashrc
+	fi
+	# Symlink common dotfiles to root's home
+	for f in .gitconfig .vimrc .zshrc .bash_profile; do
+		if [ -f "/dotfiles/$f" ]; then
+			ln -sf "/dotfiles/$f" "/root/$f"
+		fi
+	done
+	# Merge .config if provided
+	if [ -d "/dotfiles/.config" ]; then
+		mkdir -p /root/.config
+		# Do not overwrite existing files blindly; create symlinks
+		for item in /dotfiles/.config/*; do
+			base=$(basename "$item")
+			if [ ! -e "/root/.config/$base" ]; then
+				ln -s "$item" "/root/.config/$base"
+			fi
+		done
+	fi
 fi
 
 # Define exit function for devbox

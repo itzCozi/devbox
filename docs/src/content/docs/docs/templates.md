@@ -226,7 +226,7 @@ devbox init myproject --config-only --template python
 # Edit the generated configuration
 nano ~/devbox/myproject/devbox.json
 
-# Then create the container
+# Then create the box
 devbox init myproject
 ```
 
@@ -318,106 +318,6 @@ Create your own reusable configurations:
 }
 ```
 
-## Advanced Setup Patterns
----
-
-##### Multi-Stage Setup
-
-For complex environments, use multi-stage setup commands:
-
-```json
-{
-  "setup_commands": [
-    "# Stage 1: System packages",
-    "apt install -y curl wget git build-essential",
-    
-    "# Stage 2: Programming languages",
-    "curl -fsSL https://deb.nodesource.com/setup_18.x | bash -",
-    "apt install -y nodejs python3 python3-pip",
-    
-    "# Stage 3: Language-specific packages",
-    "pip3 install flask requests",
-    "npm install -g typescript express",
-    
-    "# Stage 4: Project-specific setup",
-    "mkdir -p /workspace/{src,tests,docs}",
-    "chown -R root:root /workspace"
-  ]
-}
-```
-
-##### Conditional Setup
-
-Use shell conditionals for flexible setup:
-
-```json
-{
-  "setup_commands": [
-    "# Install Python if requirements.txt exists",
-    "[ -f /workspace/requirements.txt ] && pip3 install -r /workspace/requirements.txt || true",
-    
-    "# Install Node.js dependencies if package.json exists", 
-    "[ -f /workspace/package.json ] && cd /workspace && npm install || true",
-    
-    "# Setup git config if not exists",
-    "git config --global user.name 'Developer' || true",
-    "git config --global user.email 'dev@example.com' || true"
-  ]
-}
-```
-
-##### Environment-Specific Setup
-
-```json
-{
-  "setup_commands": [
-    "# Development tools for dev environment",
-    "if [ \"$NODE_ENV\" = \"development\" ]; then",
-    "  npm install -g nodemon ts-node",
-    "  pip3 install black flake8 pytest",
-    "fi",
-    
-    "# Production optimizations",
-    "if [ \"$NODE_ENV\" = \"production\" ]; then",
-    "  npm install -g pm2",
-    "  pip3 install gunicorn",
-    "fi"
-  ]
-}
-```
-
-## Best Practices
----
-
-##### Setup Command Guidelines
-
-1. **Always use -y flag** for apt commands
-2. **Group related commands** for better readability
-3. **Use full paths** for downloaded files
-4. **Clean up temporary files** after installation
-5. **Test commands individually** before adding to config
-
-##### Environment Variables
-
-1. **Use meaningful names** that describe purpose
-2. **Set PATH modifications** in environment section
-3. **Include language-specific variables** (PYTHONPATH, GOPATH, etc.)
-4. **Use /workspace** as base for project-specific paths
-
-##### Port Configuration
-
-1. **Map common development ports** (3000, 5000, 8000, 8080)
-2. **Include language-specific ports** (Python: 5000, 8000; Node.js: 3000, 8080)
-3. **Reserve ports for databases** if needed (5432, 3306, 6379, 27017)
-4. **Use consistent port mapping** across similar projects
-
-##### Volume Management
-
-1. **Mount data directories** outside /workspace for persistence
-2. **Use absolute paths** for volume mappings
-3. **Consider cache directories** for package managers
-4. **Mount configuration files** if shared across projects
-
 ## Template Development
 ---
 
@@ -466,4 +366,34 @@ project/
     └── setup.sh         # Additional setup scripts
 ```
 
-Templates and custom configurations make devbox incredibly flexible for any development workflow!
+## Best Practices
+---
+
+##### Setup Command Guidelines
+
+1. **Always use -y flag** for apt commands
+2. **Group related commands** for better readability
+3. **Use full paths** for downloaded files
+4. **Clean up temporary files** after installation
+5. **Test commands individually** before adding to config
+
+##### Environment Variables
+
+1. **Use meaningful names** that describe purpose
+2. **Set PATH modifications** in environment section
+3. **Include language-specific variables** (PYTHONPATH, GOPATH, etc.)
+4. **Use /workspace** as base for project-specific paths
+
+##### Port Configuration
+
+1. **Map common development ports** (3000, 5000, 8000, 8080)
+2. **Include language-specific ports** (Python: 5000, 8000; Node.js: 3000, 8080)
+3. **Reserve ports for databases** if needed (5432, 3306, 6379, 27017)
+4. **Use consistent port mapping** across similar projects
+
+##### Volume Management
+
+1. **Mount data directories** outside /workspace for persistence
+2. **Use absolute paths** for volume mappings
+3. **Consider cache directories** for package managers
+4. **Mount configuration files** if shared across projects
