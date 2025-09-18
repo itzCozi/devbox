@@ -556,6 +556,84 @@ When you create a project, devbox sets up:
 └── ...
 ```
 
+## Shell Completion
+
+---
+
+##### `devbox completion`
+
+Generate completion scripts for your shell to enable tab autocompletion for devbox commands, flags, project names, and template names.
+
+**Syntax:**
+```bash
+devbox completion [bash|zsh|fish|powershell]
+```
+
+**Supported Shells:**
+- **Bash**: Autocompletion for commands, flags, project names, and templates
+- **Zsh**: Full autocompletion with descriptions
+- **Fish**: Intelligent completion with suggestions
+- **PowerShell**: Tab completion for Windows users
+
+**Setup Instructions:**
+
+**Bash:**
+```bash
+# Load completion for current session
+source <(devbox completion bash)
+
+# Install for all sessions (Linux)
+sudo devbox completion bash > /etc/bash_completion.d/devbox
+
+# Install for all sessions (macOS with Homebrew)
+devbox completion bash > $(brew --prefix)/etc/bash_completion.d/devbox
+```
+
+**Zsh:**
+```bash
+# Enable completion if not already enabled
+echo "autoload -U compinit; compinit" >> ~/.zshrc
+
+# Install for all sessions
+devbox completion zsh > "${fpath[1]}/_devbox"
+
+# Restart your shell or source ~/.zshrc
+```
+
+**Fish:**
+```bash
+# Load completion for current session
+devbox completion fish | source
+
+# Install for all sessions
+devbox completion fish > ~/.config/fish/completions/devbox.fish
+```
+
+**PowerShell (Windows):**
+```powershell
+# Load completion for current session
+devbox completion powershell | Out-String | Invoke-Expression
+
+# Install for all sessions
+devbox completion powershell > devbox.ps1
+# Then source this file from your PowerShell profile
+```
+
+**What Gets Completed:**
+- Command names (`init`, `shell`, `run`, `list`, etc.)
+- Command flags (`--template`, `--force`, `--keep-running`)
+- Project names for commands like `shell`, `run`, `stop`, `destroy`
+- Template names for `--template` flag and `templates show/delete`
+
+**Examples:**
+```bash
+# Tab completion examples (press TAB after typing)
+devbox <TAB>                    # Shows: init, shell, run, list, etc.
+devbox shell <TAB>              # Shows: your-project-names
+devbox init myapp --template <TAB>  # Shows: python, nodejs, go, web
+devbox templates show <TAB>     # Shows: available-template-names
+```
+
 ## Docker Integration
 
 ---
