@@ -1,6 +1,7 @@
 package integration
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -28,7 +29,10 @@ func buildDevboxBinary() error {
 
 	cmd := exec.Command("go", "build", "-o", binaryName, "./cmd/devbox")
 	cmd.Dir = getProjectRoot()
-	return cmd.Run()
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("failed to build devbox binary: %w", err)
+	}
+	return nil
 }
 
 func cleanupTestBinary() {
@@ -44,7 +48,6 @@ func getProjectRoot() string {
 }
 
 func getTestBinaryPath() string {
-
 	basePath := getProjectRoot()
 	exePath := filepath.Join(basePath, "devbox-test.exe")
 	if _, err := os.Stat(exePath); err == nil {
@@ -65,7 +68,6 @@ func TestVersionCommand(t *testing.T) {
 
 	expectedPrefix := "devbox (v"
 	if strings.Contains(outputStr, expectedPrefix) && strings.Contains(outputStr, "1.0") {
-
 		return
 	}
 
@@ -96,14 +98,12 @@ func TestHelpCommand(t *testing.T) {
 			outputStr := string(output)
 
 			if !strings.Contains(outputStr, "devbox") && !strings.Contains(outputStr, "Usage:") {
-
 				if len(output) == 0 && err != nil {
 					t.Fatalf("Failed to run help command %v: %v", tt.args, err)
 				}
 			}
 
 			if strings.Contains(outputStr, "devbox") || strings.Contains(outputStr, "Usage:") {
-
 				return
 			}
 

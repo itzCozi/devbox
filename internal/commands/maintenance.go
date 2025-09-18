@@ -152,13 +152,13 @@ func performStatusCheck() error {
 	fmt.Printf("🐳 Docker Status: ")
 	if err := dockerClient.RunDockerCommand([]string{"version", "--format", "Server: {{.Server.Version}}"}); err != nil {
 		fmt.Printf("❌ Docker not available: %v\n", err)
-		return err
+		return fmt.Errorf("docker is not available: %w", err)
 	}
 
 	cfg, err := configManager.Load()
 	if err != nil {
 		fmt.Printf("❌ Failed to load config: %v\n", err)
-		return err
+		return fmt.Errorf("failed to load config: %w", err)
 	}
 
 	projects := cfg.GetProjects()
@@ -167,7 +167,7 @@ func performStatusCheck() error {
 	boxes, err := dockerClient.ListBoxes()
 	if err != nil {
 		fmt.Printf("❌ Failed to list boxes: %v\n", err)
-		return err
+		return fmt.Errorf("failed to list docker boxes: %w", err)
 	}
 
 	boxStatus := make(map[string]string)

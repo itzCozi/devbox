@@ -7,7 +7,6 @@ import (
 )
 
 func TestMainFunction(t *testing.T) {
-
 	defer func() {
 		if r := recover(); r != nil {
 			t.Errorf("commands.Execute caused a panic: %v", r)
@@ -18,7 +17,6 @@ func TestMainFunction(t *testing.T) {
 }
 
 func TestImports(t *testing.T) {
-
 	if commands.Version == "" {
 		t.Error("commands.Version should not be empty")
 	}

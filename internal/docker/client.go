@@ -107,7 +107,6 @@ func (c *Client) applyProjectConfigToArgs(args []string, config map[string]inter
 	if volumes, ok := config["volumes"].([]interface{}); ok {
 		for _, volume := range volumes {
 			if volumeStr, ok := volume.(string); ok {
-
 				if strings.HasPrefix(volumeStr, "~") {
 					if home, err := os.UserHomeDir(); err == nil {
 						volumeStr = filepath.Join(home, strings.TrimPrefix(volumeStr, "~"))
@@ -226,13 +225,11 @@ func (c *Client) ExecuteSetupCommandsWithOutput(boxName string, commands []strin
 				return fmt.Errorf("setup command failed: %s: %w", command, err)
 			}
 		} else {
-
 			var stdout, stderr bytes.Buffer
 			cmd.Stdout = &stdout
 			cmd.Stderr = &stderr
 
 			if err := cmd.Run(); err != nil {
-
 				fmt.Printf("Command failed: %s\n", command)
 				if stderr.Len() > 0 {
 					fmt.Printf("Error output: %s\n", stderr.String())

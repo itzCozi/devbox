@@ -185,7 +185,6 @@ func (cm *ConfigManager) ValidateProjectConfig(config *ProjectConfig) error {
 		if port == "" {
 			return fmt.Errorf("empty port mapping")
 		}
-
 	}
 
 	for _, volume := range config.Volumes {
@@ -224,7 +223,6 @@ func (cm *ConfigManager) GetDefaultProjectConfig(projectName string) *ProjectCon
 }
 
 func (cm *ConfigManager) CreateProjectConfigFromTemplate(templateName, projectName string) (*ProjectConfig, error) {
-
 	templates := map[string]*ProjectConfig{
 		"python": {
 			Name:      projectName,
@@ -291,9 +289,7 @@ func (cm *ConfigManager) CreateProjectConfigFromTemplate(templateName, projectNa
 
 	template, exists := templates[templateName]
 	if !exists {
-
 		if t, err := cm.LoadUserTemplate(templateName); err == nil && t != nil {
-
 			data, _ := json.Marshal(t.Config)
 			var cfg ProjectConfig
 			_ = json.Unmarshal(data, &cfg)
@@ -381,7 +377,10 @@ func (cm *ConfigManager) SaveUserTemplate(tpl *ConfigTemplate) error {
 	if err != nil {
 		return fmt.Errorf("failed to marshal template: %w", err)
 	}
-	return os.WriteFile(filepath.Join(dir, tpl.Name+".json"), b, 0644)
+	if err := os.WriteFile(filepath.Join(dir, tpl.Name+".json"), b, 0644); err != nil {
+		return fmt.Errorf("failed to write template file: %w", err)
+	}
+	return nil
 }
 
 func (cm *ConfigManager) DeleteUserTemplate(name string) error {
@@ -393,7 +392,10 @@ func (cm *ConfigManager) DeleteUserTemplate(name string) error {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		return fmt.Errorf("template '%s' not found", name)
 	}
-	return os.Remove(path)
+	if err := os.Remove(path); err != nil {
+		return fmt.Errorf("failed to delete template: %w", err)
+	}
+	return nil
 }
 
 func (config *Config) AddProject(project *Project) {

@@ -7,7 +7,6 @@ import (
 )
 
 func TestNewConfigManager(t *testing.T) {
-
 	cm, err := NewConfigManager()
 	if err != nil {
 		t.Fatalf("Failed to create config manager: %v", err)
@@ -145,7 +144,6 @@ func TestProjectConfig(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-
 			jsonData, err := json.Marshal(tt.config)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Marshal error = %v, wantErr %v", err, tt.wantErr)
@@ -153,7 +151,6 @@ func TestProjectConfig(t *testing.T) {
 			}
 
 			if err == nil {
-
 				var pc ProjectConfig
 				err = json.Unmarshal(jsonData, &pc)
 				if err != nil {

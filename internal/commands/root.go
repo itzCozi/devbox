@@ -54,11 +54,13 @@ var rootCmd = &cobra.Command{
 }
 
 func Execute() error {
-	return rootCmd.Execute()
+	if err := rootCmd.Execute(); err != nil {
+		return fmt.Errorf("failed to execute root command: %w", err)
+	}
+	return nil
 }
 
 func init() {
-
 	rootCmd.AddCommand(initCmd)
 	rootCmd.AddCommand(upCmd)
 	rootCmd.AddCommand(shellCmd)

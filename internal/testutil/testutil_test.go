@@ -52,19 +52,16 @@ func TestCreateTestProjectConfig(t *testing.T) {
 }
 
 func TestAssertNoError(t *testing.T) {
-
 	AssertNoError(t, nil)
 }
 
 func TestAssertEqual(t *testing.T) {
-
 	AssertEqual(t, "test", "test")
 	AssertEqual(t, 123, 123)
 	AssertEqual(t, true, true)
 }
 
 func TestAssertNotNil(t *testing.T) {
-
 	AssertNotNil(t, "test")
 	AssertNotNil(t, 123)
 	AssertNotNil(t, []string{})

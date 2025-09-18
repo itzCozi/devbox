@@ -113,7 +113,6 @@ var statusCmd = &cobra.Command{
 }
 
 func humanizeDuration(d time.Duration) string {
-
 	d = d.Round(time.Second)
 	hours := int(d.Hours())
 	mins := int(d.Minutes()) % 60

@@ -114,7 +114,7 @@ func validateProjectConfig(projectName string) error {
 	if err := configManager.ValidateProjectConfig(projectConfig); err != nil {
 		fmt.Printf("❌ Configuration validation failed:\n")
 		fmt.Printf("   %s\n", err.Error())
-		return err
+		return fmt.Errorf("project config validation failed: %w", err)
 	}
 
 	fmt.Printf("✅ Configuration for project '%s' is valid\n", projectName)

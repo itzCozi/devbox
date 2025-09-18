@@ -8,7 +8,6 @@ import (
 )
 
 func TestConfigManager_LoadAndSave(t *testing.T) {
-
 	tempDir := t.TempDir()
 
 	cm := &ConfigManager{
@@ -86,7 +85,6 @@ func TestConfigManager_LoadAndSave(t *testing.T) {
 }
 
 func TestConfigManager_LoadProjectConfig(t *testing.T) {
-
 	tempDir := t.TempDir()
 
 	cm := &ConfigManager{
@@ -150,7 +148,6 @@ func TestConfigManager_LoadProjectConfig(t *testing.T) {
 }
 
 func TestConfigManager_LoadEmptyConfig(t *testing.T) {
-
 	tempDir := t.TempDir()
 
 	cm := &ConfigManager{
@@ -181,7 +178,6 @@ func TestConfigManager_LoadEmptyConfig(t *testing.T) {
 }
 
 func TestConfigManager_LoadInvalidJSON(t *testing.T) {
-
 	tempDir := t.TempDir()
 
 	cm := &ConfigManager{
