@@ -3,23 +3,12 @@ title: Templates & Setup
 description: Built-in templates and custom setup configurations for devbox
 ---
 
-Devbox provides built-in templates for common development environments and supports extensive customization through configuration files.
+Devbox provides a few built-in templates for common development environments. Use them as a starting point and customize via `devbox.json`.
 
 ## Built-in Templates
 ---
 
-#### Python Template
-
-**Use Case**: Python development with popular packages and tools
-
-**Includes**:
-- Python 3.10+ with pip
-- Virtual environment support (venv)
-- Development tools (build-essential, git, curl, wget)
-- Common Python packages
-- Pre-configured environment variables
-
-**Configuration**:
+#### Python
 ```json
 {
   "name": "python-project",
@@ -40,31 +29,15 @@ Devbox provides built-in templates for common development environments and suppo
 }
 ```
 
-**Usage**:
+Usage:
 ```bash
 devbox init myapp --template python
 devbox shell myapp
-
-# Python is ready to use
-python3 --version
-pip3 list
-python3 -m venv venv
-source venv/bin/activate
 ```
 
 ---
 
-#### Node.js Template
-
-**Use Case**: Node.js development with npm and modern tooling
-
-**Includes**:
-- Node.js 18+ with npm
-- Build tools and dependencies
-- TypeScript support
-- Common development utilities
-
-**Configuration**:
+#### Node.js
 ```json
 {
   "name": "nodejs-project",
@@ -85,30 +58,15 @@ source venv/bin/activate
 }
 ```
 
-**Usage**:
+Usage:
 ```bash
 devbox init webapp --template nodejs
 devbox shell webapp
-
-# Node.js is ready
-node --version
-npm --version
-npm init -y
-npm install express
 ```
 
 ---
 
-#### Go Template
-
-**Use Case**: Go development with latest toolchain
-
-**Includes**:
-- Go 1.21+ with standard tools
-- Git and build utilities
-- Properly configured GOPATH and environment
-
-**Configuration**:
+#### Go
 ```json
 {
   "name": "go-project",
@@ -129,30 +87,15 @@ npm install express
 }
 ```
 
-**Usage**:
+Usage:
 ```bash
 devbox init service --template go
 devbox shell service
-
-# Go is ready
-go version
-go mod init myproject
-go run main.go
 ```
 
 ---
 
-#### Web Template
-
-**Use Case**: Full-stack web development with multiple languages and tools
-
-**Includes**:
-- Python 3 with web frameworks
-- Node.js with frontend tools
-- nginx for serving static files
-- Database clients and tools
-
-**Configuration**:
+#### Web
 ```json
 {
   "name": "web-project",
@@ -171,7 +114,7 @@ go run main.go
   },
   "ports": [
     "80:80",
-    "3000:3000", 
+    "3000:3000",
     "5000:5000",
     "8000:8000",
     "8080:8080"
@@ -180,20 +123,10 @@ go run main.go
 }
 ```
 
-**Usage**:
+Usage:
 ```bash
 devbox init fullstack --template web
 devbox shell fullstack
-
-# Multiple languages available
-python3 --version
-node --version
-nginx -v
-
-# Create full-stack project
-mkdir frontend backend
-cd frontend && npx create-react-app .
-cd ../backend && python3 -m flask --app app run
 ```
 
 ## Template Usage
@@ -216,26 +149,14 @@ devbox init webapp --template web
 ```
 
 ##### Template Customization
-
-You can customize templates by generating configuration first:
-
+Generate config from a template, edit, then create:
 ```bash
-# Generate config from template
 devbox init myproject --config-only --template python
-
-# Edit the generated configuration
-nano ~/devbox/myproject/devbox.json
-
-# Then create the box
 devbox init myproject
 ```
 
 ## Custom Configurations
----
-
-##### Creating Custom Templates
-
-Create your own reusable configurations:
+Create your own reusable configurations (example snippet):
 
 ```json
 {
@@ -270,7 +191,7 @@ mkdir ~/devbox/analysis && cd ~/devbox/analysis
 devbox templates create data-science AnalysisProject
 ```
 
-##### Database Development
+##### Database Development (example)
 
 ```json
 {
@@ -290,7 +211,7 @@ devbox templates create data-science AnalysisProject
 }
 ```
 
-##### DevOps/Infrastructure
+##### DevOps/Infrastructure (example)
 
 ```json
 {
@@ -311,7 +232,7 @@ devbox templates create data-science AnalysisProject
 }
 ```
 
-##### Mobile Development
+##### Mobile Development (example)
 
 ```json
 {
@@ -333,10 +254,6 @@ devbox templates create data-science AnalysisProject
 ```
 
 ## Template Development
----
-
-##### Creating New Templates
-
 1. Start with working configuration:
 ```bash
 devbox init test-project --generate-config

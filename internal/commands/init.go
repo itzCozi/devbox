@@ -25,7 +25,7 @@ This will create a project directory and a corresponding Docker box.
 
 Examples:
   devbox init myproject                    # Basic project
-  devbox init myproject --template python # Python development project  
+  devbox init myproject --template python # Python development project
   devbox init myproject --config-only     # Generate devbox.json only
   devbox init myproject --generate-config # Create box and generate devbox.json`,
 	Args: cobra.ExactArgs(1),

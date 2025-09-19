@@ -134,8 +134,7 @@ This works by mounting the host's Docker socket (`/var/run/docker.sock`) in your
 Now that you understand the basics:
 
 1. **Explore the commands**: [Command Reference](/docs/cli/)
-2. **Enable shell completion**: Run `devbox completion bash` (or zsh/fish/powershell) for tab autocompletion
-3. **Learn about configuration**: [Configuration Guide](/docs/configuration/)
-4. **Explore templates**: Try different [project templates](/docs/templates/)
-5. **Customize**: Create a custom `devbox.json` config file
-6. **Maintenance**: [Cleanup and Maintenance](/docs/cleanup-maintenance/)
+2. **Learn about configuration**: [Configuration Guide](/docs/configuration/)
+3. **Explore templates**: Try different [project templates](/docs/templates/)
+4. **Customize**: Create a custom `devbox.json` config file
+5. **Maintenance**: [Cleanup and Maintenance](/docs/cleanup-maintenance/)

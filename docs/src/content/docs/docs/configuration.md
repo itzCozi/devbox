@@ -3,7 +3,7 @@ title: Configuration Files
 description: Comprehensive configuration management with devbox.json and global settings
 ---
 
-Devbox supports comprehensive configuration management through both global settings and project-specific configuration files.
+Devbox supports configuration via a per-project `devbox.json` and a global `~/.devbox/config.json`.
 
 ## Project Configuration
 ---
@@ -27,7 +27,7 @@ Each project can have a `devbox.json` file in its workspace directory that defin
 }
 ```
 
-##### Complete Configuration Options
+##### Common Fields
 
 ```json
 {
@@ -74,26 +74,7 @@ Each project can have a `devbox.json` file in its workspace directory that defin
 }
 ```
 
-##### Configuration Fields
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `name` | string | Project name (required) |
-| `base_image` | string | Docker base image |
-| `setup_commands` | array | Commands to run during initialization (after system update) |
-| `environment` | object | Environment variables |
-| `ports` | array | Port mappings (host:box) |
-| `volumes` | array | Volume mappings |
-| `dotfiles` | array | Optional host dotfiles directory path(s) to mount; first entry is mounted to /dotfiles and sourced/symlinked on shell init |
-| `working_dir` | string | Working directory in box |
-| `shell` | string | Default shell |
-| `user` | string | User to run as |
-| `capabilities` | array | Linux capabilities to add |
-| `labels` | object | Docker labels |
-| `network` | string | Docker network to use |
-| `restart` | string | Restart policy |
-| `resources` | object | Resource constraints |
-| `health_check` | object | Health check configuration |
+Key fields you may use: `name`, `base_image`, `setup_commands`, `environment`, `ports`, `volumes`, `dotfiles`, `working_dir`. Advanced options like `capabilities`, `labels`, `network`, `restart`, `resources`, and `health_check` are supported but optional.
 
 :::note
 Regardless of configuration, devbox always runs `apt update -y && apt full-upgrade -y` first when initializing any box to ensure the system is up to date. Your `setup_commands` will run after this system update.
@@ -141,12 +122,7 @@ devbox up --dotfiles ~/.dotfiles
 }
 ```
 
-Behavior:
-- The specified directory is mounted to `/dotfiles` in the box
-- On shell init, devbox will:
-  - source `/dotfiles/.bashrc` if present
-  - symlink common files (.gitconfig, .vimrc, .zshrc, .bash_profile)
-  - symlink contents of `/dotfiles/.config/*` into `/root/.config/` if not already present
+Behavior summary: mount at `/dotfiles` and source/symlink common files on shell init.
 
 ## Configuration Management
 ---
@@ -248,8 +224,7 @@ Global settings are stored in `~/.devbox/config.json`:
 | `auto_update` | boolean | `true` | Whether to run updates during initialization |
 | `auto_stop_on_exit` | boolean | `true` | If enabled, devbox stops a project's box automatically after exiting an interactive shell or finishing a one-off `run` command. Override per-invocation with `--keep-running`. |
 
-Notes:
-- Existing installations may not have `auto_stop_on_exit` until you add it. You can also view it with `devbox config global`.
+Note: If `auto_stop_on_exit` is missing in older installs, add it under `settings`.
 
 ## Migration
 ---

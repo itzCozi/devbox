@@ -21,32 +21,13 @@ This script will automatically:
 
 If you prefer to build devbox manually or the automatic script doesn't work for your system:
 
-### Prerequisites
-- Debian/Ubuntu Linux system
-- Docker installed and running
-- Go 1.21+ installed
-- make and git installed
-
 ### Install Dependencies
 ```bash
-# Update package index
-sudo apt update
-
-# Install Docker (if not already installed)
-sudo apt install docker.io
-
-# Install Go (if not already installed)
-sudo apt install golang-go
-
-# Install build tools
-sudo apt install make git
-
-# Start and enable Docker
-sudo systemctl start docker
-sudo systemctl enable docker
-
-# Add your user to docker group (requires logout/login)
-sudo usermod -aG docker $USER
+sudo apt update \
+	&& sudo apt install -y docker.io golang-go make git \
+	&& sudo systemctl enable --now docker \
+	&& sudo usermod -aG docker $USER
+# Note: log out/in (or run `newgrp docker`) for group changes to take effect.
 ```
 
 ### Build and Install
@@ -60,9 +41,6 @@ make build
 
 # Install to system (requires sudo)
 sudo make install
-
-# Verify installation
-devbox --help
 ```
 
 ## File Locations

@@ -3,7 +3,7 @@ title: Troubleshooting
 description: Common issues and solutions for devbox
 ---
 
-This guide covers common issues you might encounter with devbox and how to resolve them.
+Common issues and quick fixes.
 
 ## Installation Issues
 ---
@@ -356,7 +356,7 @@ rm -rf ~/.devbox/
 # rm -rf ~/devbox/  # This deletes your code!
 
 # Reinstall devbox if needed
-curl -fsSL https://devbox.ar0.eu/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/itzcozi/devbox/main/install.sh | bash
 ```
 
 ##### "Recover project after box deletion"
