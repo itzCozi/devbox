@@ -105,11 +105,8 @@ var lockCmd = &cobra.Command{
 
 		envMap, workdir, user, restart, labels, capabilities, resources, network := dockerClient.GetContainerMeta(proj.BoxName)
 
-		aptList := tryExecList(proj.BoxName, "dpkg-query -W -f='${Package}=${Version}\\n' $(apt-mark showmanual 2>/dev/null || true) 2>/dev/null | sort")
-		pipList := tryExecList(proj.BoxName, "python3 -m pip freeze 2>/dev/null || pip3 freeze 2>/dev/null || true")
-		npmList := tryExecJSONNames(proj.BoxName, "npm list -g --depth=0 --json 2>/dev/null || true")
-		yarnList := tryExecYarnGlobal(proj.BoxName)
-		pnpmList := tryExecJSONNames(proj.BoxName, "pnpm ls -g --depth=0 --json 2>/dev/null || true")
+		fmt.Printf("Gathering package information in parallel...\n")
+		aptList, pipList, npmList, yarnList, pnpmList := dockerClient.QueryPackagesParallel(proj.BoxName)
 
 		lf := lockFile{
 			Version:   1,

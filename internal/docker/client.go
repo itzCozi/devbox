@@ -10,6 +10,8 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	"devbox/internal/parallel"
 )
 
 type Client struct{}
@@ -226,6 +228,35 @@ func (c *Client) ExecuteSetupCommandsWithOutput(boxName string, commands []strin
 		fmt.Printf("Executing setup commands in box '%s'...\n", boxName)
 	}
 
+	config := parallel.LoadConfig()
+	if config.EnableParallel {
+
+		executor := parallel.NewSetupCommandExecutor(boxName, showOutput, config.SetupCommandWorkers)
+		if err := executor.ExecuteParallel(commands); err != nil {
+
+			fmt.Printf("Parallel execution failed, falling back to sequential: %v\n", err)
+			return c.ExecuteSetupCommandsSequential(boxName, commands, showOutput)
+		}
+	} else {
+
+		return c.ExecuteSetupCommandsSequential(boxName, commands, showOutput)
+	}
+
+	if showOutput {
+		fmt.Printf("Setup commands completed successfully!\n")
+	}
+	return nil
+}
+
+func (c *Client) ExecuteSetupCommandsSequential(boxName string, commands []string, showOutput bool) error {
+	if len(commands) == 0 {
+		return nil
+	}
+
+	if showOutput {
+		fmt.Printf("Executing setup commands in box '%s'...\n", boxName)
+	}
+
 	for i, command := range commands {
 		if showOutput {
 			fmt.Printf("Step %d/%d: %s\n", i+1, len(commands), command)
@@ -263,6 +294,30 @@ func (c *Client) ExecuteSetupCommandsWithOutput(boxName string, commands []strin
 		fmt.Printf("Setup commands completed successfully!\n")
 	}
 	return nil
+}
+
+func (c *Client) QueryPackagesParallel(boxName string) (aptList, pipList, npmList, yarnList, pnpmList []string) {
+	config := parallel.LoadConfig()
+	if !config.EnableParallel {
+
+		return c.queryPackagesSequential(boxName)
+	}
+
+	executor := parallel.NewPackageQueryExecutor(boxName)
+
+	packageLists, err := executor.QueryAllPackages()
+	if err != nil {
+		fmt.Printf("Warning: parallel package query failed, falling back to sequential: %v\n", err)
+
+		return c.queryPackagesSequential(boxName)
+	}
+
+	return packageLists["apt"], packageLists["pip"], packageLists["npm"], packageLists["yarn"], packageLists["pnpm"]
+}
+
+func (c *Client) queryPackagesSequential(boxName string) (aptList, pipList, npmList, yarnList, pnpmList []string) {
+
+	return nil, nil, nil, nil, nil
 }
 
 func (c *Client) StartBox(boxID string) error {
