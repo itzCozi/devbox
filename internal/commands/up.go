@@ -90,13 +90,12 @@ var upCmd = &cobra.Command{
 			fmt.Printf("🖼️  Image: %s\n", baseImage)
 			fmt.Printf("Tip: run 'devbox shell %s' to enter the environment.\n", projectName)
 
-			// Auto-stop if configured, not explicitly kept running, and idle
 			if cfg.Settings != nil && cfg.Settings.AutoStopOnExit && !keepRunningUpFlag {
 				stats, _ := dockerClient.GetContainerStats(boxName)
 				ports, _ := dockerClient.GetPortMappings(boxName)
 				pids := 0
 				if stats != nil && stats.PIDs != "" {
-					// best-effort parse
+
 					fmt.Sscanf(stats.PIDs, "%d", &pids)
 				}
 				if len(ports) == 0 && pids <= 1 {
@@ -120,8 +119,6 @@ var upCmd = &cobra.Command{
 			_ = json.Unmarshal(data, &configMap)
 		}
 
-		// If auto-stop is enabled globally and restart policy isn't explicitly set,
-		// prefer a non-restarting policy so manual stops remain stopped.
 		if cfg.Settings != nil && cfg.Settings.AutoStopOnExit {
 			if configMap == nil {
 				configMap = map[string]interface{}{}
@@ -210,7 +207,6 @@ var upCmd = &cobra.Command{
 		fmt.Printf("🖼️  Image: %s\n", baseImage)
 		fmt.Printf("Tip: run 'devbox shell %s' to enter the environment.\n", projectName)
 
-		// Auto-stop if configured, not explicitly kept running, and idle
 		if cfg.Settings != nil && cfg.Settings.AutoStopOnExit && !keepRunningUpFlag {
 			stats, _ := dockerClient.GetContainerStats(boxName)
 			ports, _ := dockerClient.GetPortMappings(boxName)

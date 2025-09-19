@@ -80,14 +80,22 @@ Key fields you may use: `name`, `base_image`, `setup_commands`, `environment`, `
 Regardless of configuration, devbox always runs `apt update -y && apt full-upgrade -y` first when initializing any box to ensure the system is up to date. Your `setup_commands` will run after this system update.
 :::
 
-## Reproducible Installs with devbox.lock
+## Reproducible Installs
 ---
 
-Devbox automatically records package manager installs you run inside the box to `/workspace/devbox.lock` (which is your project folder on the host). The following commands are tracked when they succeed:
+Devbox automatically records package manager installs you run inside the box to `/workspace/devbox.lock` (which is your project folder on the host).
+
+Lock file paths:
+- Inside box: `/workspace/devbox.lock`
+- On host: `~/devbox/<project>/devbox.lock`
+
+The following commands are tracked when they succeed:
 
 - `apt install ...` and `apt-get install ...`
 - `pip install ...` and `pip3 install ...`
 - `npm install ...`, `npm i ...`, `npm add ...`
+- `yarn add ...` and `yarn global add ...`
+- `pnpm add ...`, `pnpm install ...`, and `pnpm i ...`
 
 On `devbox up` and during `devbox update` rebuilds, devbox replays the commands from `devbox.lock` before running `setup_commands`. This makes it easy to reproduce the exact environment or share it with teammates by committing `devbox.lock` to your repo.
 
@@ -95,6 +103,30 @@ Notes:
 - Only successful install commands are recorded, and duplicates are de-duplicated line-by-line.
 - You can edit `devbox.lock` manually to remove mistakes or add comments (lines starting with `#` are ignored).
 - If you prefer explicit configuration, keep using `setup_commands` in `devbox.json`; the lock file complements it for ad-hoc installs.
+
+## Environment Snapshot
+---
+
+For a more comprehensive, shareable snapshot similar to Nix-style locks, use:
+
+```bash
+devbox lock <project>
+``
+
+This writes a JSON snapshot (by default to `<workspace>/devbox.lock.json`) that includes:
+
+- Base image: name, digest (if available), and image ID
+- Container configuration: working_dir, user, restart policy, network, ports, volumes, labels, environment, capabilities, resources (cpus/memory)
+- Installed packages:
+  - apt: manually installed packages pinned as `name=version`
+  - pip: `pip freeze`
+  - npm/yarn/pnpm: globally installed packages `name@version`
+- Any `setup_commands` from your `devbox.json` (for context)
+
+Usage notes:
+- Commit `devbox.lock.json` to your repository to share environment details with teammates.
+- This file is an authoritative snapshot for auditing/sharing. The current execution path for rebuilds remains `devbox.json` + the simple `devbox.lock` replay file. A future `devbox restore` may apply `devbox.lock.json` directly.
+- Local app dependencies (e.g. non-global Node packages in your repo) are intentionally not included; rely on your project’s own lockfiles (package-lock.json, yarn.lock, pnpm-lock.yaml, requirements.txt/poetry.lock, etc.).
 
 ## Initialize with Configuration
 ---
@@ -239,6 +271,10 @@ Global settings are stored in `~/.devbox/config.json`:
 | `default_base_image` | string | `ubuntu:22.04` | Default base image for new projects |
 | `auto_update` | boolean | `true` | Whether to run updates during initialization |
 | `auto_stop_on_exit` | boolean | `true` | If enabled, devbox stops a project's box automatically after exiting an interactive shell or finishing a one-off `run` command. Override per-invocation with `--keep-running`. |
+
+When `auto_stop_on_exit` is enabled:
+- `devbox up` will also stop the container if it is idle right after setup (no ports exposed and only the init process running), unless `--keep-running` is passed.
+- If your `devbox.json` does not specify a `restart` policy, devbox will default to `--restart no` so that manual stops persist.
 
 Note: If `auto_stop_on_exit` is missing in older installs, add it under `settings`.
 

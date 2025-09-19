@@ -3,6 +3,7 @@ package docker
 import (
 	"bufio"
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
@@ -66,7 +67,7 @@ func (c *Client) CreateBoxWithConfig(name, image, workspaceHost, workspaceBox st
 			args = c.applyProjectConfigToArgs(args, config)
 		}
 	}
-	// Ensure a restart policy is set; default to unless-stopped if not provided by config
+
 	hasRestart := false
 	for i := 0; i < len(args); i++ {
 		if args[i] == "--restart" {
@@ -98,7 +99,7 @@ func (c *Client) CreateBoxWithConfig(name, image, workspaceHost, workspaceBox st
 }
 
 func (c *Client) applyProjectConfigToArgs(args []string, config map[string]interface{}) []string {
-	// Restart policy (override default if provided)
+
 	if restart, ok := config["restart"].(string); ok && restart != "" {
 		args = append(args, "--restart", restart)
 	}
@@ -454,28 +455,50 @@ _devbox_wrap_and_record() {
 	if [ $status -eq 0 ]; then
 		case "$name" in
 			apt|apt-get)
-				if printf ' %s ' "$*" | grep -qE '(^| )install( |$)'; then
+				# Track install/remove/purge/autoremove
+				if printf ' %s ' "$*" | grep -qE '(^| )(install|remove|purge|autoremove)( |$)'; then
 					devbox_record_cmd "$name $*"
 				fi
 				;;
 			pip|pip3)
-				if [ "$1" = install ]; then
+				if [ "$1" = install ] || [ "$1" = uninstall ]; then
 					devbox_record_cmd "$name $*"
 				fi
 				;;
 			npm)
-				if [ "$1" = install ] || [ "$1" = i ] || [ "$1" = add ]; then
+				# Track install and uninstall variants
+				if [ "$1" = install ] || [ "$1" = i ] || [ "$1" = add ] \
+				   || [ "$1" = uninstall ] || [ "$1" = remove ] || [ "$1" = rm ] || [ "$1" = r ] || [ "$1" = un ]; then
 					devbox_record_cmd "$name $*"
 				fi
 				;;
 			yarn)
-				if [ "$1" = add ] || [ "$1" = global ] && [ "$2" = add ]; then
+				# Track add/remove and global add/remove
+				if [ "$1" = add ] || [ "$1" = remove ] || { [ "$1" = global ] && { [ "$2" = add ] || [ "$2" = remove ]; }; }; then
 					devbox_record_cmd "$name $*"
 				fi
 				;;
 			pnpm)
-				if [ "$1" = add ] || [ "$1" = install ] || [ "$1" = i ]; then
+				# Track add/install and remove/uninstall variants
+				if [ "$1" = add ] || [ "$1" = install ] || [ "$1" = i ] \
+				   || [ "$1" = remove ] || [ "$1" = rm ] || [ "$1" = uninstall ] || [ "$1" = un ]; then
 					devbox_record_cmd "$name $*"
+				fi
+				;;
+			corepack)
+				# Handle: corepack yarn add ..., corepack yarn global add ...
+				#         corepack yarn remove ..., corepack yarn global remove ...
+				#         corepack pnpm add/install/i/remove/rm/uninstall/un ...
+				subcmd="$1"; shift || true
+				if [ "$subcmd" = yarn ]; then
+					if [ "$1" = add ] || [ "$1" = remove ] || { [ "$1" = global ] && { [ "$2" = add ] || [ "$2" = remove ]; }; }; then
+						devbox_record_cmd "corepack yarn $*"
+					fi
+				elif [ "$subcmd" = pnpm ]; then
+					if [ "$1" = add ] || [ "$1" = install ] || [ "$1" = i ] \
+					   || [ "$1" = remove ] || [ "$1" = rm ] || [ "$1" = uninstall ] || [ "$1" = un ]; then
+						devbox_record_cmd "corepack pnpm $*"
+					fi
 				fi
 				;;
 		esac
@@ -490,6 +513,7 @@ PIP3_BIN="$(command -v pip3 2>/dev/null || echo /usr/bin/pip3)"
 NPM_BIN="$(command -v npm 2>/dev/null || echo /usr/bin/npm)"
 YARN_BIN="$(command -v yarn 2>/dev/null || echo /usr/bin/yarn)"
 PNPM_BIN="$(command -v pnpm 2>/dev/null || echo /usr/bin/pnpm)"
+COREPACK_BIN="$(command -v corepack 2>/dev/null || echo /usr/bin/corepack)"
 
 apt()      { _devbox_wrap_and_record "$APT_BIN" apt "$@"; }
 apt-get()  { _devbox_wrap_and_record "$APTGET_BIN" apt-get "$@"; }
@@ -498,6 +522,7 @@ pip3()     { _devbox_wrap_and_record "$PIP3_BIN" pip3 "$@"; }
 npm()      { _devbox_wrap_and_record "$NPM_BIN" npm "$@"; }
 yarn()     { _devbox_wrap_and_record "$YARN_BIN" yarn "$@"; }
 pnpm()     { _devbox_wrap_and_record "$PNPM_BIN" pnpm "$@"; }
+corepack(){ _devbox_wrap_and_record "$COREPACK_BIN" corepack "$@"; }
 BASHRC_EOF`
 
 	cmd = exec.Command("docker", "exec", boxName, "bash", "-c", welcomeCmd)
@@ -791,4 +816,123 @@ func (c *Client) GetMounts(boxName string) ([]string, error) {
 		}
 	}
 	return mounts, nil
+}
+
+func (c *Client) ExecCapture(boxName, command string) (string, string, error) {
+	wrapped := ". /root/.bashrc >/dev/null 2>&1 || true; set -o pipefail; " + command
+	cmd := exec.Command("docker", "exec", boxName, "bash", "-lc", wrapped)
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+	if err := cmd.Run(); err != nil {
+		return stdout.String(), stderr.String(), fmt.Errorf("exec failed: %w", err)
+	}
+	return stdout.String(), stderr.String(), nil
+}
+
+func (c *Client) GetImageDigestInfo(ref string) (string, string, error) {
+	cmd := exec.Command("docker", "inspect", "--type=image", "--format", "{{join .RepoDigests \",\"}}|{{.Id}}", ref)
+	var out bytes.Buffer
+	var errb bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &errb
+	if err := cmd.Run(); err == nil {
+		parts := strings.Split(strings.TrimSpace(out.String()), "|")
+		digest := ""
+		id := ""
+		if len(parts) > 0 {
+			ds := strings.Split(parts[0], ",")
+			if len(ds) > 0 {
+				digest = strings.TrimSpace(ds[0])
+			}
+		}
+		if len(parts) > 1 {
+			id = strings.TrimSpace(parts[1])
+		}
+		return digest, id, nil
+	}
+
+	cmd = exec.Command("docker", "inspect", "--type=container", "--format", "{{.Image}}", ref)
+	out.Reset()
+	errb.Reset()
+	cmd.Stdout = &out
+	cmd.Stderr = &errb
+	if err := cmd.Run(); err != nil {
+		return "", "", fmt.Errorf("inspect failed: %s", strings.TrimSpace(errb.String()))
+	}
+	imageID := strings.TrimSpace(out.String())
+	if imageID == "" {
+		return "", "", nil
+	}
+	cmd = exec.Command("docker", "inspect", "--type=image", "--format", "{{join .RepoDigests \",\"}}|{{.Id}}", imageID)
+	out.Reset()
+	errb.Reset()
+	cmd.Stdout = &out
+	cmd.Stderr = &errb
+	if err := cmd.Run(); err != nil {
+		return "", imageID, nil
+	}
+	parts := strings.Split(strings.TrimSpace(out.String()), "|")
+	digest := ""
+	id := imageID
+	if len(parts) > 0 {
+		ds := strings.Split(parts[0], ",")
+		if len(ds) > 0 {
+			digest = strings.TrimSpace(ds[0])
+		}
+	}
+	if len(parts) > 1 && strings.TrimSpace(parts[1]) != "" {
+		id = strings.TrimSpace(parts[1])
+	}
+	return digest, id, nil
+}
+
+func (c *Client) GetContainerMeta(boxName string) (map[string]string, string, string, string, map[string]string, []string, map[string]string, string) {
+	type inspectType struct {
+		Config struct {
+			Env        []string          `json:"Env"`
+			WorkingDir string            `json:"WorkingDir"`
+			User       string            `json:"User"`
+			Labels     map[string]string `json:"Labels"`
+		} `json:"Config"`
+		HostConfig struct {
+			RestartPolicy struct {
+				Name string `json:"Name"`
+			} `json:"RestartPolicy"`
+			CapAdd      []string `json:"CapAdd"`
+			NanoCpus    int64    `json:"NanoCpus"`
+			Memory      int64    `json:"Memory"`
+			NetworkMode string   `json:"NetworkMode"`
+		} `json:"HostConfig"`
+	}
+	cmd := exec.Command("docker", "inspect", boxName)
+	var out, errb bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &errb
+	if err := cmd.Run(); err != nil {
+		return map[string]string{}, "", "", "", map[string]string{}, []string{}, map[string]string{}, ""
+	}
+	var arr []inspectType
+	if err := json.Unmarshal(out.Bytes(), &arr); err != nil || len(arr) == 0 {
+		return map[string]string{}, "", "", "", map[string]string{}, []string{}, map[string]string{}, ""
+	}
+	ins := arr[0]
+	env := map[string]string{}
+	for _, e := range ins.Config.Env {
+		if kv := strings.SplitN(e, "=", 2); len(kv) == 2 {
+			env[kv[0]] = kv[1]
+		}
+	}
+	resources := map[string]string{}
+	if ins.HostConfig.NanoCpus > 0 {
+
+		cpu := float64(ins.HostConfig.NanoCpus) / 1e9
+		resources["cpus"] = strings.TrimRight(strings.TrimRight(fmt.Sprintf("%.3f", cpu), "0"), ".")
+	}
+	if ins.HostConfig.Memory > 0 {
+
+		mb := float64(ins.HostConfig.Memory) / (1024 * 1024)
+		resources["memory"] = fmt.Sprintf("%.0fMB", mb)
+	}
+	return env, ins.Config.WorkingDir, ins.Config.User, ins.HostConfig.RestartPolicy.Name, ins.Config.Labels, ins.HostConfig.CapAdd, resources, ins.HostConfig.NetworkMode
 }

@@ -50,11 +50,12 @@ Start a devbox environment from a shared devbox.json in the current directory. P
 
 **Syntax:**
 ```bash
-devbox up [--dotfiles <path>]
+devbox up [--dotfiles <path>] [--keep-running]
 ```
 
 **Options:**
 - `--dotfiles <path>`: Mount a local dotfiles directory into common locations inside the box
+- `--keep-running`: Keep the box running after setup completes (overrides auto-stop-on-idle)
 
 **Behavior:**
 - Reads `./devbox.json`
@@ -63,6 +64,8 @@ devbox up [--dotfiles <path>]
 - Runs a system update, then `setup_commands`
 - Installs the devbox wrapper for nice shell UX
  - Records package installations you perform inside the box to `devbox.lock` (apt/pip/npm/yarn/pnpm). On rebuilds, these commands are replayed to reproduce the environment.
+ - If global setting `auto_stop_on_exit` is enabled (default), `devbox up` stops the container right away if it is idle (no exposed ports and only the init process running). Use `--keep-running` to leave it running.
+ - When `auto_stop_on_exit` is enabled and your `devbox.json` does not specify a `restart` policy, devbox uses `--restart no` to prevent the container from auto-restarting after being stopped.
 
 **Examples:**
 ```bash
@@ -259,6 +262,79 @@ myproject            devbox_myproject     Up 2 hours      devbox.json  /home/use
 webapp               devbox_webapp        Exited          none         /home/user/devbox/webapp
 
 Total projects: 2
+```
+
+---
+
+### `devbox lock`
+
+Generate a comprehensive environment snapshot as `devbox.lock.json` for a project. This is ideal for sharing/auditing the exact box image, container configuration, and globally installed packages.
+
+**Syntax:**
+```bash
+devbox lock <project> [-o, --output <path>]
+```
+
+**Options:**
+- `-o, --output <path>`: Write the lock file to a custom path. Defaults to `<workspace>/devbox.lock.json`.
+
+**Behavior:**
+- Ensures the project's box is running (starts it if needed).
+- Inspects the container and its image to capture:
+  - Base image: name, digest (if available), image ID
+  - Container config: working_dir, user, restart policy, network, ports, volumes, labels, environment, capabilities, resources (cpus/memory)
+  - Installed package snapshots:
+    - apt: manually installed packages pinned as `name=version`
+    - pip: `pip freeze` output
+    - npm/yarn/pnpm: globally installed packages as `name@version`
+- If `devbox.json` exists in the workspace, includes its `setup_commands` for context.
+
+This snapshot is meant for sharing and audit. It does not currently drive `devbox up` automatically; continue to use `devbox.json` plus the simple `devbox.lock` command list for replay. A future `devbox restore` may apply `devbox.lock.json` directly.
+
+**Examples:**
+```bash
+# Write snapshot into the project workspace
+devbox lock myproject
+
+# Write snapshot to a custom file
+devbox lock myproject -o ./env/devbox.lock.json
+```
+
+**Sample Output (excerpt):**
+```json
+{
+  "version": 1,
+  "project": "myproject",
+  "box_name": "devbox_myproject",
+  "created_at": "2025-09-18T20:41:51Z",
+  "base_image": {
+    "name": "ubuntu:22.04",
+    "digest": "ubuntu@sha256:...",
+    "id": "sha256:..."
+  },
+  "container": {
+    "working_dir": "/workspace",
+    "user": "root",
+    "restart": "no",
+    "network": "bridge",
+    "ports": ["3000/tcp -> 0.0.0.0:3000"],
+    "volumes": ["bind /host/path -> /workspace (rw=true)"],
+    "environment": {"TZ": "UTC"},
+    "labels": {"devbox.project": "myproject"},
+    "capabilities": ["SYS_PTRACE"],
+    "resources": {"cpus": "2", "memory": "2048MB"}
+  },
+  "packages": {
+    "apt": ["git=1:2.34.1-..."],
+    "pip": ["requests==2.32.3"],
+    "npm": ["typescript@5.6.2"],
+    "yarn": [],
+    "pnpm": []
+  },
+  "setup_commands": [
+    "apt install -y python3 python3-pip"
+  ]
+}
 ```
 
 ## Configuration Commands
@@ -641,7 +717,7 @@ Devbox creates boxes (Docker containers) with these characteristics:
 - **Base Image**: `ubuntu:22.04` (configurable)
 - **Working Directory**: `/workspace`
 - **Mount**: `~/devbox/<project>` → `/workspace`
-- **Restart Policy**: `unless-stopped`
+- **Restart Policy**: `unless-stopped` (or `no` when `auto_stop_on_exit` is enabled and no explicit policy is set)
 - **Command**: `sleep infinity` (keeps box alive)
 
 **Docker Commands Equivalent:**
