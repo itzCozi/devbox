@@ -7,7 +7,7 @@ import (
 )
 
 var completionCmd = &cobra.Command{
-	Use:   "completion [bash|zsh|fish|powershell]",
+	Use:   "completion [bash|zsh|fish]",
 	Short: "Generate completion script",
 	Long: `To load completions:
 
@@ -18,8 +18,6 @@ Bash:
   # To load completions for each session, execute once:
   # Linux:
   $ devbox completion bash > /etc/bash_completion.d/devbox
-  # macOS:
-  $ devbox completion bash > $(brew --prefix)/etc/bash_completion.d/devbox
 
 Zsh:
 
@@ -40,17 +38,9 @@ Fish:
   # To load completions for each session, execute once:
   $ devbox completion fish > ~/.config/fish/completions/devbox.fish
 
-PowerShell:
-
-  PS> devbox completion powershell | Out-String | Invoke-Expression
-
-  # To load completions for every new session, run:
-  PS> devbox completion powershell > devbox.ps1
-  # and source this file from your PowerShell profile.
-
 `,
 	DisableFlagsInUseLine: true,
-	ValidArgs:             []string{"bash", "zsh", "fish", "powershell"},
+	ValidArgs:             []string{"bash", "zsh", "fish"},
 	Args:                  cobra.MatchAll(cobra.ExactArgs(1), cobra.OnlyValidArgs),
 	Run: func(cmd *cobra.Command, args []string) {
 		switch args[0] {
@@ -60,13 +50,10 @@ PowerShell:
 			cmd.Root().GenZshCompletion(os.Stdout)
 		case "fish":
 			cmd.Root().GenFishCompletion(os.Stdout, true)
-		case "powershell":
-			cmd.Root().GenPowerShellCompletionWithDesc(os.Stdout)
 		}
 	},
 }
 
-// getProjectNames returns a list of available project names for completion
 func getProjectNames(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 	if configManager == nil {
 		return nil, cobra.ShellCompDirectiveNoFileComp
@@ -86,7 +73,6 @@ func getProjectNames(cmd *cobra.Command, args []string, toComplete string) ([]st
 	return projectNames, cobra.ShellCompDirectiveNoFileComp
 }
 
-// getTemplateNames returns a list of available template names for completion
 func getTemplateNames(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 	if configManager == nil {
 		return nil, cobra.ShellCompDirectiveNoFileComp
@@ -97,18 +83,14 @@ func getTemplateNames(cmd *cobra.Command, args []string, toComplete string) ([]s
 }
 
 func init() {
-	// Add completion functions to commands that need them
 
-	// Commands that take project names
 	shellCmd.ValidArgsFunction = getProjectNames
 	runCmd.ValidArgsFunction = getProjectNames
 	stopCmd.ValidArgsFunction = getProjectNames
 	destroyCmd.ValidArgsFunction = getProjectNames
 
-	// Template commands that take template names
 	templatesShowCmd.ValidArgsFunction = getTemplateNames
 	templatesDeleteCmd.ValidArgsFunction = getTemplateNames
 
-	// Init command can use template completion for --template flag
 	initCmd.RegisterFlagCompletionFunc("template", getTemplateNames)
 }

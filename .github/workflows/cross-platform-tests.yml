@@ -1,4 +1,4 @@
-name: Cross-Platform Tests
+name: Linux Tests
 
 on:
   push:
@@ -10,14 +10,14 @@ on:
     - cron: '0 2 * * *'
 
 jobs:
-  test-cross-platform:
+  test-linux:
     name: Test on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
 
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest]
         go-version: ['1.21']
 
     steps:
@@ -54,14 +54,7 @@ jobs:
     - name: Build application
       run: go build -v ./cmd/devbox
 
-    - name: Test binary execution (Unix)
-      if: runner.os != 'Windows'
+    - name: Test binary execution
       run: |
         ./devbox version || echo "Expected failure on non-Linux systems"
         ./devbox --help
-
-    - name: Test binary execution (Windows)
-      if: runner.os == 'Windows'
-      run: |
-        .\devbox.exe version
-        .\devbox.exe --help

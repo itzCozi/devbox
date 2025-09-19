@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -132,10 +133,38 @@ var upCmd = &cobra.Command{
 			return fmt.Errorf("box failed to start: %w", err)
 		}
 
+		fmt.Printf("Setting up devbox commands in box...\n")
+		if err := dockerClient.SetupDevboxInBoxWithUpdate(boxName, projectName); err != nil {
+			return fmt.Errorf("failed to setup devbox in box: %w", err)
+		}
+
 		fmt.Printf("Updating system packages...\n")
 		systemUpdateCommands := []string{"apt update -y", "apt full-upgrade -y"}
 		if err := dockerClient.ExecuteSetupCommandsWithOutput(boxName, systemUpdateCommands, false); err != nil {
 			return fmt.Errorf("failed to update system packages: %w", err)
+		}
+
+		lockfilePath := filepath.Join(cwd, "devbox.lock")
+		if _, err := os.Stat(lockfilePath); err == nil {
+			fmt.Printf("Replaying recorded package installs from devbox.lock...\n")
+
+			data, readErr := os.ReadFile(lockfilePath)
+			if readErr == nil {
+				lines := strings.Split(string(data), "\n")
+				var cmds []string
+				for _, line := range lines {
+					cmd := strings.TrimSpace(line)
+					if cmd == "" || strings.HasPrefix(cmd, "#") {
+						continue
+					}
+					cmds = append(cmds, cmd)
+				}
+				if len(cmds) > 0 {
+					if err := dockerClient.ExecuteSetupCommandsWithOutput(boxName, cmds, false); err != nil {
+						return fmt.Errorf("failed to replay devbox.lock commands: %w", err)
+					}
+				}
+			}
 		}
 
 		if len(projectConfig.SetupCommands) > 0 {
@@ -143,11 +172,6 @@ var upCmd = &cobra.Command{
 			if err := dockerClient.ExecuteSetupCommandsWithOutput(boxName, projectConfig.SetupCommands, false); err != nil {
 				return fmt.Errorf("failed to execute setup commands: %w", err)
 			}
-		}
-
-		fmt.Printf("Setting up devbox commands in box...\n")
-		if err := dockerClient.SetupDevboxInBoxWithUpdate(boxName, projectName); err != nil {
-			return fmt.Errorf("failed to setup devbox in box: %w", err)
 		}
 
 		fmt.Printf("✅ Environment is up!\n")

@@ -3,6 +3,9 @@ package commands
 import (
 	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -90,6 +93,29 @@ func updateSingleProject(projectName string) error {
 	}
 	if err := dockerClient.ExecuteSetupCommandsWithOutput(project.BoxName, updateCommands, false); err != nil {
 		fmt.Printf("⚠️  Failed to update system packages: %v\n", err)
+	}
+
+	if project.WorkspacePath != "" {
+		lockfilePath := filepath.Join(project.WorkspacePath, "devbox.lock")
+		if _, err := os.Stat(lockfilePath); err == nil {
+			fmt.Printf("Replaying recorded package installs from devbox.lock...\n")
+			if data, readErr := os.ReadFile(lockfilePath); readErr == nil {
+				lines := strings.Split(string(data), "\n")
+				var cmds []string
+				for _, line := range lines {
+					cmd := strings.TrimSpace(line)
+					if cmd == "" || strings.HasPrefix(cmd, "#") {
+						continue
+					}
+					cmds = append(cmds, cmd)
+				}
+				if len(cmds) > 0 {
+					if err := dockerClient.ExecuteSetupCommandsWithOutput(project.BoxName, cmds, false); err != nil {
+						fmt.Printf("⚠️  Failed to replay devbox.lock commands: %v\n", err)
+					}
+				}
+			}
+		}
 	}
 
 	if projectConfig != nil && len(projectConfig.SetupCommands) > 0 {

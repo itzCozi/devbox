@@ -56,6 +56,9 @@ apt install tree htop
 
 # Install Python packages
 pip3 install requests flask
+
+# These installs are automatically recorded to /workspace/devbox.lock
+# so the environment can be reproduced on rebuild or by teammates.
 ```
 
 ## Create and Run Code

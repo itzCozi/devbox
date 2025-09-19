@@ -23,10 +23,6 @@ func TestMain(m *testing.M) {
 
 func buildDevboxBinary() error {
 	binaryName := "devbox-test"
-	if os.Getenv("OS") == "Windows_NT" {
-		binaryName = "devbox-test.exe"
-	}
-
 	cmd := exec.Command("go", "build", "-o", binaryName, "./cmd/devbox")
 	cmd.Dir = getProjectRoot()
 	if err := cmd.Run(); err != nil {
@@ -37,9 +33,7 @@ func buildDevboxBinary() error {
 
 func cleanupTestBinary() {
 	testBinary := filepath.Join(getProjectRoot(), "devbox-test")
-	testBinaryExe := filepath.Join(getProjectRoot(), "devbox-test.exe")
 	os.Remove(testBinary)
-	os.Remove(testBinaryExe)
 }
 
 func getProjectRoot() string {
@@ -49,10 +43,6 @@ func getProjectRoot() string {
 
 func getTestBinaryPath() string {
 	basePath := getProjectRoot()
-	exePath := filepath.Join(basePath, "devbox-test.exe")
-	if _, err := os.Stat(exePath); err == nil {
-		return exePath
-	}
 	return filepath.Join(basePath, "devbox-test")
 }
 

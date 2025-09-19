@@ -62,6 +62,7 @@ devbox up [--dotfiles <path>]
 - Applies ports, env, and volumes from configuration
 - Runs a system update, then `setup_commands`
 - Installs the devbox wrapper for nice shell UX
+ - Records package installations you perform inside the box to `devbox.lock` (apt/pip/npm/yarn/pnpm). On rebuilds, these commands are replayed to reproduce the environment.
 
 **Examples:**
 ```bash
@@ -494,6 +495,7 @@ devbox update [project]
 - When a project is specified, only that environment is updated
 - With no project, all registered projects are updated
 - Pulls the latest base image, recreates the box with current devbox.json config, and re-runs setup commands
+ - Replays package install commands from `devbox.lock` to restore your previously installed packages
 
 **Options:**
 - None currently. Uses your existing configuration in `devbox.json` if present.
@@ -571,14 +573,13 @@ Generate completion scripts for your shell to enable tab autocompletion for devb
 
 **Syntax:**
 ```bash
-devbox completion [bash|zsh|fish|powershell]
+devbox completion [bash|zsh|fish]
 ```
 
 **Supported Shells:**
-- **Bash**: Autocompletion for commands, flags, project names, and templates
-- **Zsh**: Full autocompletion with descriptions
-- **Fish**: Intelligent completion with suggestions
-- **PowerShell**: Tab completion for Windows users
+- **Bash**: Autocompletion for commands, flags, project names, and templates (Linux)
+- **Zsh**: Full autocompletion with descriptions (Linux)
+- **Fish**: Intelligent completion with suggestions (Linux)
 
 **Setup Instructions:**
 
@@ -590,8 +591,7 @@ source <(devbox completion bash)
 # Install for all sessions (Linux)
 sudo devbox completion bash > /etc/bash_completion.d/devbox
 
-# Install for all sessions (macOS with Homebrew)
-devbox completion bash > $(brew --prefix)/etc/bash_completion.d/devbox
+
 ```
 
 **Zsh:**
@@ -614,15 +614,7 @@ devbox completion fish | source
 devbox completion fish > ~/.config/fish/completions/devbox.fish
 ```
 
-**PowerShell (Windows):**
-```powershell
-# Load completion for current session
-devbox completion powershell | Out-String | Invoke-Expression
 
-# Install for all sessions
-devbox completion powershell > devbox.ps1
-# Then source this file from your PowerShell profile
-```
 
 **What Gets Completed:**
 - Command names (`init`, `shell`, `run`, `list`, etc.)

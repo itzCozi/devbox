@@ -175,12 +175,11 @@ test(docker): add integration tests for container management
 
 ### Overview
 
-**⚠️ Testing Environment**: For best results, run tests on **Debian/Ubuntu** systems where devbox is fully functional. Cross-platform tests verify compatibility but devbox only operates on Debian/Ubuntu.
+**⚠️ Testing Environment**: For best results, run tests on **Debian/Ubuntu** systems where devbox is fully functional. CI runs on Linux only; other platforms are not supported.
 
 devbox has a comprehensive test suite that includes:
 - **Unit tests** for individual functions and components
-- **Integration tests** for CLI commands and end-to-end functionality (best on Debian/Ubuntu)
-- **Cross-platform tests** for Windows, macOS, and Linux compatibility verification
+- **Integration tests** for CLI commands and end-to-end functionality (Debian/Ubuntu only)
 - **Security tests** and vulnerability scanning
 - **Performance tests** with race condition detection
 
@@ -213,7 +212,7 @@ make test
 # Run tests with coverage
 make test-coverage
 
-# Run tests with race detection (Linux/macOS)
+# Run tests with race detection (Linux)
 go test -race ./...
 
 # Run specific test packages
@@ -316,17 +315,16 @@ The project uses GitHub Actions for automated testing and quality assurance:
 Runs on every push and pull request:
 - **Multi-version testing** (Go 1.21, 1.22)
 - **Comprehensive test suite** with race detection
-- **Cross-platform builds** (Linux, Windows, macOS)
+- **Linux builds only** (Ubuntu/Debian)
 - **Code linting** with golangci-lint
 - **Security scanning** with gosec and govulncheck
 - **Coverage reporting** with Codecov integration
 
-#### 2. Cross-Platform Tests (`.github/workflows/cross-platform-tests.yml`)
-Ensures compatibility across operating systems:
-- **Ubuntu, Windows, macOS** testing
+#### 2. Linux Tests (`.github/workflows/cross-platform-tests.yml`)
+Ensures stability on supported Linux runners:
+- **Ubuntu** testing
 - **Daily scheduled runs** for regression detection
 - **Binary execution verification**
-- **OS-specific test handling**
 
 #### 3. Coverage Reporting (`.github/workflows/coverage.yml`)
 Detailed test coverage analysis:
@@ -347,7 +345,7 @@ All pull requests must pass:
 - ✅ **All tests** (unit + integration)
 - ✅ **Linting checks** (golangci-lint)
 - ✅ **Security scans** (gosec, govulncheck)
-- ✅ **Cross-platform builds**
+- ✅ **Linux builds**
 - ✅ **Code coverage** maintained or improved
 
 ### Local CI Simulation
@@ -401,7 +399,7 @@ Common CI issues and solutions:
 # Reproduce locally
 go test -v ./internal/package_name
 
-# Check for race conditions (Linux/macOS)
+# Check for race conditions (Linux)
 go test -race ./...
 
 # Run integration tests
@@ -434,7 +432,7 @@ open coverage.html
 
 #### Platform-Specific Issues
 
-**⚠️ Important Note**: devbox is designed to work only on **Debian/Ubuntu** systems. While we run cross-platform CI tests for compatibility checking, the actual devbox functionality requires a Debian or Ubuntu environment.
+**⚠️ Important Note**: devbox is designed to work only on **Debian/Ubuntu** systems. CI runs on Linux only; other platforms are not supported.
 
 **Recommended Testing Environment**:
 - **Debian 11+** or **Ubuntu 20.04+** for best results
@@ -442,8 +440,6 @@ open coverage.html
 - **WSL2 with Ubuntu** on Windows for development
 
 **Platform-Specific Behavior**:
-- **Windows**: Integration tests may skip due to OS compatibility checks - devbox functionality not supported
-- **macOS**: Tests run for compatibility verification only - devbox functionality not supported
 - **Linux (Debian/Ubuntu)**: Full functionality and testing supported
 
 ## Submitting Changes
@@ -513,7 +509,7 @@ Brief description of changes and motivation
 - [ ] Added unit tests for new functionality
 - [ ] Added integration tests if applicable
 - [ ] All CI checks pass (tests, linting, security)
-- [ ] Cross-platform compatibility verified
+
 - [ ] Coverage maintained or improved
 
 ## Code Quality

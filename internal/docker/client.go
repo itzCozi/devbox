@@ -215,7 +215,8 @@ func (c *Client) ExecuteSetupCommandsWithOutput(boxName string, commands []strin
 			fmt.Printf("Step %d/%d: %s\n", i+1, len(commands), command)
 		}
 
-		cmd := exec.Command("docker", "exec", boxName, "bash", "-c", command)
+		wrapped := ". /root/.bashrc >/dev/null 2>&1 || true; " + command
+		cmd := exec.Command("docker", "exec", boxName, "bash", "-c", wrapped)
 
 		if showOutput {
 			cmd.Stdout = os.Stdout
@@ -374,11 +375,10 @@ chmod +x /usr/local/bin/devbox`
 sed -i '/# Devbox welcome message/,/^$/d' /root/.bashrc 2>/dev/null || true
 sed -i '/devbox_exit()/,/^}$/d' /root/.bashrc 2>/dev/null || true
 sed -i '/devbox() {/,/^}$/d' /root/.bashrc 2>/dev/null || true
+	sed -i '/# Devbox package tracking start/,/# Devbox package tracking end/d' /root/.bashrc 2>/dev/null || true
 
-# Add new devbox configuration
 cat >> /root/.bashrc << 'BASHRC_EOF'
 
-# Devbox welcome message
 if [ -t 1 ]; then
     echo "🚀 Welcome to devbox project: ` + projectName + `"
     echo "📁 Your files are in: /workspace"
@@ -387,22 +387,17 @@ if [ -t 1 ]; then
     echo ""
 fi
 
-# Dotfiles injection (optional)
 if [ -d "/dotfiles" ]; then
-	# Source custom bashrc if present
 	if [ -f "/dotfiles/.bashrc" ]; then
 		. /dotfiles/.bashrc
 	fi
-	# Symlink common dotfiles to root's home
 	for f in .gitconfig .vimrc .zshrc .bash_profile; do
 		if [ -f "/dotfiles/$f" ]; then
 			ln -sf "/dotfiles/$f" "/root/$f"
 		fi
 	done
-	# Merge .config if provided
 	if [ -d "/dotfiles/.config" ]; then
 		mkdir -p /root/.config
-		# Do not overwrite existing files blindly; create symlinks
 		for item in /dotfiles/.config/*; do
 			base=$(basename "$item")
 			if [ ! -e "/root/.config/$base" ]; then
@@ -412,21 +407,82 @@ if [ -d "/dotfiles" ]; then
 	fi
 fi
 
-# Define exit function for devbox
 devbox_exit() {
     echo "👋 Exiting devbox shell for project \"` + projectName + `\""
     exit 0
 }
 
-# Override devbox command when it's called with exit
 devbox() {
     if [[ "$1" == "exit" || "$1" == "quit" ]]; then
         devbox_exit
         return
     fi
-    # Call the actual devbox script for other commands
     /usr/local/bin/devbox "$@"
 }
+
+export DEVBOX_LOCKFILE="${DEVBOX_LOCKFILE:-/workspace/devbox.lock}"
+
+devbox_record_cmd() {
+	local cmd="$1"
+	if [ -n "$DEVBOX_LOCKFILE" ] && [ -w "$(dirname "$DEVBOX_LOCKFILE")" ]; then
+		if [ ! -f "$DEVBOX_LOCKFILE" ] || ! grep -Fxq "$cmd" "$DEVBOX_LOCKFILE" 2>/dev/null; then
+			echo "$cmd" >> "$DEVBOX_LOCKFILE"
+		fi
+	fi
+}
+
+_devbox_wrap_and_record() {
+	local bin="$1"; shift
+	local name="$1"; shift
+	"$bin" "$@"
+	local status=$?
+	if [ $status -eq 0 ]; then
+		case "$name" in
+			apt|apt-get)
+				if printf ' %s ' "$*" | grep -qE '(^| )install( |$)'; then
+					devbox_record_cmd "$name $*"
+				fi
+				;;
+			pip|pip3)
+				if [ "$1" = install ]; then
+					devbox_record_cmd "$name $*"
+				fi
+				;;
+			npm)
+				if [ "$1" = install ] || [ "$1" = i ] || [ "$1" = add ]; then
+					devbox_record_cmd "$name $*"
+				fi
+				;;
+			yarn)
+				if [ "$1" = add ] || [ "$1" = global ] && [ "$2" = add ]; then
+					devbox_record_cmd "$name $*"
+				fi
+				;;
+			pnpm)
+				if [ "$1" = add ] || [ "$1" = install ] || [ "$1" = i ]; then
+					devbox_record_cmd "$name $*"
+				fi
+				;;
+		esac
+	fi
+	return $status
+}
+
+APT_BIN="$(command -v apt 2>/dev/null || echo /usr/bin/apt)"
+APTGET_BIN="$(command -v apt-get 2>/dev/null || echo /usr/bin/apt-get)"
+PIP_BIN="$(command -v pip 2>/dev/null || echo /usr/bin/pip)"
+PIP3_BIN="$(command -v pip3 2>/dev/null || echo /usr/bin/pip3)"
+NPM_BIN="$(command -v npm 2>/dev/null || echo /usr/bin/npm)"
+YARN_BIN="$(command -v yarn 2>/dev/null || echo /usr/bin/yarn)"
+PNPM_BIN="$(command -v pnpm 2>/dev/null || echo /usr/bin/pnpm)"
+
+apt()      { _devbox_wrap_and_record "$APT_BIN" apt "$@"; }
+apt-get()  { _devbox_wrap_and_record "$APTGET_BIN" apt-get "$@"; }
+pip()      { _devbox_wrap_and_record "$PIP_BIN" pip "$@"; }
+pip3()     { _devbox_wrap_and_record "$PIP3_BIN" pip3 "$@"; }
+npm()      { _devbox_wrap_and_record "$NPM_BIN" npm "$@"; }
+yarn()     { _devbox_wrap_and_record "$YARN_BIN" yarn "$@"; }
+pnpm()     { _devbox_wrap_and_record "$PNPM_BIN" pnpm "$@"; }
 BASHRC_EOF`
 
 	cmd = exec.Command("docker", "exec", boxName, "bash", "-c", welcomeCmd)
@@ -503,7 +559,9 @@ func AttachShell(boxName string) error {
 }
 
 func RunCommand(boxName string, command []string) error {
-	args := append([]string{"exec", "-it", boxName}, command...)
+	cmdStr := strings.Join(command, " ")
+	wrapped := ". /root/.bashrc >/dev/null 2>&1 || true; " + cmdStr
+	args := []string{"exec", "-it", boxName, "bash", "-lc", wrapped}
 	cmd := exec.Command("docker", args...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout

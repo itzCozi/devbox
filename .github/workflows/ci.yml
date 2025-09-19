@@ -110,9 +110,6 @@ jobs:
       run: |
         mkdir -p build
         BINARY_NAME=devbox
-        if [ "$GOOS" = "windows" ]; then
-          BINARY_NAME="${BINARY_NAME}.exe"
-        fi
         CGO_ENABLED=0 go build -ldflags="-w -s" -o build/${BINARY_NAME}-${GOOS}-${GOARCH} ./cmd/devbox
 
     - name: Upload artifacts

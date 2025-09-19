@@ -80,6 +80,22 @@ Key fields you may use: `name`, `base_image`, `setup_commands`, `environment`, `
 Regardless of configuration, devbox always runs `apt update -y && apt full-upgrade -y` first when initializing any box to ensure the system is up to date. Your `setup_commands` will run after this system update.
 :::
 
+## Reproducible Installs with devbox.lock
+---
+
+Devbox automatically records package manager installs you run inside the box to `/workspace/devbox.lock` (which is your project folder on the host). The following commands are tracked when they succeed:
+
+- `apt install ...` and `apt-get install ...`
+- `pip install ...` and `pip3 install ...`
+- `npm install ...`, `npm i ...`, `npm add ...`
+
+On `devbox up` and during `devbox update` rebuilds, devbox replays the commands from `devbox.lock` before running `setup_commands`. This makes it easy to reproduce the exact environment or share it with teammates by committing `devbox.lock` to your repo.
+
+Notes:
+- Only successful install commands are recorded, and duplicates are de-duplicated line-by-line.
+- You can edit `devbox.lock` manually to remove mistakes or add comments (lines starting with `#` are ignored).
+- If you prefer explicit configuration, keep using `setup_commands` in `devbox.json`; the lock file complements it for ad-hoc installs.
+
 ## Initialize with Configuration
 ---
 
