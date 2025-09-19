@@ -130,6 +130,16 @@ Examples:
 			json.Unmarshal(configData, &configMap)
 		}
 
+		// Honor global auto-stop by defaulting restart policy to "no" unless explicitly set
+		if cfg.Settings != nil && cfg.Settings.AutoStopOnExit {
+			if configMap == nil {
+				configMap = map[string]interface{}{}
+			}
+			if _, ok := configMap["restart"]; !ok {
+				configMap["restart"] = "no"
+			}
+		}
+
 		boxID, err := dockerClient.CreateBoxWithConfig(boxName, baseImage, workspacePath, workspaceBox, configMap)
 		if err != nil {
 			return fmt.Errorf("failed to create box: %w", err)

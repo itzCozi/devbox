@@ -18,6 +18,8 @@ var (
 	upDotfilesPath string
 )
 
+var keepRunningUpFlag bool
+
 var upCmd = &cobra.Command{
 	Use:   "up",
 	Short: "Start a devbox environment from the current folder's devbox.json",
@@ -87,6 +89,23 @@ var upCmd = &cobra.Command{
 			fmt.Printf("🐳 Box: %s\n", boxName)
 			fmt.Printf("🖼️  Image: %s\n", baseImage)
 			fmt.Printf("Tip: run 'devbox shell %s' to enter the environment.\n", projectName)
+
+			// Auto-stop if configured, not explicitly kept running, and idle
+			if cfg.Settings != nil && cfg.Settings.AutoStopOnExit && !keepRunningUpFlag {
+				stats, _ := dockerClient.GetContainerStats(boxName)
+				ports, _ := dockerClient.GetPortMappings(boxName)
+				pids := 0
+				if stats != nil && stats.PIDs != "" {
+					// best-effort parse
+					fmt.Sscanf(stats.PIDs, "%d", &pids)
+				}
+				if len(ports) == 0 && pids <= 1 {
+					fmt.Printf("Stopping box '%s' (auto-stop: idle)...\n", boxName)
+					if err := dockerClient.StopBox(boxName); err != nil {
+						fmt.Printf("Warning: failed to stop box: %v\n", err)
+					}
+				}
+			}
 			return nil
 		}
 
@@ -99,6 +118,17 @@ var upCmd = &cobra.Command{
 		if projectConfig != nil {
 			data, _ := json.Marshal(projectConfig)
 			_ = json.Unmarshal(data, &configMap)
+		}
+
+		// If auto-stop is enabled globally and restart policy isn't explicitly set,
+		// prefer a non-restarting policy so manual stops remain stopped.
+		if cfg.Settings != nil && cfg.Settings.AutoStopOnExit {
+			if configMap == nil {
+				configMap = map[string]interface{}{}
+			}
+			if _, ok := configMap["restart"]; !ok {
+				configMap["restart"] = "no"
+			}
 		}
 
 		var dotfiles []string
@@ -179,10 +209,27 @@ var upCmd = &cobra.Command{
 		fmt.Printf("🐳 Box: %s\n", boxName)
 		fmt.Printf("🖼️  Image: %s\n", baseImage)
 		fmt.Printf("Tip: run 'devbox shell %s' to enter the environment.\n", projectName)
+
+		// Auto-stop if configured, not explicitly kept running, and idle
+		if cfg.Settings != nil && cfg.Settings.AutoStopOnExit && !keepRunningUpFlag {
+			stats, _ := dockerClient.GetContainerStats(boxName)
+			ports, _ := dockerClient.GetPortMappings(boxName)
+			pids := 0
+			if stats != nil && stats.PIDs != "" {
+				fmt.Sscanf(stats.PIDs, "%d", &pids)
+			}
+			if len(ports) == 0 && pids <= 1 {
+				fmt.Printf("Stopping box '%s' (auto-stop: idle)...\n", boxName)
+				if err := dockerClient.StopBox(boxName); err != nil {
+					fmt.Printf("Warning: failed to stop box: %v\n", err)
+				}
+			}
+		}
 		return nil
 	},
 }
 
 func init() {
 	upCmd.Flags().StringVar(&upDotfilesPath, "dotfiles", "", "Path to local dotfiles directory to mount into the box")
+	upCmd.Flags().BoolVar(&keepRunningUpFlag, "keep-running", false, "Keep the box running after 'up' finishes")
 }

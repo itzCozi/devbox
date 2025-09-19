@@ -58,7 +58,6 @@ func (c *Client) CreateBoxWithConfig(name, image, workspaceHost, workspaceBox st
 		"--name", name,
 		"--mount", fmt.Sprintf("type=bind,source=%s,target=%s", workspaceHost, workspaceBox),
 		"--workdir", workspaceBox,
-		"--restart", "unless-stopped",
 		"-it",
 	}
 
@@ -66,6 +65,17 @@ func (c *Client) CreateBoxWithConfig(name, image, workspaceHost, workspaceBox st
 		if config, ok := projectConfig.(map[string]interface{}); ok {
 			args = c.applyProjectConfigToArgs(args, config)
 		}
+	}
+	// Ensure a restart policy is set; default to unless-stopped if not provided by config
+	hasRestart := false
+	for i := 0; i < len(args); i++ {
+		if args[i] == "--restart" {
+			hasRestart = true
+			break
+		}
+	}
+	if !hasRestart {
+		args = append(args, "--restart", "unless-stopped")
 	}
 
 	args = append(args, image, "sleep", "infinity")
@@ -88,6 +98,11 @@ func (c *Client) CreateBoxWithConfig(name, image, workspaceHost, workspaceBox st
 }
 
 func (c *Client) applyProjectConfigToArgs(args []string, config map[string]interface{}) []string {
+	// Restart policy (override default if provided)
+	if restart, ok := config["restart"].(string); ok && restart != "" {
+		args = append(args, "--restart", restart)
+	}
+
 	if env, ok := config["environment"].(map[string]interface{}); ok {
 		for key, value := range env {
 			if valueStr, ok := value.(string); ok {
@@ -636,7 +651,11 @@ func (c *Client) ListBoxes() ([]BoxInfo, error) {
 		}
 	}
 
-	return boxes, fmt.Errorf("failed to scan containers: %w", scanner.Err())
+	if err := scanner.Err(); err != nil {
+		return nil, fmt.Errorf("failed to scan containers: %w", err)
+	}
+
+	return boxes, nil
 }
 
 func (c *Client) RunDockerCommand(args []string) error {
