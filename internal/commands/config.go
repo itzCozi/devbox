@@ -7,6 +7,8 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+
+	"devbox/internal/config"
 )
 
 var configCmd = &cobra.Command{
