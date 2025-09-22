@@ -89,14 +89,7 @@ var upCmd = &cobra.Command{
 			fmt.Printf("Tip: run 'devbox shell %s' to enter the environment.\n", projectName)
 
 			if cfg.Settings != nil && cfg.Settings.AutoStopOnExit && !keepRunningUpFlag {
-				stats, _ := dockerClient.GetContainerStats(boxName)
-				ports, _ := dockerClient.GetPortMappings(boxName)
-				pids := 0
-				if stats != nil && stats.PIDs != "" {
-
-					fmt.Sscanf(stats.PIDs, "%d", &pids)
-				}
-				if len(ports) == 0 && pids <= 1 {
+				if idle, err := dockerClient.IsContainerIdle(boxName); err == nil && idle {
 					fmt.Printf("Stopping box '%s' (auto-stop: idle)...\n", boxName)
 					if err := dockerClient.StopBox(boxName); err != nil {
 						fmt.Printf("Warning: failed to stop box: %v\n", err)
@@ -156,13 +149,7 @@ var upCmd = &cobra.Command{
 		fmt.Printf("Tip: run 'devbox shell %s' to enter the environment.\n", projectName)
 
 		if cfg.Settings != nil && cfg.Settings.AutoStopOnExit && !keepRunningUpFlag {
-			stats, _ := dockerClient.GetContainerStats(boxName)
-			ports, _ := dockerClient.GetPortMappings(boxName)
-			pids := 0
-			if stats != nil && stats.PIDs != "" {
-				fmt.Sscanf(stats.PIDs, "%d", &pids)
-			}
-			if len(ports) == 0 && pids <= 1 {
+			if idle, err := dockerClient.IsContainerIdle(boxName); err == nil && idle {
 				fmt.Printf("Stopping box '%s' (auto-stop: idle)...\n", boxName)
 				if err := dockerClient.StopBox(boxName); err != nil {
 					fmt.Printf("Warning: failed to stop box: %v\n", err)

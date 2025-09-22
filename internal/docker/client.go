@@ -921,6 +921,22 @@ func (c *Client) GetMounts(boxName string) ([]string, error) {
 	return mounts, nil
 }
 
+func (c *Client) IsContainerIdle(boxName string) (bool, error) {
+	stats, err := c.GetContainerStats(boxName)
+	if err != nil {
+		return false, err
+	}
+	ports, err := c.GetPortMappings(boxName)
+	if err != nil {
+		return false, err
+	}
+	pids := 0
+	if stats != nil && strings.TrimSpace(stats.PIDs) != "" {
+		fmt.Sscanf(stats.PIDs, "%d", &pids)
+	}
+	return len(ports) == 0 && pids <= 1, nil
+}
+
 func (c *Client) ExecCapture(boxName, command string) (string, string, error) {
 	wrapped := ". /root/.bashrc >/dev/null 2>&1 || true; set -o pipefail; " + command
 	cmd := exec.Command("docker", "exec", boxName, "bash", "-lc", wrapped)

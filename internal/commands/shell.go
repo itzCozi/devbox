@@ -70,9 +70,14 @@ var shellCmd = &cobra.Command{
 		if !keepRunningFlag {
 			cfg, err := configManager.Load()
 			if err == nil && cfg.Settings != nil && cfg.Settings.AutoStopOnExit {
-				fmt.Printf("Stopping box '%s' (auto-stop enabled)...\n", project.BoxName)
-				if err := dockerClient.StopBox(project.BoxName); err != nil {
-					fmt.Printf("Warning: failed to stop box: %v\n", err)
+				idle, idleErr := dockerClient.IsContainerIdle(project.BoxName)
+				if idleErr != nil {
+
+				} else if idle {
+					fmt.Printf("Stopping box '%s' (auto-stop: idle) ...\n", project.BoxName)
+					if err := dockerClient.StopBox(project.BoxName); err != nil {
+						fmt.Printf("Warning: failed to stop box: %v\n", err)
+					}
 				}
 			}
 		}

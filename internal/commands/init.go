@@ -204,6 +204,15 @@ Examples:
 			}
 		}
 
+		if cfg.Settings != nil && cfg.Settings.AutoStopOnExit {
+			if idle, err := dockerClient.IsContainerIdle(boxName); err == nil && idle {
+				fmt.Printf("Stopping box '%s' (auto-stop: idle)...\n", boxName)
+				if err := dockerClient.StopBox(boxName); err != nil {
+					fmt.Printf("Warning: failed to stop box: %v\n", err)
+				}
+			}
+		}
+
 		fmt.Printf("\nNext steps:\n")
 		fmt.Printf("  devbox shell %s       # Open interactive shell\n", projectName)
 		fmt.Printf("  devbox run %s <cmd>   # Run a command\n", projectName)
