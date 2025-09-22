@@ -44,7 +44,7 @@ jobs:
         go tool cover -func=coverage.out -o coverage.txt
 
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v4
+      uses: codecov/codecov-action@v5
       with:
         file: ./coverage.out
         flags: unittests
