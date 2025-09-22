@@ -140,4 +140,4 @@ Now that you understand the basics:
 2. **Learn about configuration**: [Configuration Guide](/docs/configuration/)
 3. **Explore templates**: Try different [project templates](/docs/templates/)
 4. **Customize**: Create a custom `devbox.json` config file
-5. **Maintenance**: [Cleanup and Maintenance](/docs/cleanup-maintenance/)
+5. **Maintenance**: [Cleanup and Maintenance](/docs/maintenance/)

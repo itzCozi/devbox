@@ -60,7 +60,7 @@ export default defineConfig({
 					label: 'Maintenance',
 					collapsed: true,
 					items: [
-						{ label: 'Cleanup & Maintenance', slug: 'docs/cleanup-maintenance' },
+						{ label: 'Cleanup & Maintenance', slug: 'docs/maintenance' },
 						{ label: 'Troubleshooting', slug: 'docs/troubleshooting' },
 					],
 				},
