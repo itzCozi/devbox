@@ -6,6 +6,9 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
+
+	"github.com/xeipuuv/gojsonschema"
 )
 
 type Config struct {
@@ -176,33 +179,62 @@ func (cm *ConfigManager) SaveProjectConfig(projectPath string, config *ProjectCo
 	return nil
 }
 
-func (cm *ConfigManager) ValidateProjectConfig(config *ProjectConfig) error {
-	if config.Name == "" {
-		return fmt.Errorf("project name is required")
+func (cm *ConfigManager) ValidateProjectConfig(cfg *ProjectConfig) error {
+	if cfg == nil {
+		return fmt.Errorf("config is nil")
 	}
 
-	for _, port := range config.Ports {
-		if port == "" {
-			return fmt.Errorf("empty port mapping")
+	sch := gojsonschema.NewStringLoader(ProjectConfigJSONSchema)
+	docBytes, _ := json.Marshal(cfg)
+	doc := gojsonschema.NewBytesLoader(docBytes)
+	res, err := gojsonschema.Validate(sch, doc)
+	if err != nil {
+		return fmt.Errorf("schema validation error: %w", err)
+	}
+	if !res.Valid() {
+		var b strings.Builder
+		b.WriteString("project config invalid:\n")
+		for _, e := range res.Errors() {
+			b.WriteString(" - ")
+			b.WriteString(e.String())
+			b.WriteString("\n")
 		}
+		return fmt.Errorf(strings.TrimSpace(b.String()))
 	}
 
-	for _, volume := range config.Volumes {
-		if volume == "" {
-			return fmt.Errorf("empty volume mapping")
+	for _, port := range cfg.Ports {
+		if !strings.Contains(port, ":") && !strings.Contains(port, "/") {
+
+			return fmt.Errorf("invalid port mapping '%s' (expected host:container or container[/proto])", port)
 		}
 	}
-
-	if config.Resources != nil {
-		if config.Resources.CPUs != "" {
-
-		}
-		if config.Resources.Memory != "" {
-
+	for _, volume := range cfg.Volumes {
+		if !strings.Contains(volume, ":") {
+			return fmt.Errorf("invalid volume mapping '%s' (expected host:container)", volume)
 		}
 	}
+	if cfg.HealthCheck != nil {
+		if len(cfg.HealthCheck.Test) > 0 && cfg.HealthCheck.Test[0] == "NONE" && len(cfg.HealthCheck.Test) > 1 {
+			return fmt.Errorf("health_check.test cannot have arguments when set to NONE")
+		}
 
+		if cfg.HealthCheck.Interval != "" {
+			if _, err := time.ParseDuration(strings.ReplaceAll(cfg.HealthCheck.Interval, "m", "m0s")); err != nil && !durationLike(cfg.HealthCheck.Interval) {
+
+			}
+		}
+	}
 	return nil
+}
+
+func durationLike(s string) bool {
+
+	for _, suf := range []string{"ns", "us", "ms", "s", "m", "h"} {
+		if strings.HasSuffix(s, suf) {
+			return true
+		}
+	}
+	return false
 }
 
 func (cm *ConfigManager) GetDefaultProjectConfig(projectName string) *ProjectConfig {
@@ -452,3 +484,46 @@ func (config *Config) GetEffectiveBaseImage(project *Project, projectConfig *Pro
 	}
 	return "ubuntu:22.04"
 }
+
+const ProjectConfigJSONSchema = `{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"title": "Devbox Project Config",
+	"type": "object",
+	"required": ["name"],
+	"properties": {
+		"name": {"type": "string", "minLength": 1},
+		"base_image": {"type": "string"},
+		"setup_commands": {"type": "array", "items": {"type": "string"}},
+		"environment": {"type": "object", "additionalProperties": {"type": "string"}},
+		"ports": {"type": "array", "items": {"type": "string"}},
+		"volumes": {"type": "array", "items": {"type": "string"}},
+		"dotfiles": {"type": "array", "items": {"type": "string"}},
+		"working_dir": {"type": "string"},
+		"shell": {"type": "string"},
+		"user": {"type": "string"},
+		"capabilities": {"type": "array", "items": {"type": "string"}},
+		"labels": {"type": "object", "additionalProperties": {"type": "string"}},
+		"network": {"type": "string"},
+		"restart": {"type": "string"},
+		"health_check": {
+			"type": "object",
+			"properties": {
+				"test": {"type": "array", "items": {"type": "string"}},
+				"interval": {"type": "string"},
+				"timeout": {"type": "string"},
+				"start_period": {"type": "string"},
+				"retries": {"type": "integer", "minimum": 0}
+			},
+			"additionalProperties": false
+		},
+		"resources": {
+			"type": "object",
+			"properties": {
+				"cpus": {"type": "string"},
+				"memory": {"type": "string"}
+			},
+			"additionalProperties": false
+		}
+	},
+	"additionalProperties": false
+}`

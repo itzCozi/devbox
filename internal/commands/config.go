@@ -17,6 +17,7 @@ var configCmd = &cobra.Command{
 Available commands:
   generate <project>    Generate devbox.json for project
   validate <project>    Validate project configuration
+	schema                Print JSON Schema for devbox.json
   show <project>        Show project configuration
   templates             List available templates
   global               Show global configuration`,
@@ -35,6 +36,9 @@ Available commands:
 				return fmt.Errorf("project name required for validate command")
 			}
 			return validateProjectConfig(args[1])
+		case "schema":
+			fmt.Println(config.ProjectConfigJSONSchema)
+			return nil
 		case "show":
 			if len(args) < 2 {
 				return fmt.Errorf("project name required for show command")

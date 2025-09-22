@@ -758,6 +758,54 @@ type ContainerStats struct {
 	PIDs       string
 }
 
+func (c *Client) CommitContainer(containerName, imageTag string) (string, error) {
+	args := []string{"commit", containerName, imageTag}
+	cmd := exec.Command("docker", args...)
+	var out, errb bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &errb
+	if err := cmd.Run(); err != nil {
+		return "", fmt.Errorf("docker commit failed: %s", strings.TrimSpace(errb.String()))
+	}
+	return strings.TrimSpace(out.String()), nil
+}
+
+func (c *Client) SaveImage(imageRef, tarPath string) error {
+	f, err := os.Create(tarPath)
+	if err != nil {
+		return fmt.Errorf("failed to create tar file: %w", err)
+	}
+	defer f.Close()
+	cmd := exec.Command("docker", "save", imageRef)
+	cmd.Stdout = f
+	var errb bytes.Buffer
+	cmd.Stderr = &errb
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("docker save failed: %s", strings.TrimSpace(errb.String()))
+	}
+	return nil
+}
+
+func (c *Client) LoadImage(tarPath string) (string, error) {
+	cmd := exec.Command("docker", "load", "-i", tarPath)
+	var out, errb bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &errb
+	if err := cmd.Run(); err != nil {
+		return "", fmt.Errorf("docker load failed: %s", strings.TrimSpace(errb.String()))
+	}
+
+	s := strings.TrimSpace(out.String())
+	lines := strings.Split(s, "\n")
+	if len(lines) > 0 {
+		last := lines[len(lines)-1]
+		if i := strings.LastIndex(last, ": "); i != -1 {
+			return strings.TrimSpace(last[i+2:]), nil
+		}
+	}
+	return s, nil
+}
+
 func (c *Client) GetContainerStats(boxName string) (*ContainerStats, error) {
 
 	format := "{{.CPUPerc}}\t{{.MemUsage}}\t{{.MemPerc}}\t{{.NetIO}}\t{{.BlockIO}}\t{{.PIDs}}"
