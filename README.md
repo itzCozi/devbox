@@ -20,6 +20,16 @@ devbox creates isolated development environments, contained in a project's Docke
 - 🐧 **Linux-only** - Officially supported on Debian/Ubuntu systems
 - 🧪 **Well Tested** - Comprehensive test suite on Linux
 
+## Why devbox?
+
+devbox focuses on fast, disposable, Docker-native development environments with simple, commit-friendly config.
+
+- Minimal config: a small JSON file, no heavy frameworks
+- Clean host workspace: flat folders, no complex mounts
+- Reproducible: isolated per-project boxes you can destroy/recreate anytime
+- Docker-in-Docker ready: use Docker inside your environment out of the box
+- Designed for Linux/WSL: optimized for Debian/Ubuntu workflows
+
 ## Installation
 
 ```bash

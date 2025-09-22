@@ -2,11 +2,13 @@
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import starlightThemeRapide from 'starlight-theme-rapide'
+import sitemap from '@astrojs/sitemap'
 
 
 export default defineConfig({
 	site: 'https://devbox.ar0.eu',
 	integrations: [
+    sitemap(),
 		starlight({
 			title: 'devbox',
 			description: 'Isolated development environments using Docker containers',
