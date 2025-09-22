@@ -41,8 +41,9 @@ export default defineConfig({
 					label: 'Getting Started',
 					items: [
 						{ label: 'Introduction', slug: 'docs/intro' },
-						{ label: 'Quick Start', slug: 'docs/start' },
 						{ label: 'Installation', slug: 'docs/install' },
+						{ label: 'Quick Start', slug: 'docs/start' },
+						{ label: 'FAQ', slug: 'docs/faq' },
 					],
 				},
 				{
