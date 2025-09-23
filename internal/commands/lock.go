@@ -19,6 +19,8 @@ type lockFile struct {
 	BaseImage   lockImage         `json:"base_image"`
 	Container   lockContainer     `json:"container"`
 	Packages    lockPackages      `json:"packages"`
+	Registries  lockRegistries    `json:"registries,omitempty"`
+	AptSources  lockAptSources    `json:"apt_sources,omitempty"`
 	SetupScript []string          `json:"setup_commands,omitempty"`
 	Notes       map[string]string `json:"notes,omitempty"`
 }
@@ -48,6 +50,21 @@ type lockPackages struct {
 	Npm  []string `json:"npm,omitempty"`
 	Yarn []string `json:"yarn,omitempty"`
 	Pnpm []string `json:"pnpm,omitempty"`
+}
+
+type lockRegistries struct {
+	PipIndexURL   string            `json:"pip_index_url,omitempty"`
+	PipExtraIndex []string          `json:"pip_extra_index_urls,omitempty"`
+	NpmRegistry   string            `json:"npm_registry,omitempty"`
+	YarnRegistry  string            `json:"yarn_registry,omitempty"`
+	PnpmRegistry  string            `json:"pnpm_registry,omitempty"`
+	Env           map[string]string `json:"env,omitempty"`
+}
+
+type lockAptSources struct {
+	SnapshotURL   string   `json:"snapshot_url,omitempty"`
+	SourcesLists  []string `json:"sources_lists,omitempty"`
+	PinnedRelease string   `json:"pinned_release,omitempty"`
 }
 
 var (
@@ -108,6 +125,10 @@ var lockCmd = &cobra.Command{
 		fmt.Printf("Gathering package information in parallel...\n")
 		aptList, pipList, npmList, yarnList, pnpmList := dockerClient.QueryPackagesParallel(proj.BoxName)
 
+		aptSnapshot, aptSources, aptRelease := dockerClient.GetAptSources(proj.BoxName)
+		pipIndex, pipExtras := dockerClient.GetPipRegistries(proj.BoxName)
+		npmReg, yarnReg, pnpmReg := dockerClient.GetNodeRegistries(proj.BoxName)
+
 		lf := lockFile{
 			Version:   1,
 			Project:   proj.Name,
@@ -132,6 +153,19 @@ var lockCmd = &cobra.Command{
 				Npm:  npmList,
 				Yarn: yarnList,
 				Pnpm: pnpmList,
+			},
+			Registries: lockRegistries{
+				PipIndexURL:   pipIndex,
+				PipExtraIndex: pipExtras,
+				NpmRegistry:   npmReg,
+				YarnRegistry:  yarnReg,
+				PnpmRegistry:  pnpmReg,
+				Env:           envMap,
+			},
+			AptSources: lockAptSources{
+				SnapshotURL:   aptSnapshot,
+				SourcesLists:  aptSources,
+				PinnedRelease: aptRelease,
 			},
 		}
 

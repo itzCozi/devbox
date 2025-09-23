@@ -2,9 +2,11 @@ package parallel
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
+	"sort"
 	"strings"
 	"time"
 )
@@ -230,7 +232,7 @@ func (pqe *PackageQueryExecutor) QueryAllPackages() (map[string][]string, error)
 		{"apt", "dpkg-query -W -f='${Package}=${Version}\\n' $(apt-mark showmanual 2>/dev/null || true) 2>/dev/null | sort"},
 		{"pip", "python3 -m pip freeze 2>/dev/null || pip3 freeze 2>/dev/null || true"},
 		{"npm", "npm list -g --depth=0 --json 2>/dev/null || true"},
-		{"yarn", "yarn global list --depth=0 2>/dev/null | sed -n 's/^[[:space:]]*├──[[:space:]]*//p' | sed -n 's/^[[:space:]]*└──[[:space:]]*//p' | sed 's/ (.*)//'"},
+		{"yarn", "node -e \"(async()=>{const cp=require('child_process');function sh(c){try{return cp.execSync(c,{stdio:['ignore','pipe','ignore']}).toString()}catch(e){return ''}}const dir=sh('yarn global dir').trim();if(!dir){process.exit(0)}const fs=require('fs'),path=require('path');const pkgLock=path.join(dir,'package.json');let deps={};try{const pkg=JSON.parse(fs.readFileSync(pkgLock,'utf8'));deps=Object.assign({},pkg.dependencies||{},pkg.devDependencies||{})}catch{}Object.keys(deps).forEach(n=>{let v='';try{const pj=JSON.parse(fs.readFileSync(path.join(dir,'node_modules',n,'package.json'),'utf8'));v=pj.version||''}catch{}if(v)console.log(n+'@'+v)});})();\" 2>/dev/null || true"},
 		{"pnpm", "pnpm ls -g --depth=0 --json 2>/dev/null || true"},
 	}
 
@@ -290,9 +292,49 @@ func parseLineList(output string) []string {
 }
 
 func parseJSONPackageList(output string) []string {
-
 	if strings.TrimSpace(output) == "" {
 		return nil
+	}
+
+	type npmDep struct {
+		Version string `json:"version"`
+	}
+	var obj struct {
+		Dependencies map[string]npmDep `json:"dependencies"`
+	}
+	if err := json.Unmarshal([]byte(output), &obj); err == nil && obj.Dependencies != nil {
+		var res []string
+		for name, dep := range obj.Dependencies {
+			if dep.Version != "" {
+				res = append(res, fmt.Sprintf("%s@%s", name, dep.Version))
+			}
+		}
+		sort.Strings(res)
+		return res
+	}
+
+	var arr []map[string]any
+	if err := json.Unmarshal([]byte(output), &arr); err == nil {
+		depSet := map[string]string{}
+		for _, node := range arr {
+			if deps, ok := node["dependencies"].(map[string]any); ok {
+				for name, v := range deps {
+					if m, ok := v.(map[string]any); ok {
+						if ver, ok := m["version"].(string); ok && ver != "" {
+							depSet[name] = ver
+						}
+					}
+				}
+			}
+		}
+		if len(depSet) > 0 {
+			var res []string
+			for name, ver := range depSet {
+				res = append(res, fmt.Sprintf("%s@%s", name, ver))
+			}
+			sort.Strings(res)
+			return res
+		}
 	}
 
 	return nil

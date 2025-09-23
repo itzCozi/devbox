@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -590,9 +591,20 @@ BASHRC_EOF`
 }
 
 func (c *Client) StopBox(boxName string) error {
-	cmd := exec.Command("docker", "stop", boxName)
+
+	timeoutSec := 2
+	if v := strings.TrimSpace(os.Getenv("DEVBOX_STOP_TIMEOUT")); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n >= 0 {
+			timeoutSec = n
+		}
+	}
+	cmd := exec.Command("docker", "stop", "--time", fmt.Sprintf("%d", timeoutSec), boxName)
 	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("failed to stop box: %w", err)
+
+		if killErr := exec.Command("docker", "kill", boxName).Run(); killErr != nil {
+			return fmt.Errorf("failed to stop box: %w", err)
+		}
+		return nil
 	}
 	return nil
 }
@@ -947,6 +959,88 @@ func (c *Client) ExecCapture(boxName, command string) (string, string, error) {
 		return stdout.String(), stderr.String(), fmt.Errorf("exec failed: %w", err)
 	}
 	return stdout.String(), stderr.String(), nil
+}
+
+func (c *Client) GetAptSources(boxName string) (snapshotURL string, sources []string, release string) {
+
+	out, _, err := c.ExecCapture(boxName, "cat /etc/apt/sources.list 2>/dev/null; echo; cat /etc/apt/sources.list.d/*.list 2>/dev/null || true")
+	if err == nil {
+		scanner := bufio.NewScanner(strings.NewReader(out))
+		for scanner.Scan() {
+			line := strings.TrimSpace(scanner.Text())
+			if line == "" || strings.HasPrefix(line, "#") {
+				continue
+			}
+			sources = append(sources, line)
+			if strings.Contains(line, "snapshot.debian.org") || strings.Contains(line, "snapshot.ubuntu.com") {
+
+				parts := strings.Fields(line)
+				for _, p := range parts {
+					if strings.HasPrefix(p, "http://") || strings.HasPrefix(p, "https://") {
+						snapshotURL = p
+						break
+					}
+				}
+			}
+		}
+	}
+
+	if relOut, _, err2 := c.ExecCapture(boxName, ". /etc/os-release 2>/dev/null; echo $VERSION_CODENAME"); err2 == nil {
+		release = strings.TrimSpace(relOut)
+	}
+	return
+}
+
+func (c *Client) GetPipRegistries(boxName string) (indexURL string, extra []string) {
+
+	out, _, err := c.ExecCapture(boxName, "(pip3 config debug || pip config debug) 2>/dev/null | sed -n 's/^ *index-url *= *//p; s/^ *extra-index-url *= *//p')")
+	if err == nil && strings.TrimSpace(out) != "" {
+
+		lines := strings.Split(strings.TrimSpace(out), "\n")
+		for _, l := range lines {
+			l = strings.TrimSpace(l)
+			if l == "" {
+				continue
+			}
+			if indexURL == "" && (strings.Contains(l, "://") || strings.HasPrefix(l, "file:")) {
+				indexURL = l
+			} else {
+				extra = append(extra, l)
+			}
+		}
+	}
+	if indexURL == "" {
+
+		if conf, _, err2 := c.ExecCapture(boxName, "grep -hE '^(index-url|extra-index-url)' /etc/pip.conf ~/.pip/pip.conf 2>/dev/null || true"); err2 == nil {
+			for _, line := range strings.Split(conf, "\n") {
+				line = strings.TrimSpace(line)
+				if strings.HasPrefix(line, "index-url") && indexURL == "" {
+					if i := strings.Index(line, "="); i != -1 {
+						indexURL = strings.TrimSpace(line[i+1:])
+					}
+				}
+				if strings.HasPrefix(line, "extra-index-url") {
+					if i := strings.Index(line, "="); i != -1 {
+						extra = append(extra, strings.TrimSpace(line[i+1:]))
+					}
+				}
+			}
+		}
+	}
+	return
+}
+
+func (c *Client) GetNodeRegistries(boxName string) (npmReg, yarnReg, pnpmReg string) {
+	if out, _, err := c.ExecCapture(boxName, "npm config get registry 2>/dev/null || true"); err == nil {
+		npmReg = strings.TrimSpace(out)
+	}
+	if out, _, err := c.ExecCapture(boxName, "yarn config get npmRegistryServer 2>/dev/null || true"); err == nil {
+		yarnReg = strings.TrimSpace(out)
+	}
+	if out, _, err := c.ExecCapture(boxName, "pnpm config get registry 2>/dev/null || true"); err == nil {
+		pnpmReg = strings.TrimSpace(out)
+	}
+	return
 }
 
 func (c *Client) GetImageDigestInfo(ref string) (string, string, error) {

@@ -286,7 +286,11 @@ devbox lock <project> [-o, --output <path>]
   - Installed package snapshots:
     - apt: manually installed packages pinned as `name=version`
     - pip: `pip freeze` output
-    - npm/yarn/pnpm: globally installed packages as `name@version`
+    - npm/yarn/pnpm: globally installed packages as `name@version` (Yarn global versions are detected from Yarn's global dir)
+  - Registries and sources for reproducibility:
+    - pip: `index-url` and `extra-index-url`
+    - npm/yarn/pnpm: global registry URLs
+    - apt: `sources.list` lines, snapshot base URL if present, and OS release codename
 - If `devbox.json` exists in the workspace, includes its `setup_commands` for context.
 
 This snapshot is meant for sharing and audit. It does not currently drive `devbox up` automatically; continue to use `devbox.json` plus the simple `devbox.lock` command list for replay. A future `devbox restore` may apply `devbox.lock.json` directly.
@@ -328,13 +332,80 @@ devbox lock myproject -o ./env/devbox.lock.json
     "apt": ["git=1:2.34.1-..."],
     "pip": ["requests==2.32.3"],
     "npm": ["typescript@5.6.2"],
-    "yarn": [],
+    "yarn": ["eslint@9.1.0"],
     "pnpm": []
+  },
+  "registries": {
+    "pip_index_url": "https://pypi.org/simple",
+    "pip_extra_index_urls": ["https://mirror.example/simple"],
+    "npm_registry": "https://registry.npmjs.org/",
+    "yarn_registry": "https://registry.yarnpkg.com",
+    "pnpm_registry": "https://registry.npmjs.org/"
+  },
+  "apt_sources": {
+    "snapshot_url": "https://snapshot.debian.org/archive/debian/20240915T000000Z/",
+    "sources_lists": [
+      "deb https://snapshot.debian.org/archive/debian/20240915T000000Z/ bullseye main"
+    ],
+    "pinned_release": "jammy"
   },
   "setup_commands": [
     "apt install -y python3 python3-pip"
   ]
 }
+```
+
+---
+
+### `devbox verify`
+
+Validate that the running box matches the `devbox.lock.json` exactly. Fails fast on any drift.
+
+**Syntax:**
+```bash
+devbox verify <project>
+```
+
+**Checks:**
+- Package sets: apt, pip, npm, yarn, pnpm (exact set match)
+- Registries: pip index/extra-index, npm/yarn/pnpm registry URLs
+- Apt sources: sources.list lines, snapshot base URL (if present), OS release codename
+
+Returns non-zero on any mismatch and prints a concise drift report.
+
+**Example:**
+```bash
+devbox verify myproject
+```
+
+---
+
+### `devbox apply`
+
+Apply the `devbox.lock.json` to the running box: configure registries and apt sources, then reconcile package sets to match the lock.
+
+**Syntax:**
+```bash
+devbox apply <project>
+```
+
+**Behavior:**
+- Registries:
+  - Writes `/etc/pip.conf` with `index-url`/`extra-index-url` from lock
+  - Runs `npm/yarn/pnpm` config to set global registry URLs
+- Apt sources:
+  - Backs up and rewrites `/etc/apt/sources.list`, clears `/etc/apt/sources.list.d/*.list`
+  - Optionally sets a default release hint, then `apt update`
+- Reconciliation:
+  - APT: install exact versions from lock, remove extras, autoremove
+  - Pip: install missing exact versions, uninstall extras
+  - npm/yarn/pnpm (global): add missing exact versions, remove extras
+
+Exits non-zero if application fails at any step.
+
+**Example:**
+```bash
+devbox apply myproject
 ```
 
 ## Configuration Commands

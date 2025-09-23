@@ -120,12 +120,18 @@ This writes a JSON snapshot (by default to `<workspace>/devbox.lock.json`) that 
 - Installed packages:
   - apt: manually installed packages pinned as `name=version`
   - pip: `pip freeze`
-  - npm/yarn/pnpm: globally installed packages `name@version`
+  - npm/yarn/pnpm: globally installed packages `name@version` (Yarn global versions are read from Yarn's global directory)
+- Registries and sources for reproducibility:
+  - pip: `index-url` and `extra-index-url`
+  - npm/yarn/pnpm: global registry URLs
+  - apt: full `sources.list` lines, snapshot base URL if present, and OS release codename
 - Any `setup_commands` from your `devbox.json` (for context)
 
 Usage notes:
 - Commit `devbox.lock.json` to your repository to share environment details with teammates.
-- This file is an authoritative snapshot for auditing/sharing. The current execution path for rebuilds remains `devbox.json` + the simple `devbox.lock` replay file. A future `devbox restore` may apply `devbox.lock.json` directly.
+- This file is an authoritative snapshot for auditing/sharing. The current execution path for rebuilds remains `devbox.json` + the simple `devbox.lock` replay file. You can now also use:
+  - `devbox verify <project>` to validate a box matches the lock (fails fast on drift)
+  - `devbox apply <project>` to configure registries/sources and reconcile package sets to the lock
 - Local app dependencies (e.g. non-global Node packages in your repo) are intentionally not included; rely on your project’s own lockfiles (package-lock.json, yarn.lock, pnpm-lock.yaml, requirements.txt/poetry.lock, etc.).
 
 ## Initialize with Configuration
