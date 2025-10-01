@@ -54,7 +54,7 @@ var shellCmd = &cobra.Command{
 			}
 		}
 
-		checkCmd := exec.Command("docker", "exec", project.BoxName, "test", "-f", "/etc/devbox-initialized")
+		checkCmd := exec.Command(engineCmd(), "exec", project.BoxName, "test", "-f", "/etc/devbox-initialized")
 		if checkCmd.Run() != nil {
 			fmt.Printf("Setting up devbox commands in box...\n")
 			if err := dockerClient.SetupDevboxInBox(project.BoxName, projectName); err != nil {

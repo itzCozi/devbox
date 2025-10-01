@@ -6,11 +6,19 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"github.com/spf13/cobra"
 
 	"devbox/internal/config"
 )
+
+func engineCmd() string {
+	if v := strings.TrimSpace(os.Getenv("DEVBOX_ENGINE")); v != "" {
+		return v
+	}
+	return "docker"
+}
 
 var (
 	upDotfilesPath string
@@ -76,7 +84,7 @@ var upCmd = &cobra.Command{
 				}
 			}
 
-			checkCmd := exec.Command("docker", "exec", boxName, "test", "-f", "/etc/devbox-initialized")
+			checkCmd := exec.Command(engineCmd(), "exec", boxName, "test", "-f", "/etc/devbox-initialized")
 			if checkCmd.Run() != nil {
 				if err := dockerClient.SetupDevboxInBox(boxName, projectName); err != nil {
 					return fmt.Errorf("failed to setup devbox in existing box: %w", err)

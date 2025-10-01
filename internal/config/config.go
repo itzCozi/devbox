@@ -8,6 +8,8 @@ import (
 	"strings"
 	"time"
 
+	"errors"
+
 	"github.com/xeipuuv/gojsonschema"
 )
 
@@ -50,6 +52,7 @@ type ProjectConfig struct {
 	Restart       string            `json:"restart,omitempty"`
 	HealthCheck   *HealthCheck      `json:"health_check,omitempty"`
 	Resources     *Resources        `json:"resources,omitempty"`
+	Gpus          string            `json:"gpus,omitempty"`
 }
 
 type HealthCheck struct {
@@ -145,9 +148,21 @@ func (cm *ConfigManager) Save(config *Config) error {
 }
 
 func (cm *ConfigManager) LoadProjectConfig(projectPath string) (*ProjectConfig, error) {
-	configPath := filepath.Join(projectPath, "devbox.json")
+	// Support multiple filenames for project config to avoid clashes with other tools
+	candidates := []string{
+		filepath.Join(projectPath, "devbox.json"),         // default
+		filepath.Join(projectPath, "devbox.project.json"), // alternative
+		filepath.Join(projectPath, ".devbox.json"),        // dotfile style
+	}
 
-	if _, err := os.Stat(configPath); os.IsNotExist(err) {
+	var configPath string
+	for _, p := range candidates {
+		if _, err := os.Stat(p); err == nil {
+			configPath = p
+			break
+		}
+	}
+	if configPath == "" {
 		return nil, nil
 	}
 
@@ -165,7 +180,19 @@ func (cm *ConfigManager) LoadProjectConfig(projectPath string) (*ProjectConfig, 
 }
 
 func (cm *ConfigManager) SaveProjectConfig(projectPath string, config *ProjectConfig) error {
-	configPath := filepath.Join(projectPath, "devbox.json")
+	// If an existing config file with a supported name exists, write back to it; otherwise use default
+	candidates := []string{
+		filepath.Join(projectPath, "devbox.json"),
+		filepath.Join(projectPath, "devbox.project.json"),
+		filepath.Join(projectPath, ".devbox.json"),
+	}
+	configPath := candidates[0]
+	for _, p := range candidates {
+		if _, err := os.Stat(p); err == nil {
+			configPath = p
+			break
+		}
+	}
 
 	data, err := json.MarshalIndent(config, "", "  ")
 	if err != nil {
@@ -199,7 +226,7 @@ func (cm *ConfigManager) ValidateProjectConfig(cfg *ProjectConfig) error {
 			b.WriteString(e.String())
 			b.WriteString("\n")
 		}
-		return fmt.Errorf(strings.TrimSpace(b.String()))
+		return errors.New(strings.TrimSpace(b.String()))
 	}
 
 	for _, port := range cfg.Ports {
@@ -523,7 +550,8 @@ const ProjectConfigJSONSchema = `{
 				"memory": {"type": "string"}
 			},
 			"additionalProperties": false
-		}
+		},
+		"gpus": {"type": "string"}
 	},
 	"additionalProperties": false
 }`

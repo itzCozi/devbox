@@ -25,23 +25,30 @@ func (c *Client) Close() error {
 	return nil
 }
 
+func dockerCmd() string {
+	if eng := strings.TrimSpace(os.Getenv("DEVBOX_ENGINE")); eng != "" {
+		return eng
+	}
+	return "docker"
+}
+
 func IsDockerAvailable() error {
-	cmd := exec.Command("docker", "version")
+	cmd := exec.Command(dockerCmd(), "version")
 	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("docker is not installed or not running. Please ensure Docker is installed and the Docker daemon is running")
+		return fmt.Errorf("%s is not installed or not running. Please ensure %s is installed and its daemon is running", dockerCmd(), dockerCmd())
 	}
 	return nil
 }
 
 func (c *Client) PullImage(image string) error {
-	cmd := exec.Command("docker", "images", "-q", image)
+	cmd := exec.Command(dockerCmd(), "images", "-q", image)
 	output, err := cmd.Output()
 	if err == nil && len(strings.TrimSpace(string(output))) > 0 {
 		return nil
 	}
 
 	fmt.Printf("Pulling image %s...\n", image)
-	cmd = exec.Command("docker", "pull", image)
+	cmd = exec.Command(dockerCmd(), "pull", image)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
@@ -84,7 +91,7 @@ func (c *Client) CreateBoxWithConfig(name, image, workspaceHost, workspaceBox st
 
 	args = append(args, image, "sleep", "infinity")
 
-	cmd := exec.Command("docker", args...)
+	cmd := exec.Command(dockerCmd(), args...)
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
@@ -190,6 +197,11 @@ func (c *Client) applyProjectConfigToArgs(args []string, config map[string]inter
 		}
 	}
 
+	// GPU support
+	if gpus, ok := config["gpus"].(string); ok && strings.TrimSpace(gpus) != "" {
+		args = append(args, "--gpus", strings.TrimSpace(gpus))
+	}
+
 	if healthCheck, ok := config["health_check"].(map[string]interface{}); ok {
 		if test, ok := healthCheck["test"].([]interface{}); ok && len(test) > 0 {
 			var testArgs []string
@@ -264,7 +276,7 @@ func (c *Client) ExecuteSetupCommandsSequential(boxName string, commands []strin
 		}
 
 		wrapped := ". /root/.bashrc >/dev/null 2>&1 || true; " + command
-		cmd := exec.Command("docker", "exec", boxName, "bash", "-c", wrapped)
+		cmd := exec.Command(dockerCmd(), "exec", boxName, "bash", "-lc", wrapped)
 
 		if showOutput {
 			cmd.Stdout = os.Stdout
@@ -322,7 +334,7 @@ func (c *Client) queryPackagesSequential(boxName string) (aptList, pipList, npmL
 }
 
 func (c *Client) StartBox(boxID string) error {
-	cmd := exec.Command("docker", "start", boxID)
+	cmd := exec.Command(dockerCmd(), "start", boxID)
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
 
@@ -346,11 +358,11 @@ func (c *Client) SetupDevboxInBoxWithUpdate(boxName, projectName string) error {
 
 func (c *Client) setupDevboxInBoxWithOptions(boxName, projectName string, forceUpdate bool) error {
 
-	checkCmd := exec.Command("docker", "exec", boxName, "test", "-f", "/etc/devbox-initialized")
+	checkCmd := exec.Command(dockerCmd(), "exec", boxName, "test", "-f", "/etc/devbox-initialized")
 	isFirstTime := checkCmd.Run() != nil
 
 	if isFirstTime {
-		markerCmd := exec.Command("docker", "exec", boxName, "touch", "/etc/devbox-initialized")
+		markerCmd := exec.Command(dockerCmd(), "exec", boxName, "touch", "/etc/devbox-initialized")
 		if err := markerCmd.Run(); err != nil {
 			fmt.Printf("Warning: failed to create initialization marker: %v\n", err)
 		}
@@ -438,7 +450,7 @@ esac`
 DEVBOX_WRAPPER_EOF
 chmod +x /usr/local/bin/devbox`
 
-	cmd := exec.Command("docker", "exec", boxName, "bash", "-c", installCmd)
+	cmd := exec.Command(dockerCmd(), "exec", boxName, "bash", "-c", installCmd)
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("failed to install devbox wrapper in box: %w", err)
 	}
@@ -581,7 +593,7 @@ pnpm()     { _devbox_wrap_and_record "$PNPM_BIN" pnpm "$@"; }
 corepack(){ _devbox_wrap_and_record "$COREPACK_BIN" corepack "$@"; }
 BASHRC_EOF`
 
-	cmd = exec.Command("docker", "exec", boxName, "bash", "-c", welcomeCmd)
+	cmd = exec.Command(dockerCmd(), "exec", boxName, "bash", "-c", welcomeCmd)
 	if err := cmd.Run(); err != nil {
 
 		fmt.Printf("Warning: failed to add welcome message: %v\n", err)
@@ -598,10 +610,10 @@ func (c *Client) StopBox(boxName string) error {
 			timeoutSec = n
 		}
 	}
-	cmd := exec.Command("docker", "stop", "--time", fmt.Sprintf("%d", timeoutSec), boxName)
+	cmd := exec.Command(dockerCmd(), "stop", "--time", fmt.Sprintf("%d", timeoutSec), boxName)
 	if err := cmd.Run(); err != nil {
 
-		if killErr := exec.Command("docker", "kill", boxName).Run(); killErr != nil {
+		if killErr := exec.Command(dockerCmd(), "kill", boxName).Run(); killErr != nil {
 			return fmt.Errorf("failed to stop box: %w", err)
 		}
 		return nil
@@ -611,7 +623,7 @@ func (c *Client) StopBox(boxName string) error {
 
 func (c *Client) RemoveBox(boxName string) error {
 
-	cmd := exec.Command("docker", "rm", "-f", boxName)
+	cmd := exec.Command(dockerCmd(), "rm", "-f", boxName)
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
 
@@ -626,7 +638,7 @@ func (c *Client) RemoveBox(boxName string) error {
 }
 
 func (c *Client) BoxExists(boxName string) (bool, error) {
-	cmd := exec.Command("docker", "inspect", boxName)
+	cmd := exec.Command(dockerCmd(), "inspect", boxName)
 	err := cmd.Run()
 	if err != nil {
 		if exitError, ok := err.(*exec.ExitError); ok && exitError.ExitCode() == 1 {
@@ -638,7 +650,7 @@ func (c *Client) BoxExists(boxName string) (bool, error) {
 }
 
 func (c *Client) GetBoxStatus(boxName string) (string, error) {
-	cmd := exec.Command("docker", "inspect", "--format", "{{.State.Status}}", boxName)
+	cmd := exec.Command(dockerCmd(), "inspect", "--format", "{{.State.Status}}", boxName)
 	output, err := cmd.Output()
 	if err != nil {
 		if exitError, ok := err.(*exec.ExitError); ok && exitError.ExitCode() == 1 {
@@ -651,7 +663,7 @@ func (c *Client) GetBoxStatus(boxName string) (string, error) {
 
 func AttachShell(boxName string) error {
 
-	cmd := exec.Command("docker", "exec", "-it",
+	cmd := exec.Command(dockerCmd(), "exec", "-it",
 		"-e", fmt.Sprintf("DEVBOX_BOX_NAME=%s", boxName),
 		boxName, "/bin/bash", "-c",
 		"export PS1='devbox(\\$PROJECT_NAME):\\w\\$ '; exec /bin/bash")
@@ -669,7 +681,7 @@ func RunCommand(boxName string, command []string) error {
 	cmdStr := strings.Join(command, " ")
 	wrapped := ". /root/.bashrc >/dev/null 2>&1 || true; " + cmdStr
 	args := []string{"exec", "-it", boxName, "bash", "-lc", wrapped}
-	cmd := exec.Command("docker", args...)
+	cmd := exec.Command(dockerCmd(), args...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -707,7 +719,7 @@ type BoxInfo struct {
 }
 
 func (c *Client) ListBoxes() ([]BoxInfo, error) {
-	cmd := exec.Command("docker", "ps", "-a", "--format", "{{.Names}}\t{{.Status}}\t{{.Image}}")
+	cmd := exec.Command(dockerCmd(), "ps", "-a", "--format", "{{.Names}}\t{{.Status}}\t{{.Image}}")
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
@@ -751,7 +763,7 @@ func (c *Client) ListBoxes() ([]BoxInfo, error) {
 }
 
 func (c *Client) RunDockerCommand(args []string) error {
-	cmd := exec.Command("docker", args...)
+	cmd := exec.Command(dockerCmd(), args...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
@@ -772,7 +784,7 @@ type ContainerStats struct {
 
 func (c *Client) CommitContainer(containerName, imageTag string) (string, error) {
 	args := []string{"commit", containerName, imageTag}
-	cmd := exec.Command("docker", args...)
+	cmd := exec.Command(dockerCmd(), args...)
 	var out, errb bytes.Buffer
 	cmd.Stdout = &out
 	cmd.Stderr = &errb
@@ -788,7 +800,7 @@ func (c *Client) SaveImage(imageRef, tarPath string) error {
 		return fmt.Errorf("failed to create tar file: %w", err)
 	}
 	defer f.Close()
-	cmd := exec.Command("docker", "save", imageRef)
+	cmd := exec.Command(dockerCmd(), "save", imageRef)
 	cmd.Stdout = f
 	var errb bytes.Buffer
 	cmd.Stderr = &errb
@@ -799,7 +811,7 @@ func (c *Client) SaveImage(imageRef, tarPath string) error {
 }
 
 func (c *Client) LoadImage(tarPath string) (string, error) {
-	cmd := exec.Command("docker", "load", "-i", tarPath)
+	cmd := exec.Command(dockerCmd(), "load", "-i", tarPath)
 	var out, errb bytes.Buffer
 	cmd.Stdout = &out
 	cmd.Stderr = &errb
@@ -821,7 +833,7 @@ func (c *Client) LoadImage(tarPath string) (string, error) {
 func (c *Client) GetContainerStats(boxName string) (*ContainerStats, error) {
 
 	format := "{{.CPUPerc}}\t{{.MemUsage}}\t{{.MemPerc}}\t{{.NetIO}}\t{{.BlockIO}}\t{{.PIDs}}"
-	cmd := exec.Command("docker", "stats", "--no-stream", "--format", format, boxName)
+	cmd := exec.Command(dockerCmd(), "stats", "--no-stream", "--format", format, boxName)
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
@@ -853,7 +865,7 @@ func (c *Client) GetContainerStats(boxName string) (*ContainerStats, error) {
 }
 
 func (c *Client) GetContainerID(boxName string) (string, error) {
-	cmd := exec.Command("docker", "inspect", "--format", "{{.Id}}", boxName)
+	cmd := exec.Command(dockerCmd(), "inspect", "--format", "{{.Id}}", boxName)
 	out, err := cmd.Output()
 	if err != nil {
 		return "", fmt.Errorf("failed to get container ID: %w", err)
@@ -862,7 +874,7 @@ func (c *Client) GetContainerID(boxName string) (string, error) {
 }
 
 func (c *Client) GetUptime(boxName string) (time.Duration, error) {
-	cmd := exec.Command("docker", "inspect", "--format", "{{.State.StartedAt}}\t{{.State.Running}}", boxName)
+	cmd := exec.Command(dockerCmd(), "inspect", "--format", "{{.State.StartedAt}}\t{{.State.Running}}", boxName)
 	out, err := cmd.Output()
 	if err != nil {
 		return 0, fmt.Errorf("failed to inspect container: %w", err)
@@ -890,7 +902,7 @@ func (c *Client) GetUptime(boxName string) (time.Duration, error) {
 }
 
 func (c *Client) GetPortMappings(boxName string) ([]string, error) {
-	cmd := exec.Command("docker", "port", boxName)
+	cmd := exec.Command(dockerCmd(), "port", boxName)
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
@@ -912,7 +924,7 @@ func (c *Client) GetPortMappings(boxName string) ([]string, error) {
 func (c *Client) GetMounts(boxName string) ([]string, error) {
 	template := `{{range .Mounts}}{{.Type}} {{.Source}} -> {{.Destination}} (rw={{.RW}})
 {{end}}`
-	cmd := exec.Command("docker", "inspect", "--format", template, boxName)
+	cmd := exec.Command(dockerCmd(), "inspect", "--format", template, boxName)
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
@@ -951,7 +963,7 @@ func (c *Client) IsContainerIdle(boxName string) (bool, error) {
 
 func (c *Client) ExecCapture(boxName, command string) (string, string, error) {
 	wrapped := ". /root/.bashrc >/dev/null 2>&1 || true; set -o pipefail; " + command
-	cmd := exec.Command("docker", "exec", boxName, "bash", "-lc", wrapped)
+	cmd := exec.Command(dockerCmd(), "exec", boxName, "bash", "-lc", wrapped)
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
@@ -1044,7 +1056,7 @@ func (c *Client) GetNodeRegistries(boxName string) (npmReg, yarnReg, pnpmReg str
 }
 
 func (c *Client) GetImageDigestInfo(ref string) (string, string, error) {
-	cmd := exec.Command("docker", "inspect", "--type=image", "--format", "{{join .RepoDigests \",\"}}|{{.Id}}", ref)
+	cmd := exec.Command(dockerCmd(), "inspect", "--type=image", "--format", "{{join .RepoDigests \",\"}}|{{.Id}}", ref)
 	var out bytes.Buffer
 	var errb bytes.Buffer
 	cmd.Stdout = &out
@@ -1065,7 +1077,7 @@ func (c *Client) GetImageDigestInfo(ref string) (string, string, error) {
 		return digest, id, nil
 	}
 
-	cmd = exec.Command("docker", "inspect", "--type=container", "--format", "{{.Image}}", ref)
+	cmd = exec.Command(dockerCmd(), "inspect", "--type=container", "--format", "{{.Image}}", ref)
 	out.Reset()
 	errb.Reset()
 	cmd.Stdout = &out
@@ -1077,7 +1089,7 @@ func (c *Client) GetImageDigestInfo(ref string) (string, string, error) {
 	if imageID == "" {
 		return "", "", nil
 	}
-	cmd = exec.Command("docker", "inspect", "--type=image", "--format", "{{join .RepoDigests \",\"}}|{{.Id}}", imageID)
+	cmd = exec.Command(dockerCmd(), "inspect", "--type=image", "--format", "{{join .RepoDigests \",\"}}|{{.Id}}", imageID)
 	out.Reset()
 	errb.Reset()
 	cmd.Stdout = &out
@@ -1118,7 +1130,7 @@ func (c *Client) GetContainerMeta(boxName string) (map[string]string, string, st
 			NetworkMode string   `json:"NetworkMode"`
 		} `json:"HostConfig"`
 	}
-	cmd := exec.Command("docker", "inspect", boxName)
+	cmd := exec.Command(dockerCmd(), "inspect", boxName)
 	var out, errb bytes.Buffer
 	cmd.Stdout = &out
 	cmd.Stderr = &errb

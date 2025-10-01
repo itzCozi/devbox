@@ -11,6 +11,13 @@ import (
 	"time"
 )
 
+func engineCmd() string {
+	if v := strings.TrimSpace(os.Getenv("DEVBOX_ENGINE")); v != "" {
+		return v
+	}
+	return "docker"
+}
+
 type SetupCommandExecutor struct {
 	boxName    string
 	workerPool *WorkerPool
@@ -181,7 +188,7 @@ func (sce *SetupCommandExecutor) executeCommand(command string, step, total int,
 	}
 
 	wrapped := ". /root/.bashrc >/dev/null 2>&1 || true; " + command
-	cmd := exec.Command("docker", "exec", sce.boxName, "bash", "-c", wrapped)
+	cmd := exec.Command(engineCmd(), "exec", sce.boxName, "bash", "-c", wrapped)
 
 	if sce.showOutput {
 		cmd.Stdout = os.Stdout
@@ -266,7 +273,7 @@ func (pqe *PackageQueryExecutor) QueryAllPackages() (map[string][]string, error)
 
 func (pqe *PackageQueryExecutor) createQueryTask(command string) StringTask {
 	return func() (string, error) {
-		cmd := exec.Command("docker", "exec", pqe.boxName, "bash", "-c", command)
+		cmd := exec.Command(engineCmd(), "exec", pqe.boxName, "bash", "-c", command)
 
 		var stdout, stderr bytes.Buffer
 		cmd.Stdout = &stdout
