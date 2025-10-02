@@ -189,6 +189,13 @@ Examples:
 			return fmt.Errorf("failed to save configuration: %w", err)
 		}
 
+		if projectConfig != nil && (templateFlag != "" || generateConfig) {
+			fmt.Printf("📝 Generating lock file (devbox.lock.json)...\n")
+			if err := WriteLockFileForProject(projectName, ""); err != nil {
+				fmt.Printf("Warning: failed to write lock file: %v\n", err)
+			}
+		}
+
 		fmt.Printf("✅ Project '%s' initialized successfully!\n", projectName)
 		fmt.Printf("📁 Workspace: %s\n", workspacePath)
 		fmt.Printf("🐳 Box: %s\n", boxName)

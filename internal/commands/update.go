@@ -136,6 +136,10 @@ func updateSingleProject(projectName string) error {
 	}
 
 	fmt.Printf("✅ Updated '%s' successfully\n", projectName)
+
+	if err := WriteLockFileForProject(projectName, ""); err != nil {
+		fmt.Printf("⚠️  Failed to write lock file: %v\n", err)
+	}
 	return nil
 }
 

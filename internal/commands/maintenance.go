@@ -334,6 +334,8 @@ func updateAllboxes() error {
 			failed++
 		} else {
 			fmt.Printf("✅ Updated %s successfully\n", projectName)
+
+			_ = WriteLockFileForBox(project.BoxName, projectName, project.WorkspacePath, project.BaseImage, "")
 			updated++
 		}
 	}
@@ -500,6 +502,8 @@ func rebuildAllboxes() error {
 		if err := dockerClient.SetupDevboxInBoxWithUpdate(project.BoxName, projectName); err != nil {
 			fmt.Printf("⚠️  Failed to setup devbox environment: %v\n", err)
 		}
+
+		_ = WriteLockFileForBox(project.BoxName, projectName, project.WorkspacePath, project.BaseImage, "")
 
 		fmt.Printf("✅ Rebuilt %s successfully\n", projectName)
 		rebuilt++

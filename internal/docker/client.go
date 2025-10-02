@@ -197,7 +197,6 @@ func (c *Client) applyProjectConfigToArgs(args []string, config map[string]inter
 		}
 	}
 
-	// GPU support
 	if gpus, ok := config["gpus"].(string); ok && strings.TrimSpace(gpus) != "" {
 		args = append(args, "--gpus", strings.TrimSpace(gpus))
 	}

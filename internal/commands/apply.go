@@ -124,6 +124,8 @@ var applyCmd = &cobra.Command{
 			}
 		}
 
+		_ = WriteLockFileForBox(proj.BoxName, projectName, proj.WorkspacePath, proj.BaseImage, "")
+
 		fmt.Println("✅ Applied lockfile: registries/sources configured and packages reconciled")
 		return nil
 	},

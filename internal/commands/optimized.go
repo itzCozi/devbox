@@ -133,6 +133,8 @@ func (optSetup *OptimizedSetup) FastInit(projectName string, projectConfig *conf
 		if err := optSetup.dockerClient.ExecuteSetupCommandsWithOutput(boxName, projectConfig.SetupCommands, false); err != nil {
 			return fmt.Errorf("failed to execute setup commands: %w", err)
 		}
+
+		_ = WriteLockFileForBox(boxName, projectName, workspacePath, baseImage, "")
 	}
 
 	return nil
@@ -196,6 +198,8 @@ func (optSetup *OptimizedSetup) FastUp(projectConfig *config.ProjectConfig, proj
 		if err := optSetup.dockerClient.ExecuteSetupCommandsWithOutput(boxName, projectConfig.SetupCommands, false); err != nil {
 			return fmt.Errorf("failed to execute setup commands: %w", err)
 		}
+
+		_ = WriteLockFileForBox(boxName, projectName, cwd, baseImage, "")
 	}
 
 	return nil
