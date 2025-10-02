@@ -27,7 +27,7 @@ This command helps maintain a clean system by removing:
 
 - Orphaned devbox boxes (not tracked in config)
 - Unused Docker images
-- Unused Docker volumes  
+- Unused Docker volumes
 - Unused Docker networks
 - Dangling build artifacts
 
@@ -81,7 +81,7 @@ Examples:
 		}
 
 		if len(cleanupTasks) > 0 {
-			fmt.Printf("\n✅ Cleanup completed successfully!\n")
+			fmt.Printf("\nCleanup completed successfully.\n")
 		}
 
 		return nil
@@ -89,7 +89,7 @@ Examples:
 }
 
 func runInteractiveCleanup() error {
-	fmt.Printf("🧹 Devbox Cleanup Menu\n\n")
+	fmt.Printf("Devbox cleanup\n\n")
 	fmt.Printf("Available cleanup options:\n")
 	fmt.Printf("  1. Clean up orphaned devbox boxes\n")
 	fmt.Printf("  2. Remove unused Docker images\n")
@@ -135,7 +135,7 @@ func runInteractiveCleanup() error {
 					return err
 				}
 			}
-			fmt.Printf("\n✅ Comprehensive cleanup completed!\n")
+			fmt.Printf("\nComprehensive cleanup completed.\n")
 			return nil
 		case "7":
 			return showSystemStatus()
@@ -149,7 +149,7 @@ func runInteractiveCleanup() error {
 }
 
 func cleanupOrphanedFromCleanup() error {
-	fmt.Printf("🔍 Scanning for orphaned devbox boxes...\n")
+	fmt.Printf("Scanning for orphaned devbox boxes...\n")
 
 	if dryRunFlag {
 		fmt.Printf("DRY RUN - No boxes will be removed\n")
@@ -181,13 +181,13 @@ func cleanupOrphanedFromCleanup() error {
 	}
 
 	if len(orphanedboxes) == 0 {
-		fmt.Printf("✅ No orphaned boxes found.\n")
+		fmt.Printf("No orphaned boxes found.\n")
 		return nil
 	}
 
 	fmt.Printf("Found %d orphaned devbox box(s):\n", len(orphanedboxes))
 	for _, boxName := range orphanedboxes {
-		fmt.Printf("  • %s\n", boxName)
+		fmt.Printf("  - %s\n", boxName)
 	}
 
 	if dryRunFlag {
@@ -214,10 +214,10 @@ func cleanupOrphanedFromCleanup() error {
 	for _, boxName := range orphanedboxes {
 		fmt.Printf("Removing %s...\n", boxName)
 		if err := dockerClient.RemoveBox(boxName); err != nil {
-			fmt.Printf("❌ Failed to remove %s: %v\n", boxName, err)
+			fmt.Printf("error: failed to remove %s: %v\n", boxName, err)
 			failed++
 		} else {
-			fmt.Printf("✅ Removed %s\n", boxName)
+			fmt.Printf("Removed %s\n", boxName)
 			removed++
 		}
 	}
@@ -231,7 +231,7 @@ func cleanupOrphanedFromCleanup() error {
 }
 
 func cleanupUnusedImages() error {
-	fmt.Printf("🔍 Scanning for unused Docker images...\n")
+	fmt.Printf("Scanning for unused Docker images...\n")
 
 	if dryRunFlag {
 		fmt.Printf("DRY RUN - No images will be removed\n")
@@ -258,14 +258,14 @@ func cleanupUnusedImages() error {
 		if err := dockerClient.RunDockerCommand([]string{"image", "prune", "-f"}); err != nil {
 			return fmt.Errorf("failed to prune images: %w", err)
 		}
-		fmt.Printf("✅ Unused images removed.\n")
+		fmt.Printf("Unused images removed.\n")
 	}
 
 	return nil
 }
 
 func cleanupUnusedVolumes() error {
-	fmt.Printf("🔍 Scanning for unused Docker volumes...\n")
+	fmt.Printf("Scanning for unused Docker volumes...\n")
 
 	if dryRunFlag {
 		fmt.Printf("DRY RUN - No volumes will be removed\n")
@@ -292,14 +292,14 @@ func cleanupUnusedVolumes() error {
 		if err := dockerClient.RunDockerCommand([]string{"volume", "prune", "-f"}); err != nil {
 			return fmt.Errorf("failed to prune volumes: %w", err)
 		}
-		fmt.Printf("✅ Unused volumes removed.\n")
+		fmt.Printf("Unused volumes removed.\n")
 	}
 
 	return nil
 }
 
 func cleanupUnusedNetworks() error {
-	fmt.Printf("🔍 Scanning for unused Docker networks...\n")
+	fmt.Printf("Scanning for unused Docker networks...\n")
 
 	if dryRunFlag {
 		fmt.Printf("DRY RUN - No networks will be removed\n")
@@ -326,14 +326,14 @@ func cleanupUnusedNetworks() error {
 		if err := dockerClient.RunDockerCommand([]string{"network", "prune", "-f"}); err != nil {
 			return fmt.Errorf("failed to prune networks: %w", err)
 		}
-		fmt.Printf("✅ Unused networks removed.\n")
+		fmt.Printf("Unused networks removed.\n")
 	}
 
 	return nil
 }
 
 func runSystemPrune() error {
-	fmt.Printf("🔍 Running comprehensive Docker system cleanup...\n")
+	fmt.Printf("Running comprehensive Docker system cleanup...\n")
 
 	if dryRunFlag {
 		fmt.Printf("DRY RUN - No resources will be removed\n")
@@ -360,29 +360,29 @@ func runSystemPrune() error {
 		if err := dockerClient.RunDockerCommand([]string{"system", "prune", "-f"}); err != nil {
 			return fmt.Errorf("failed to run system prune: %w", err)
 		}
-		fmt.Printf("✅ System prune completed.\n")
+		fmt.Printf("System prune completed.\n")
 	}
 
 	return nil
 }
 
 func showSystemStatus() error {
-	fmt.Printf("📊 Docker System Status\n\n")
+	fmt.Printf("Docker system status\n\n")
 
 	fmt.Printf("=== Disk Usage ===\n")
 	if err := dockerClient.RunDockerCommand([]string{"system", "df"}); err != nil {
-		fmt.Printf("❌ Failed to get disk usage: %v\n", err)
+		fmt.Printf("error: failed to get disk usage: %v\n", err)
 	}
 
 	fmt.Printf("\n=== Devbox boxes ===\n")
 	boxes, err := dockerClient.ListBoxes()
 	if err != nil {
-		fmt.Printf("❌ Failed to list boxes: %v\n", err)
+		fmt.Printf("error: failed to list boxes: %v\n", err)
 	} else {
 		fmt.Printf("Active devbox boxes: %d\n", len(boxes))
 		for _, box := range boxes {
 			for _, name := range box.Names {
-				fmt.Printf("  • %s (%s)\n", strings.TrimPrefix(name, "/"), box.Status)
+				fmt.Printf("  - %s (%s)\n", strings.TrimPrefix(name, "/"), box.Status)
 			}
 		}
 	}
@@ -390,18 +390,18 @@ func showSystemStatus() error {
 	fmt.Printf("\n=== Tracked Projects ===\n")
 	cfg, err := configManager.Load()
 	if err != nil {
-		fmt.Printf("❌ Failed to load config: %v\n", err)
+		fmt.Printf("error: failed to load config: %v\n", err)
 	} else {
 		projects := cfg.GetProjects()
 		fmt.Printf("Tracked projects: %d\n", len(projects))
 		for name, project := range projects {
-			fmt.Printf("  • %s -> %s\n", name, project.BoxName)
+			fmt.Printf("  - %s -> %s\n", name, project.BoxName)
 		}
 	}
 
 	fmt.Printf("\n=== Docker Version ===\n")
 	if err := dockerClient.RunDockerCommand([]string{"version", "--format", "{{.Server.Version}}"}); err != nil {
-		fmt.Printf("❌ Failed to get Docker version: %v\n", err)
+		fmt.Printf("error: failed to get Docker version: %v\n", err)
 	}
 
 	return nil

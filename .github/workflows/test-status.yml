@@ -23,14 +23,14 @@ jobs:
 
     - name: Run tests and generate summary
       run: |
-        echo "# 🧪 Test Results Summary" >> $GITHUB_STEP_SUMMARY
+        echo "# Test Results Summary" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
 
         # Run tests and capture output
         if go test -v ./... > test_output.log 2>&1; then
-          echo "✅ All tests passed!" >> $GITHUB_STEP_SUMMARY
+          echo "All tests passed." >> $GITHUB_STEP_SUMMARY
         else
-          echo "❌ Some tests failed!" >> $GITHUB_STEP_SUMMARY
+          echo "Some tests failed." >> $GITHUB_STEP_SUMMARY
         fi
 
         echo "" >> $GITHUB_STEP_SUMMARY
@@ -40,7 +40,7 @@ jobs:
         go test -coverprofile=coverage.out ./... > /dev/null 2>&1
         if [ -f coverage.out ]; then
           COVERAGE=$(go tool cover -func=coverage.out | grep total | awk '{print $3}')
-          echo "📊 Total Coverage: **$COVERAGE**" >> $GITHUB_STEP_SUMMARY
+          echo "Total Coverage: **$COVERAGE**" >> $GITHUB_STEP_SUMMARY
         fi
 
         echo "" >> $GITHUB_STEP_SUMMARY
@@ -52,8 +52,8 @@ jobs:
     - name: Set test status
       run: |
         if go test ./... > /dev/null 2>&1; then
-          echo "TEST_STATUS=✅ PASSING" >> $GITHUB_ENV
+          echo "TEST_STATUS=PASSING" >> $GITHUB_ENV
         else
-          echo "TEST_STATUS=❌ FAILING" >> $GITHUB_ENV
+          echo "TEST_STATUS=FAILING" >> $GITHUB_ENV
           exit 1
         fi

@@ -107,7 +107,7 @@ var devcontainerGenerateCmd = &cobra.Command{
 			return fmt.Errorf("failed to write %s: %w", outPath, err)
 		}
 
-		fmt.Printf("✅ Wrote %s\n", outPath)
+		fmt.Printf("Wrote %s\n", outPath)
 		fmt.Println("Open the folder in VS Code and use 'Reopen in Container' to start a consistent dev environment.")
 		return nil
 	},

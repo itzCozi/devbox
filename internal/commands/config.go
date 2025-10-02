@@ -83,8 +83,8 @@ func generateProjectConfig(projectName string) error {
 		return fmt.Errorf("failed to save project configuration: %w", err)
 	}
 
-	fmt.Printf("✅ Generated devbox.json for project '%s'\n", projectName)
-	fmt.Printf("📄 Configuration file: %s\n", configPath)
+	fmt.Printf("Generated devbox.json for project '%s'\n", projectName)
+	fmt.Printf("Configuration file: %s\n", configPath)
 	fmt.Printf("\nEdit the file to customize your development environment.\n")
 	fmt.Printf("Available templates: %s\n", strings.Join(configManager.GetAvailableTemplates(), ", "))
 
@@ -118,12 +118,12 @@ func validateProjectConfig(projectName string) error {
 	}
 
 	if err := configManager.ValidateProjectConfig(projectConfig); err != nil {
-		fmt.Printf("❌ Configuration validation failed:\n")
+		fmt.Printf("error: configuration validation failed:\n")
 		fmt.Printf("   %s\n", err.Error())
 		return fmt.Errorf("project config validation failed: %w", err)
 	}
 
-	fmt.Printf("✅ Configuration for project '%s' is valid\n", projectName)
+	fmt.Printf("Configuration for project '%s' is valid\n", projectName)
 
 	fmt.Printf("\nConfiguration summary:\n")
 	fmt.Printf("  Name: %s\n", projectConfig.Name)

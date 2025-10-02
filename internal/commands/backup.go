@@ -99,10 +99,10 @@ var backupCmd = &cobra.Command{
 			return fmt.Errorf("failed to write metadata: %w", err)
 		}
 
-		fmt.Printf("✅ Backup complete\n")
-		fmt.Printf("📦 Directory: %s\n", outDir)
-		fmt.Printf("🖼️  Image tag: %s\n", imageTag)
-		fmt.Printf("📄 Files: image.tar, metadata.json\n")
+		fmt.Printf("Backup complete\n")
+		fmt.Printf("Directory: %s\n", outDir)
+		fmt.Printf("Image tag: %s\n", imageTag)
+		fmt.Printf("Files: image.tar, metadata.json\n")
 		return nil
 	},
 }

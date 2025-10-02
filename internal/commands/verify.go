@@ -118,14 +118,14 @@ var verifyCmd = &cobra.Command{
 		}
 
 		if len(drifts) > 0 {
-			fmt.Println("❌ Verification failed. Drift detected:")
+			fmt.Println("error: verification failed. Drift detected:")
 			for _, d := range drifts {
 				fmt.Printf(" - %s\n", d)
 			}
 			return fmt.Errorf("environment does not match lockfile")
 		}
 
-		fmt.Println("✅ Environment matches devbox.lock.json")
+		fmt.Println("Environment matches devbox.lock.json")
 		return nil
 	},
 }

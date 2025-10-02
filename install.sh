@@ -14,19 +14,19 @@ NC='\033[0m'
 
 
 print_info() {
-echo -e "${BLUE}ℹ️ $1${NC}"
+echo -e "${BLUE}info: $1${NC}"
 }
 
 print_success() {
-echo -e "${GREEN}✅ $1${NC}"
+echo -e "${GREEN}ok: $1${NC}"
 }
 
 print_warning() {
-echo -e "${YELLOW}⚠️ $1${NC}"
+echo -e "${YELLOW}warning: $1${NC}"
 }
 
 print_error() {
-echo -e "${RED}❌ $1${NC}"
+echo -e "${RED}error: $1${NC}"
 }
 
 print_header() {
@@ -124,7 +124,7 @@ fi
 
 print_next_steps() {
 echo
-print_success "🎉 devbox installation completed successfully!"
+print_success "devbox installation completed successfully."
 echo
 print_info "Next steps:"
 echo " 1. If Docker group permissions are needed, log out and log back in"
@@ -158,31 +158,31 @@ sudo usermod -aG docker "$USER"
 
 print_info "Verifying installations..."
 if command_exists git; then
-  print_success "✓ git: $(git --version | head -n1)"
+  print_success "git: $(git --version | head -n1)"
   else
-  print_error "✗ git installation failed"
+  print_error "git installation failed"
   exit 1
 fi
 
 if command_exists make; then
-  print_success "✓ make: $(make --version | head -n1)"
+  print_success "make: $(make --version | head -n1)"
   else
-  print_error "✗ make installation failed"
+  print_error "make installation failed"
   exit 1
 fi
 
 if command_exists go; then
-  print_success "✓ go: $(go version)"
+  print_success "go: $(go version)"
   else
-  print_error "✗ go installation failed"
+  print_error "go installation failed"
   exit 1
 fi
 
 if command_exists docker; then
-  print_success "✓ docker: $(docker --version)"
+  print_success "docker: $(docker --version)"
   print_warning "You may need to log out and log back in for Docker group permissions to take effect"
   else
-  print_error "✗ docker installation failed"
+  print_error "docker installation failed"
   exit 1
 fi
 

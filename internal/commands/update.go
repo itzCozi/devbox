@@ -43,7 +43,7 @@ func updateSingleProject(projectName string) error {
 	projectConfig, _ := configManager.LoadProjectConfig(project.WorkspacePath)
 	baseImage := cfg.GetEffectiveBaseImage(project, projectConfig)
 
-	fmt.Printf("📥 Pulling latest base image for '%s': %s\n", projectName, baseImage)
+	fmt.Printf("Pulling latest base image for '%s': %s\n", projectName, baseImage)
 	if err := dockerClient.RunDockerCommand([]string{"pull", baseImage}); err != nil {
 		return fmt.Errorf("failed to pull base image %s: %w", baseImage, err)
 	}
@@ -53,7 +53,7 @@ func updateSingleProject(projectName string) error {
 		return fmt.Errorf("failed to check box existence: %w", err)
 	}
 	if existsBox {
-		fmt.Printf("🛑 Stopping and removing existing box '%s'...\n", project.BoxName)
+		fmt.Printf("Stopping and removing existing box '%s'...\n", project.BoxName)
 
 		_ = dockerClient.StopBox(project.BoxName)
 		if err := dockerClient.RemoveBox(project.BoxName); err != nil {
@@ -73,7 +73,7 @@ func updateSingleProject(projectName string) error {
 		}
 	}
 
-	fmt.Printf("🚀 Recreating box '%s' with image '%s'...\n", project.BoxName, baseImage)
+	fmt.Printf("Recreating box '%s' with image '%s'...\n", project.BoxName, baseImage)
 	boxID, err := dockerClient.CreateBoxWithConfig(project.BoxName, baseImage, project.WorkspacePath, workspaceBox, configMap)
 	if err != nil {
 		return fmt.Errorf("failed to create box: %w", err)
@@ -92,7 +92,7 @@ func updateSingleProject(projectName string) error {
 		"apt full-upgrade -y",
 	}
 	if err := dockerClient.ExecuteSetupCommandsWithOutput(project.BoxName, updateCommands, false); err != nil {
-		fmt.Printf("⚠️  Failed to update system packages: %v\n", err)
+		fmt.Printf("warning: failed to update system packages: %v\n", err)
 	}
 
 	if project.WorkspacePath != "" {
@@ -111,7 +111,7 @@ func updateSingleProject(projectName string) error {
 				}
 				if len(cmds) > 0 {
 					if err := dockerClient.ExecuteSetupCommandsWithOutput(project.BoxName, cmds, false); err != nil {
-						fmt.Printf("⚠️  Failed to replay devbox.lock commands: %v\n", err)
+						fmt.Printf("warning: failed to replay devbox.lock commands: %v\n", err)
 					}
 				}
 			}
@@ -120,12 +120,12 @@ func updateSingleProject(projectName string) error {
 
 	if projectConfig != nil && len(projectConfig.SetupCommands) > 0 {
 		if err := dockerClient.ExecuteSetupCommandsWithOutput(project.BoxName, projectConfig.SetupCommands, false); err != nil {
-			fmt.Printf("⚠️  Failed to execute setup commands: %v\n", err)
+			fmt.Printf("warning: failed to execute setup commands: %v\n", err)
 		}
 	}
 
 	if err := dockerClient.SetupDevboxInBoxWithUpdate(project.BoxName, projectName); err != nil {
-		fmt.Printf("⚠️  Failed to setup devbox environment: %v\n", err)
+		fmt.Printf("warning: failed to setup devbox environment: %v\n", err)
 	}
 
 	if project.BaseImage != baseImage {
@@ -135,10 +135,10 @@ func updateSingleProject(projectName string) error {
 		}
 	}
 
-	fmt.Printf("✅ Updated '%s' successfully\n", projectName)
+	fmt.Printf("Updated '%s' successfully\n", projectName)
 
 	if err := WriteLockFileForProject(projectName, ""); err != nil {
-		fmt.Printf("⚠️  Failed to write lock file: %v\n", err)
+		fmt.Printf("warning: failed to write lock file: %v\n", err)
 	}
 	return nil
 }
@@ -151,14 +151,14 @@ func updateAllProjects() error {
 
 	projects := cfg.GetProjects()
 	if len(projects) == 0 {
-		fmt.Printf("✅ No projects to update.\n")
+		fmt.Printf("No projects to update.\n")
 		return nil
 	}
 
 	var updated, failed int
 	for projectName := range projects {
 		if err := updateSingleProject(projectName); err != nil {
-			fmt.Printf("❌ Failed to update %s: %v\n", projectName, err)
+			fmt.Printf("error: failed to update %s: %v\n", projectName, err)
 			failed++
 		} else {
 			updated++

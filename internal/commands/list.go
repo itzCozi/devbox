@@ -98,13 +98,13 @@ var listCmd = &cobra.Command{
 				projectConfig, err := configManager.LoadProjectConfig(project.WorkspacePath)
 				if err == nil && projectConfig != nil {
 					if projectConfig.BaseImage != "" && projectConfig.BaseImage != project.BaseImage {
-						fmt.Printf("  └─ Base image: %s (override)\n", projectConfig.BaseImage)
+						fmt.Printf("  - Base image: %s (override)\n", projectConfig.BaseImage)
 					}
 					if len(projectConfig.Ports) > 0 {
-						fmt.Printf("  └─ Ports: %s\n", strings.Join(projectConfig.Ports, ", "))
+						fmt.Printf("  - Ports: %s\n", strings.Join(projectConfig.Ports, ", "))
 					}
 					if len(projectConfig.SetupCommands) > 0 {
-						fmt.Printf("  └─ Setup commands: %d\n", len(projectConfig.SetupCommands))
+						fmt.Printf("  - Setup commands: %d\n", len(projectConfig.SetupCommands))
 					}
 				}
 			}

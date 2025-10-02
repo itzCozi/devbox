@@ -76,7 +76,7 @@ var statusCmd = &cobra.Command{
 		ports, _ := dockerClient.GetPortMappings(box)
 		mounts, _ := dockerClient.GetMounts(box)
 
-		fmt.Printf("📊 Devbox Status\n")
+		fmt.Printf("Devbox status\n")
 		fmt.Printf("Project: %s\n", projectName)
 		fmt.Printf("Box: %s\n", box)
 		fmt.Printf("Image: %s\n", project.BaseImage)

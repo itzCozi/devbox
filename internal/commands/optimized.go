@@ -72,19 +72,19 @@ func (optSetup *OptimizedSetup) FastInit(projectName string, projectConfig *conf
 		workspaceBox = projectConfig.WorkingDir
 	}
 
-	fmt.Printf("🚀 Fast initialization of '%s'...\n", boxName)
+	fmt.Printf("Fast initialization of '%s'...\n", boxName)
 
-	fmt.Printf("📥 Pulling image '%s'...\n", baseImage)
+	fmt.Printf("Pulling image '%s'...\n", baseImage)
 	if err := optSetup.dockerClient.PullImage(baseImage); err != nil {
 		return fmt.Errorf("failed to pull base image: %w", err)
 	}
 
 	if forceFlag {
 
-		fmt.Printf("🔄 Force flag detected, recreating box...\n")
+		fmt.Printf("Force flag detected, recreating box...\n")
 	}
 
-	fmt.Printf("📦 Creating box...\n")
+	fmt.Printf("Creating box...\n")
 	configMap := make(map[string]interface{})
 	if projectConfig != nil {
 
@@ -95,17 +95,17 @@ func (optSetup *OptimizedSetup) FastInit(projectName string, projectConfig *conf
 		return fmt.Errorf("failed to create box: %w", err)
 	}
 
-	fmt.Printf("▶️ Starting box...\n")
+	fmt.Printf("Starting box...\n")
 	if err := optSetup.dockerClient.StartBox(boxID); err != nil {
 		return fmt.Errorf("failed to start box: %w", err)
 	}
 
-	fmt.Printf("⏳ Waiting for box to be ready...\n")
+	fmt.Printf("Waiting for box to be ready...\n")
 	if err := optSetup.dockerClient.WaitForBox(boxName, 30*time.Second); err != nil {
 		return fmt.Errorf("box failed to start: %w", err)
 	}
 
-	fmt.Printf("⚡ Running parallel setup operations...\n")
+	fmt.Printf("Running parallel setup operations...\n")
 
 	setupTasks := []parallel.Task{
 
@@ -114,7 +114,7 @@ func (optSetup *OptimizedSetup) FastInit(projectName string, projectConfig *conf
 		},
 
 		func() error {
-			fmt.Printf("🛠️ Setting up devbox commands...\n")
+			fmt.Printf("Setting up devbox commands...\n")
 			return optSetup.dockerClient.SetupDevboxInBoxWithUpdate(boxName, projectName)
 		},
 	}
@@ -129,7 +129,7 @@ func (optSetup *OptimizedSetup) FastInit(projectName string, projectConfig *conf
 	}
 
 	if projectConfig != nil && len(projectConfig.SetupCommands) > 0 {
-		fmt.Printf("📦 Installing packages (%d commands)...\n", len(projectConfig.SetupCommands))
+		fmt.Printf("Installing packages (%d commands)...\n", len(projectConfig.SetupCommands))
 		if err := optSetup.dockerClient.ExecuteSetupCommandsWithOutput(boxName, projectConfig.SetupCommands, false); err != nil {
 			return fmt.Errorf("failed to execute setup commands: %w", err)
 		}
@@ -141,14 +141,14 @@ func (optSetup *OptimizedSetup) FastInit(projectName string, projectConfig *conf
 }
 
 func (optSetup *OptimizedSetup) FastUp(projectConfig *config.ProjectConfig, projectName, boxName, baseImage, cwd, workspaceBox string) error {
-	fmt.Printf("🚀 Fast startup of environment...\n")
+	fmt.Printf("Fast startup of environment...\n")
 
 	configMap := make(map[string]interface{})
 	if projectConfig != nil {
 
 	}
 
-	fmt.Printf("📦 Creating optimized box...\n")
+	fmt.Printf("Creating optimized box...\n")
 	boxID, err := optSetup.dockerClient.CreateBoxWithConfig(boxName, baseImage, cwd, workspaceBox, configMap)
 	if err != nil {
 		return fmt.Errorf("failed to create box: %w", err)
@@ -158,12 +158,12 @@ func (optSetup *OptimizedSetup) FastUp(projectConfig *config.ProjectConfig, proj
 		return fmt.Errorf("failed to start box: %w", err)
 	}
 
-	fmt.Printf("⏳ Waiting for box startup...\n")
+	fmt.Printf("Waiting for box startup...\n")
 	if err := optSetup.dockerClient.WaitForBox(boxName, 30*time.Second); err != nil {
 		return fmt.Errorf("box failed to start: %w", err)
 	}
 
-	fmt.Printf("⚡ Running parallel initialization...\n")
+	fmt.Printf("Running parallel initialization...\n")
 
 	setupTasks := []parallel.Task{
 
@@ -187,14 +187,14 @@ func (optSetup *OptimizedSetup) FastUp(projectConfig *config.ProjectConfig, proj
 
 	lockfilePath := filepath.Join(cwd, "devbox.lock")
 	if _, err := os.Stat(lockfilePath); err == nil {
-		fmt.Printf("📜 Processing lock file...\n")
+		fmt.Printf("Processing lock file...\n")
 		if err := optSetup.processLockFile(boxName, lockfilePath); err != nil {
 			return fmt.Errorf("failed to process lock file: %w", err)
 		}
 	}
 
 	if projectConfig != nil && len(projectConfig.SetupCommands) > 0 {
-		fmt.Printf("📦 Installing packages (%d commands)...\n", len(projectConfig.SetupCommands))
+		fmt.Printf("Installing packages (%d commands)...\n", len(projectConfig.SetupCommands))
 		if err := optSetup.dockerClient.ExecuteSetupCommandsWithOutput(boxName, projectConfig.SetupCommands, false); err != nil {
 			return fmt.Errorf("failed to execute setup commands: %w", err)
 		}
@@ -222,7 +222,7 @@ func (optSetup *OptimizedSetup) processLockFile(boxName, lockfilePath string) er
 	}
 
 	if len(cmds) > 0 {
-		fmt.Printf("🔄 Replaying %d commands from lock file...\n", len(cmds))
+		fmt.Printf("Replaying %d commands from lock file...\n", len(cmds))
 		return optSetup.dockerClient.ExecuteSetupCommandsWithOutput(boxName, cmds, false)
 	}
 
@@ -230,12 +230,12 @@ func (optSetup *OptimizedSetup) processLockFile(boxName, lockfilePath string) er
 }
 
 func (optSetup *OptimizedSetup) PrewarmImage(image string) error {
-	fmt.Printf("🔥 Prewarming image %s...\n", image)
+	fmt.Printf("Prewarming image %s...\n", image)
 	return optSetup.dockerClient.PullImage(image)
 }
 
 func (optSetup *OptimizedSetup) OptimizeEnvironment(boxName string) error {
-	fmt.Printf("⚡ Optimizing environment...\n")
+	fmt.Printf("Optimizing environment...\n")
 
 	executor := parallel.NewSetupCommandExecutor(boxName, false, 3)
 

@@ -81,9 +81,9 @@ Examples:
 		}
 
 		if configOnlyFlag {
-			fmt.Printf("✅ Configuration file generated for project '%s'\n", projectName)
-			fmt.Printf("📁 Workspace: %s\n", workspacePath)
-			fmt.Printf("📄 Config: %s/devbox.json\n", workspacePath)
+			fmt.Printf("Configuration file generated for project '%s'\n", projectName)
+			fmt.Printf("Workspace: %s\n", workspacePath)
+			fmt.Printf("Config: %s/devbox.json\n", workspacePath)
 			return nil
 		}
 
@@ -190,24 +190,24 @@ Examples:
 		}
 
 		if projectConfig != nil && (templateFlag != "" || generateConfig) {
-			fmt.Printf("📝 Generating lock file (devbox.lock.json)...\n")
+			fmt.Printf("Generating lock file (devbox.lock.json)...\n")
 			if err := WriteLockFileForProject(projectName, ""); err != nil {
 				fmt.Printf("Warning: failed to write lock file: %v\n", err)
 			}
 		}
 
-		fmt.Printf("✅ Project '%s' initialized successfully!\n", projectName)
-		fmt.Printf("📁 Workspace: %s\n", workspacePath)
-		fmt.Printf("🐳 Box: %s\n", boxName)
-		fmt.Printf("🖼️  Image: %s\n", baseImage)
+		fmt.Printf("Project '%s' initialized successfully.\n", projectName)
+		fmt.Printf("Workspace: %s\n", workspacePath)
+		fmt.Printf("Box: %s\n", boxName)
+		fmt.Printf("Image: %s\n", baseImage)
 
 		if projectConfig != nil {
-			fmt.Printf("⚙️  Configuration: devbox.json\n")
+			fmt.Printf("Configuration: devbox.json\n")
 			if len(projectConfig.SetupCommands) > 0 {
-				fmt.Printf("🔧 Setup commands: %d executed\n", len(projectConfig.SetupCommands))
+				fmt.Printf("Setup commands: %d executed\n", len(projectConfig.SetupCommands))
 			}
 			if len(projectConfig.Ports) > 0 {
-				fmt.Printf("🌐 Ports: %v\n", projectConfig.Ports)
+				fmt.Printf("Ports: %v\n", projectConfig.Ports)
 			}
 		}
 

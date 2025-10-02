@@ -90,10 +90,10 @@ var upCmd = &cobra.Command{
 					return fmt.Errorf("failed to setup devbox in existing box: %w", err)
 				}
 			}
-			fmt.Printf("✅ Environment is up!\n")
-			fmt.Printf("📁 Workspace: %s\n", cwd)
-			fmt.Printf("🐳 Box: %s\n", boxName)
-			fmt.Printf("🖼️  Image: %s\n", baseImage)
+			fmt.Printf("Environment is up.\n")
+			fmt.Printf("Workspace: %s\n", cwd)
+			fmt.Printf("Box: %s\n", boxName)
+			fmt.Printf("Image: %s\n", baseImage)
 			fmt.Printf("Tip: run 'devbox shell %s' to enter the environment.\n", projectName)
 
 			if cfg.Settings != nil && cfg.Settings.AutoStopOnExit && !keepRunningUpFlag {
@@ -150,10 +150,10 @@ var upCmd = &cobra.Command{
 			return fmt.Errorf("failed to start environment: %w", err)
 		}
 
-		fmt.Printf("✅ Environment is up!\n")
-		fmt.Printf("📁 Workspace: %s\n", cwd)
-		fmt.Printf("🐳 Box: %s\n", boxName)
-		fmt.Printf("🖼️  Image: %s\n", baseImage)
+		fmt.Printf("Environment is up.\n")
+		fmt.Printf("Workspace: %s\n", cwd)
+		fmt.Printf("Box: %s\n", boxName)
+		fmt.Printf("Image: %s\n", baseImage)
 		fmt.Printf("Tip: run 'devbox shell %s' to enter the environment.\n", projectName)
 
 		_ = WriteLockFileForBox(boxName, projectName, cwd, baseImage, "")
@@ -280,6 +280,6 @@ func applyLockInline(projectName, lockPath string) error {
 			return err
 		}
 	}
-	fmt.Println("🔒 Applied devbox.lock.json")
+	fmt.Println("Applied devbox.lock.json")
 	return nil
 }

@@ -77,7 +77,7 @@ var restoreCmd = &cobra.Command{
 			return fmt.Errorf("failed to start restored box: %w", err)
 		}
 
-		fmt.Printf("✅ Restore complete. Box '%s' recreated from backup.\n", proj.BoxName)
+		fmt.Printf("Restore complete. Box '%s' recreated from backup.\n", proj.BoxName)
 		return nil
 	},
 }

@@ -53,7 +53,7 @@ var stopCmd = &cobra.Command{
 			return fmt.Errorf("failed to stop box: %w", err)
 		}
 
-		fmt.Printf("✅ Stopped '%s'\n", project.BoxName)
+		fmt.Printf("Stopped '%s'\n", project.BoxName)
 		return nil
 	},
 }

@@ -376,8 +376,8 @@ BOX_NAME="` + boxName + `"
 PROJECT_NAME="` + projectName + `"
 
 case "$1" in
-    "status"|"info")
-        echo "📊 Devbox Box Status"
+	"status"|"info")
+		echo "Devbox box status"
         echo "Project: $PROJECT_NAME"
         echo "Box: $BOX_NAME"
         echo "Workspace: /workspace"
@@ -385,14 +385,14 @@ case "$1" in
         echo "User: $(whoami)"
         echo "Working Directory: $(pwd)"
         echo ""
-        echo "💡 Available devbox commands inside box:"
+	echo "hint: available devbox commands inside box:"
         echo "  devbox exit     - Exit the shell"
         echo "  devbox status   - Show box information"
         echo "  devbox help     - Show this help"
         echo "  devbox host     - Run command on host (experimental)"
         ;;
-    "help"|"--help"|"-h")
-        echo "🚀 Devbox Box Commands"
+	"help"|"--help"|"-h")
+		echo "Devbox box commands"
         echo ""
         echo "Available commands inside the box:"
         echo "  devbox exit         - Exit the devbox shell"
@@ -400,41 +400,41 @@ case "$1" in
         echo "  devbox help         - Show this help message"
         echo "  devbox host <cmd>   - Execute command on host (experimental)"
         echo ""
-        echo "📁 Your project files are in: /workspace"
-        echo "🐧 You are in an Ubuntu box with full package management"
+	echo "Your project files are in: /workspace"
+	echo "You are in an Ubuntu box with full package management"
         echo ""
         echo "Examples:"
         echo "  devbox exit                    # Exit to host"
         echo "  devbox status                  # Check box info"
         echo "  devbox host \"devbox list\"     # Run host command"
         echo ""
-        echo "💡 Tip: Files in /workspace are shared with your host system"
+	echo "hint: Files in /workspace are shared with your host system"
         ;;
     "host")
-        if [ -z "$2" ]; then
-            echo "❌ Usage: devbox host <command>"
+		if [ -z "$2" ]; then
+			echo "error: usage: devbox host <command>"
             echo "Example: devbox host \"devbox list\""
             exit 1
         fi
-        echo "🔄 Executing on host: $2"
-        echo "⚠️  Note: This is experimental and may not work in all environments"
+		echo "Executing on host: $2"
+		echo "warning: This is experimental and may not work in all environments"
         # This is a placeholder - we cannot easily execute on host from box
         # without additional setup like Docker socket mounting
-        echo "❌ Host command execution not yet implemented"
-        echo "💡 Exit the box and run commands on the host instead"
+		echo "error: host command execution not yet implemented"
+		echo "hint: Exit the box and run commands on the host instead"
         ;;
     "version")
         echo "devbox box wrapper v1.0"
         echo "Box: $BOX_NAME"
         echo "Project: $PROJECT_NAME"
         ;;
-    "")
-        echo "❌ Missing command. Use \"devbox help\" for available commands."
+	"")
+		echo "error: missing command. Use \"devbox help\" for available commands."
         exit 1
         ;;
     *)
-        echo "❌ Unknown devbox command: $1"
-        echo "💡 Use \"devbox help\" to see available commands inside the box"
+		echo "error: unknown devbox command: $1"
+		echo "hint: Use \"devbox help\" to see available commands inside the box"
         echo ""
         echo "Available commands:"
         echo "  exit, status, help, host, version"
@@ -463,10 +463,10 @@ sed -i '/devbox() {/,/^}$/d' /root/.bashrc 2>/dev/null || true
 cat >> /root/.bashrc << 'BASHRC_EOF'
 
 if [ -t 1 ]; then
-    echo "🚀 Welcome to devbox project: ` + projectName + `"
-    echo "📁 Your files are in: /workspace"
-    echo "💡 Type 'devbox help' for available commands"
-    echo "🚪 Type 'devbox exit' to leave the box"
+	echo "Welcome to devbox project: ` + projectName + `"
+	echo "Your files are in: /workspace"
+	echo "hint: Type 'devbox help' for available commands"
+	echo "hint: Type 'devbox exit' to leave the box"
     echo ""
 fi
 
@@ -491,8 +491,8 @@ if [ -d "/dotfiles" ]; then
 fi
 
 devbox_exit() {
-    echo "👋 Exiting devbox shell for project \"` + projectName + `\""
-    exit 0
+	echo "Exiting devbox shell for project \"` + projectName + `\""
+	exit 0
 }
 
 devbox() {

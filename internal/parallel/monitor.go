@@ -19,14 +19,14 @@ func NewPerformanceMonitor() *PerformanceMonitor {
 
 func (pm *PerformanceMonitor) Start(operation string) {
 	pm.startTimes[operation] = time.Now()
-	fmt.Printf("⏱️ Starting: %s\n", operation)
+	fmt.Printf("Starting: %s\n", operation)
 }
 
 func (pm *PerformanceMonitor) End(operation string) time.Duration {
 	if startTime, exists := pm.startTimes[operation]; exists {
 		duration := time.Since(startTime)
 		pm.durations[operation] = duration
-		fmt.Printf("✅ Completed: %s in %v\n", operation, duration)
+		fmt.Printf("Completed: %s in %v\n", operation, duration)
 		delete(pm.startTimes, operation)
 		return duration
 	}
@@ -42,7 +42,7 @@ func (pm *PerformanceMonitor) PrintSummary() {
 		return
 	}
 
-	fmt.Printf("\n📊 Performance Summary:\n")
+	fmt.Printf("\nPerformance summary:\n")
 	fmt.Printf("%-30s %s\n", "Operation", "Duration")
 	fmt.Printf("%-30s %s\n", "----------", "--------")
 
