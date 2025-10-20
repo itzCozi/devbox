@@ -8,6 +8,44 @@ Common issues and quick fixes.
 ## Installation Issues
 ---
 
+##### "403 Forbidden" when running install script
+
+**Problem**: Running `curl -fsSL https://devbox.ar0.eu/install.sh | bash` returns 403 (often in managed shells like AWS CloudShell).
+
+**Explanation**: Some environments block or challenge CDN traffic. Our mirror uses a CDN and may be affected. We've added a server-side fallback to redirect to GitHub Raw, but certain environments still enforce restrictions.
+
+**Solutions**:
+```bash
+# Use the primary GitHub Raw URL
+curl -fsSL https://raw.githubusercontent.com/itzcozi/devbox/main/install.sh | bash
+
+# Or download and run locally
+curl -fsSL -o install.sh https://raw.githubusercontent.com/itzcozi/devbox/main/install.sh
+bash install.sh
+```
+
+##### Amazon Linux 2023
+
+**Problem**: The install script reports an unsupported OS on Amazon Linux 2023.
+
+**Explanation**: devbox officially supports Debian/Ubuntu. Amazon Linux 2023 (AL2023) is Fedora-like and uses `dnf` instead of `apt`.
+
+**Workaround (manual)**:
+```bash
+# Install deps (rough equivalent)
+sudo dnf install -y git make golang docker
+sudo systemctl enable --now docker
+sudo usermod -aG docker $USER
+
+# Build and install devbox
+git clone https://github.com/itzcozi/devbox.git
+cd devbox
+make build
+sudo make install
+```
+
+> Note: We may add broader distro support in the future; contributions welcome.
+
 ##### "Command not found: devbox"
 
 **Problem**: After installation, `devbox` command is not recognized.

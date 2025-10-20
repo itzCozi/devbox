@@ -4,8 +4,14 @@ description: How to install devbox on your Debian/Ubuntu system
 ---
 
 ```bash
+# Primary (recommended)
+curl -fsSL https://raw.githubusercontent.com/itzcozi/devbox/main/install.sh | bash
+
+# Mirror (CDN)
 curl -fsSL https://devbox.ar0.eu/install.sh | bash
 ```
+
+If you encounter a 403 when using the mirror (common in some managed shells like AWS CloudShell), use the primary GitHub Raw URL instead.
 
 This script will automatically:
 - Check system compatibility (Debian/Ubuntu only)

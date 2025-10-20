@@ -31,8 +31,10 @@ export async function onRequest(context) {
       return new Response(upstream.body, { status: 200, headers: respHeaders });
     }
 
-    return new Response('Failed to fetch install script', { status: 502 });
+    // Fallback: redirect client to fetch directly from GitHub raw if proxying fails
+    return Response.redirect(upstreamUrl, 302);
   } catch (err) {
-    return new Response('Failed to fetch install script', { status: 502 });
+    // Network error fetching from upstream; try redirecting the client
+    return Response.redirect(upstreamUrl, 302);
   }
 }

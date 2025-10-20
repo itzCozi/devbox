@@ -33,12 +33,19 @@ devbox focuses on fast, disposable, Docker-native development environments with 
 ## Installation
 
 ```bash
-# Using the install script
+# Using the install script (primary)
+curl -fsSL https://raw.githubusercontent.com/itzcozi/devbox/main/install.sh | bash
+
+# Mirror (CDN)
 curl -fsSL https://devbox.ar0.eu/install.sh | bash
 # Or manually: https://devbox.ar0.eu/docs/install/#manual-build-from-source
 ```
 
-Note: devbox supports Linux environments only (Debian/Ubuntu). On Windows, use WSL2 with an Ubuntu distribution.
+Notes:
+- Some managed shell environments (e.g., AWS CloudShell) may block or challenge CDN traffic, resulting in HTTP 403 when hitting the mirror. Use the primary GitHub Raw URL above in those environments.
+- devbox supports Linux environments only (Debian/Ubuntu). On Windows, use WSL2 with an Ubuntu distribution.
+
+
 
 ## Quick Start
 
