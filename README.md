@@ -33,11 +33,12 @@ devbox focuses on fast, disposable, Docker-native development environments with 
 ## Installation
 
 ```bash
-# Using the install script (primary)
-curl -fsSL https://raw.githubusercontent.com/itzcozi/devbox/main/install.sh | bash
-
 # Mirror (CDN)
 curl -fsSL https://devbox.ar0.eu/install.sh | bash
+
+# Using the install script
+curl -fsSL https://raw.githubusercontent.com/itzcozi/devbox/main/install.sh | bash
+
 # Or manually: https://devbox.ar0.eu/docs/install/#manual-build-from-source
 ```
 
